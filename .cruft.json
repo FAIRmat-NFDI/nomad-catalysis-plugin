@@ -1,0 +1,26 @@
+{
+  "template": "https://github.com/FAIRmat-NFDI/cookiecutter-nomad-plugin",
+  "commit": "c40010ce548126347c5fd7b36c2a5031bcd0b34b",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Julia Schumann",
+      "email": "jschumann@physik.hu-berlin.de",
+      "github_username": "schumannj",
+      "plugin_name": "catalysis",
+      "module_name": "catalysis",
+      "short_description": "a NOMAD plugin for heterogeneous catalysis data",
+      "version": "0.1.0",
+      "license": "MIT",
+      "include_schema_package": true,
+      "include_normalizer": false,
+      "include_parser": false,
+      "include_app": true,
+      "_copy_without_render": [
+        "*.html"
+      ],
+      "_template": "https://github.com/FAIRmat-NFDI/cookiecutter-nomad-plugin"
+    }
+  },
+  "directory": null
+}
