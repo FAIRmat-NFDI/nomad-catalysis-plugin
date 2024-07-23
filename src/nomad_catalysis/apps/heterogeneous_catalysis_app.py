@@ -32,7 +32,8 @@ heterogeneous_catalysis_app = yaml.safe_load(
             results.material.elements: {}
             results.properties.catalytic.catalyst.catalyst_type: {}
             results.properties.catalytic.catalyst.catalyst_name: {}
-            results.properties.catalytic.catalyst.preparation_method: {label: Preparation}
+            results.properties.catalytic.catalyst.preparation_method: {
+              label: Preparation}
             results.properties.catalytic.catalyst.surface_area:
               format:
                 decimals: 2
@@ -293,5 +294,5 @@ heterogeneous_catalysis_app = yaml.safe_load(
             scale: linear
             showinput: true
             type: terms
-"""
+"""  # noqa: E501
 )
