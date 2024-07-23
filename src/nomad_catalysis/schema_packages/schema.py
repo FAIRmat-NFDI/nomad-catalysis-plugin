@@ -83,7 +83,7 @@ def set_nested_attr(obj, attr_path, value):
     setattr(obj, attr[-1], value)
 
 
-def populate_catalyst_sample_info_to_results(archive, self, logger, reference=False):
+def populate_catalyst_sample_info_to_results(archive, self, logger, reference=False):  # noqa: PLR0912
     """
     Copies the catalyst sample information (if reference provided from a reference)
     into the results archive of the measurement.
@@ -124,22 +124,22 @@ def populate_catalyst_sample_info_to_results(archive, self, logger, reference=Fa
         if self.samples[0].reference.elemental_composition is not None:
             if not archive.results.material:
                 archive.results.material = Material()
-        try:
-            archive.results.material.elemental_composition = self.samples[
-                0
-            ].reference.elemental_composition
+            try:
+                archive.results.material.elemental_composition = self.samples[
+                    0
+                ].reference.elemental_composition
 
-        except Exception as e:
-            logger.warn('Could not analyse elemental compostion.', exc_info=e)
+            except Exception as e:
+                logger.warn('Could not analyse elemental compostion.', exc_info=e)
 
-        for i in self.samples[0].reference.elemental_composition:
-            if i.element not in chemical_symbols:
-                logger.warn(
-                    f"'{i.element}' is not a valid element symbol and this "
-                    'elemental_composition section will be ignored.'
-                )
-            elif i.element not in archive.results.material.elements:
-                archive.results.material.elements += [i.element]
+            for i in self.samples[0].reference.elemental_composition:
+                if i.element not in chemical_symbols:
+                    logger.warn(
+                        f"'{i.element}' is not a valid element symbol and this "
+                        'elemental_composition section will be ignored.'
+                    )
+                elif i.element not in archive.results.material.elements:
+                    archive.results.material.elements += [i.element]
 
 
 def add_referencing_methods_to_sample_result(self, archive, logger, number):
@@ -216,7 +216,7 @@ def add_referencing_methods_to_sample_result(self, archive, logger, number):
 #             print(value)
 #             try:
 #                 set_nested_attr(
-#                     archive.results.properties.catalytic.reaction, reaction_attr, value
+#                     archive.results.properties.catalytic.reaction, reaction_attr, value  # noqa: E501
 #                 )
 #             except ValueError:
 #                 set_nested_attr(
