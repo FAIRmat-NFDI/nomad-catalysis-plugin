@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 
 
 configuration = config.get_plugin_entry_point(
-    'nomad_catalysis_test.schema_packages:catalysis'
+    'nomad_catalysis.schema_packages:catalysis'
 )
 
 m_package = SchemaPackage()

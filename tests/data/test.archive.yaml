@@ -1,3 +1,4 @@
 data:
-  m_def: nomad_catalysis.schema_packages.mypackage.MySchema
-  name: Markus
+  m_def: nomad_catalysis.schema_packages.schema.CatalystSample
+  name: MoO3
+  catalyst_type: ['bulk catalyst']
