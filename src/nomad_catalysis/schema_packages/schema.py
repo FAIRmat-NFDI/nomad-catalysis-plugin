@@ -9,6 +9,7 @@ from nomad.datamodel.data import ArchiveSection, EntryDataCategory, Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
 from nomad.datamodel.metainfo.basesections import (
     CompositeSystem,
+    Process,
 )
 from nomad.datamodel.results import (
     Catalyst,
@@ -251,6 +252,15 @@ class Preparation(ArchiveSection):
             ),
             links=['https://w3id.org/nfdi4cat/voc4cat_0007016'],
         ),
+    )
+
+    preparation_entry_reference = Quantity(
+        type=Process,
+        shape=[],
+        description="""
+        A reference to the entry that contains the details of the preparation method.
+        """,
+        a_eln=dict(component='EntryReference'),
     )
 
     preparator = Quantity(
