@@ -1,5 +1,6 @@
 import os.path
 
+import pytest
 from nomad.client import normalize_all, parse
 
 
@@ -9,3 +10,19 @@ def test_schema():
     normalize_all(entry_archive)
 
     assert entry_archive.data.name == 'MoO3'
+    assert entry_archive.results.material.elements == ['Mo', 'O']
+    assert entry_archive.results.properties.catalytic.catalyst.catalyst_name == 'MoO3'
+    assert (
+        entry_archive.results.properties.catalytic.catalyst.preparation_method
+        == 'spray-drying'
+    )
+    assert entry_archive.results.properties.catalytic.catalyst.catalyst_type == [
+        'bulk catalyst'
+    ]
+    assert (
+        entry_archive.results.properties.catalytic.catalyst.characterization_methods
+        == ['BET']
+    )
+    assert entry_archive.results.properties.catalytic.catalyst.surface_area.to(
+        'm^2/g'
+    ).magnitude == pytest.approx(3.27)
