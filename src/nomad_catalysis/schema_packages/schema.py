@@ -99,6 +99,7 @@ def populate_catalyst_sample_info_to_results(archive, self, logger, reference=Fa
         'catalyst_type': 'catalyst_type',
         'preparation_details.preparation_method': 'preparation_method',
         'surface.surface_area': 'surface_area',
+        'surface.method_surface_area_determination': 'characterization_methods',
     }
 
     # Loop through the mapping and assign the values
@@ -260,7 +261,7 @@ class Preparation(ArchiveSection):
         description="""
         A reference to the entry that contains the details of the preparation method.
         """,
-        a_eln=dict(component='EntryReference'),
+        a_eln=dict(component='ReferenceEditQuantity'),
     )
 
     preparator = Quantity(
@@ -340,14 +341,6 @@ class SurfaceArea(ArchiveSection):
 
     def normalize(self, archive, logger):
         super().normalize(archive, logger)
-
-        if self.method_surface_area_determination is not None:
-            add_catalyst(archive)
-            (
-                archive.results.properties.catalytic.catalyst.characterization_methods.append(
-                    self.method_surface_area_determination
-                )
-            )
 
 
 class CatalystSample(CompositeSystem, Schema):
