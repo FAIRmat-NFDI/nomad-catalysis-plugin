@@ -1,5 +1,5 @@
 data:
-  m_def: nomad_catalysis.schema_packages.schema.CatalystSample
+  m_def: nomad_catalysis.schema_packages.catalysis.CatalystSample
   name: MoO3
   catalyst_type: ['bulk catalyst']
   description: 'Pressing and sieving of 24.22 g, Pressing conditions: 3 t, 1 min'

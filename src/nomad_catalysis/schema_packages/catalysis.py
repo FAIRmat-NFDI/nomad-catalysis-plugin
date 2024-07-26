@@ -60,7 +60,10 @@ class CatalysisElnCategory(EntryDataCategory):
 
 
 def add_catalyst(archive: 'EntryArchive') -> None:
-    """Adds metainfo structure for catalysis data to the results section of the supplied archive."""
+    '''
+    Adds metainfo structure for catalysis data to the results section of the supplied
+    archive.
+    '''
     if not archive.results:
         archive.results = Results()
     if not archive.results.properties:
@@ -71,8 +74,8 @@ def add_catalyst(archive: 'EntryArchive') -> None:
         archive.results.properties.catalytic.catalyst = Catalyst()
 
 
-# helper function to retrieve nested attributes
 def get_nested_attr(obj, attr_path):
+    '''helper function to retrieve nested attributes'''
     for attr in attr_path.split('.'):
         obj = getattr(obj, attr, None)
         if obj is None:
@@ -81,6 +84,7 @@ def get_nested_attr(obj, attr_path):
 
 
 def set_nested_attr(obj, attr_path, value):
+    '''helper function to set nested attributes'''
     for attr in attr_path.split('.'):
         obj = getattr(obj, attr, None)
         if obj is None:
