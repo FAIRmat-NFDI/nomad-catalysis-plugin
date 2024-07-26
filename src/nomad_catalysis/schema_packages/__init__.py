@@ -6,7 +6,7 @@ class CatalysisPackageEntryPoint(SchemaPackageEntryPoint):
     parameter: int = Field(0, description='Custom configuration parameter')
 
     def load(self):
-        from nomad_catalysis.schema_packages.schema import m_package
+        from nomad_catalysis.schema_packages.catalysis import m_package
 
         return m_package
 
