@@ -54,7 +54,7 @@ class CatalysisElnCategory(EntryDataCategory):
     m_def = Category(label='Catalysis', categories=[EntryDataCategory])
 
 
-def add_catalyst(archive):
+def add_catalyst(archive: 'EntryArchive') -> None:
     """Adds metainfo structure for catalysis data."""
     if not archive.results:
         archive.results = Results()
