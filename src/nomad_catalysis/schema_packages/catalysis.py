@@ -92,11 +92,15 @@ def set_nested_attr(obj, attr_path, value):
     setattr(obj, attr[-1], value)
 
 
-def populate_catalyst_sample_info_to_results(archive, self, logger, reference=False):  # noqa: PLR0912
-    """
-    Copies the catalyst sample information (if reference provided from a reference)
-    into the results archive of the measurement.
-    """
+def populate_catalyst_sample_info_to_results(   # noqa: PLR0912
+        archive: 'EntryArchive', self, logger: 'BoundLogger', reference=False
+    ) -> None:
+    '''
+    This function copies the catalyst sample information into the results archive of
+    the measurement. If reference is true, the sample information will be taken
+    from self.samples[0].reference.
+    '''
+
     if reference:
         sample_obj = self.samples[0].reference
     else:
@@ -150,51 +154,6 @@ def populate_catalyst_sample_info_to_results(archive, self, logger, reference=Fa
                     )
                 elif i.element not in archive.results.material.elements:
                     archive.results.material.elements += [i.element]
-
-
-def add_referencing_methods_to_sample_result(self, archive, logger, number):
-    if self.lab_id is not None:
-        from nomad.search import MetadataPagination, search
-
-        catalyst_sample = self.m_root().metadata.entry_id
-        query = {'entry_references.target_entry_id': catalyst_sample}
-        search_result = search(
-            owner='all',
-            query=query,
-            pagination=MetadataPagination(page_size=number),
-            user_id=archive.metadata.main_author.user_id,
-        )
-
-        if search_result.pagination.total > 0:
-            methods = []
-            for entry in search_result.data:
-                if entry['entry_type'] == 'ELNXRayDiffraction':
-                    method = 'XRD'
-                    methods.append(method)
-                elif entry['entry_type'] == 'CatalystCollection':
-                    pass
-                elif entry['entry_type'] == 'CatalystSampleCollection':
-                    pass
-            if search_result.pagination.total > number:
-                logger.warn(
-                    f'Found {search_result.pagination.total} entries with entry_id:'
-                    f' "{catalyst_sample}". Will only check the the first '
-                    f'"{number}" entries found for XRD method.'
-                )
-            if methods:
-                if (
-                    archive.results.properties.catalytic.catalyst.characterization_methods
-                ) is None:
-                    (
-                        archive.results.properties.catalytic.catalyst.characterization_methods
-                    ) = []
-                (
-                    archive.results.properties.catalytic.catalyst.characterization_methods.append(
-                        methods[0]
-                    )
-                )
-        else:
-            logger.warn(f'Found no entries with reference: "{catalyst_sample}".')
 
 
 # def populate_reactivity_info(archive, self, logger):
@@ -418,13 +377,69 @@ class CatalystSample(CompositeSystem, Schema):
         links=['https://w3id.org/nfdi4cat/voc4cat_0000016'],
     )
 
+    def add_referencing_methods_to_sample_result(self, archive, logger, number=10):
+        '''
+        This function looks for other entries that reference the sample and checks the
+        entry type and if it finds a ELNXRayDiffration entry it adds XRD to the
+        characterization_methods in result.
+
+        'number' specifies the number of referencing entries that are checked,
+        set to 10 by default
+        '''
+        catalyst_sample = self.m_root().metadata.entry_id
+
+        if self.lab_id is None:
+            logger.warn(f'Found no entries with reference: "{catalyst_sample}".')
+            return
+
+        from nomad.search import MetadataPagination, search
+
+        query = {'entry_references.target_entry_id': catalyst_sample}
+        search_result = search(
+            owner='all',
+            query=query,
+            pagination=MetadataPagination(page_size=number),
+            user_id=archive.metadata.main_author.user_id,
+        )
+
+        if search_result.pagination.total > 0:
+            methods = []
+            for entry in search_result.data:
+                if entry['entry_type'] == 'ELNXRayDiffraction':
+                    method = 'XRD'
+                    methods.append(method)
+                elif entry['entry_type'] == 'CatalystCollection':
+                    pass
+                elif entry['entry_type'] == 'CatalystSampleCollection':
+                    pass
+            if search_result.pagination.total > number:
+                logger.warn(
+                    f'Found {search_result.pagination.total} entries with entry_id:'
+                    f' "{catalyst_sample}". Will only check the the first '
+                    f'"{number}" entries found for XRD method.'
+                )
+            if methods:
+                if (
+                    archive.results.properties.catalytic.catalyst.
+                    characterization_methods
+                ) is None:
+                    (
+                        archive.results.properties.catalytic.catalyst.
+                        characterization_methods) = []
+                (
+                    archive.results.properties.catalytic.catalyst.
+                    characterization_methods.append(methods[0])
+                )
+        else:
+            logger.warn(f'Found no entries with reference: "{catalyst_sample}".')
+
     def normalize(self, archive, logger):
         populate_catalyst_sample_info_to_results(archive, self, logger)
 
         from nomad.datamodel.context import ClientContext
 
         if isinstance(archive.m_context, ClientContext):
-            pass
-        else:
-            super().normalize(archive, logger)
-            add_referencing_methods_to_sample_result(self, archive, logger, 10)
+            return
+
+        super().normalize(archive, logger)
+        self.add_referencing_methods_to_sample_result(self, archive, logger)
