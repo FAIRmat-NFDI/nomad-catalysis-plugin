@@ -60,7 +60,7 @@ class CatalysisElnCategory(EntryDataCategory):
 
 
 def add_catalyst(archive: 'EntryArchive') -> None:
-    """Adds metainfo structure for catalysis data."""
+    """Adds metainfo structure for catalysis data to the results section of the supplied archive."""
     if not archive.results:
         archive.results = Results()
     if not archive.results.properties:
@@ -171,9 +171,6 @@ def add_referencing_methods_to_sample_result(self, archive, logger, number):
                     pass
                 elif entry['entry_type'] == 'CatalystSampleCollection':
                     pass
-                # else:
-                #     method = entry['entry_type']
-                #     methods.append(method)
             if search_result.pagination.total > number:
                 logger.warn(
                     f'Found {search_result.pagination.total} entries with entry_id:'
