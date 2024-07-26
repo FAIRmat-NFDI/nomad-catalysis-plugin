@@ -40,7 +40,12 @@ from nomad.metainfo.metainfo import Category
 # from .catalyst_measurement import Reagent as Reagent_data
 
 if TYPE_CHECKING:
-    pass
+    from nomad.datamodel.datamodel import (
+        EntryArchive,
+    )
+    from structlog.stdlib import (
+        BoundLogger,
+    )
 
 
 configuration = config.get_plugin_entry_point(
