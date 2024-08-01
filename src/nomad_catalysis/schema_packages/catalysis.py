@@ -3,7 +3,6 @@ from typing import (
 )
 
 import numpy as np
-from ase.data import chemical_symbols
 from nomad.config import config
 from nomad.datamodel.data import ArchiveSection, EntryDataCategory, Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
@@ -14,7 +13,6 @@ from nomad.datamodel.metainfo.basesections import (
 from nomad.datamodel.results import (
     Catalyst,
     CatalyticProperties,
-    Material,
     Properties,
     Results,
 )
@@ -90,110 +88,6 @@ def set_nested_attr(obj, attr_path, value):
         if obj is None:
             return
     setattr(obj, attr[-1], value)
-
-
-def populate_catalyst_sample_info_to_results(   # noqa: PLR0912
-        archive: 'EntryArchive', self, logger: 'BoundLogger', reference=False
-    ) -> None:
-    '''
-    This function copies the catalyst sample information into the results archive of
-    the measurement. If reference is true, the sample information will be taken
-    from self.samples[0].reference.
-    '''
-
-    if reference:
-        sample_obj = self.samples[0].reference
-    else:
-        sample_obj = self
-
-    add_catalyst(archive)
-    quantities_results_mapping = {
-        'name': 'catalyst_name',
-        'catalyst_type': 'catalyst_type',
-        'preparation_details.preparation_method': 'preparation_method',
-        'surface.surface_area': 'surface_area',
-        'surface.method_surface_area_determination': 'characterization_methods',
-    }
-
-    # Loop through the mapping and assign the values
-    for ref_attr, catalyst_attr in quantities_results_mapping.items():
-        value = get_nested_attr(sample_obj, ref_attr)
-        if value is not None:
-            try:
-                setattr(
-                    archive.results.properties.catalytic.catalyst, catalyst_attr, value
-                )
-            except ValueError:
-                setattr(
-                    archive.results.properties.catalytic.catalyst,
-                    catalyst_attr,
-                    [value],
-                )
-    if reference:
-        if self.samples[0].reference.name is not None:
-            if not archive.results.material:
-                archive.results.material = Material()
-            archive.results.material.material_name = self.samples[0].reference.name
-
-        if self.samples[0].reference.elemental_composition is not None:
-            if not archive.results.material:
-                archive.results.material = Material()
-            try:
-                archive.results.material.elemental_composition = self.samples[
-                    0
-                ].reference.elemental_composition
-
-            except Exception as e:
-                logger.warn('Could not analyse elemental compostion.', exc_info=e)
-
-            for i in self.samples[0].reference.elemental_composition:
-                if i.element not in chemical_symbols:
-                    logger.warn(
-                        f"'{i.element}' is not a valid element symbol and this "
-                        'elemental_composition section will be ignored.'
-                    )
-                elif i.element not in archive.results.material.elements:
-                    archive.results.material.elements += [i.element]
-
-
-# def populate_reactivity_info(archive, self, logger):
-#     """
-#     Copies the reaction data
-#     into the results archive of the measurement.
-#     """
-#     add_activity(archive)
-#     quantities_results_mapping = {
-#         'reaction_conditions.set_temperature': 'reaction_conditions.temperature',
-#         'reaction_conditions.set_pressure': 'reaction_conditions.pressure',
-#         'reaction_conditions.weight_hourly_space_velocity':
-#           'reaction_conditions.weight_hourly_space_velocity',
-#         'reaction_conditions.gas_hourly_space_velocity':
-#           'reaction_conditions.gas_hourly_space_velocity',
-#         'results[0].temperature': 'reaction_conditions.temperature',
-#         'results[0].pressure': 'reaction_conditions.pressure',
-#         'reaction_name': 'name',
-#         'reaction_type': 'type',
-#     }
-
-#     # Loop through the mapping and assign the values
-#     for ref_attr, reaction_attr in quantities_results_mapping.items():
-#         value = get_nested_attr(self, ref_attr)
-#         if value is not None:
-#             print(value)
-#             try:
-#                 set_nested_attr(
-#                     archive.results.properties.catalytic.reaction, reaction_attr, value  # noqa: E501
-#                 )
-#             except ValueError:
-#                 set_nested_attr(
-#                     archive.results.properties.catalytic.reaction,
-#                     reaction_attr,
-#                     [value],
-#                 )
-#             except:
-#                 logger.warn(
-#                     'Something else went wrong when trying setattr for reaction'
-#                 )
 
 
 class Preparation(ArchiveSection):
@@ -377,14 +271,53 @@ class CatalystSample(CompositeSystem, Schema):
         links=['https://w3id.org/nfdi4cat/voc4cat_0000016'],
     )
 
-    def add_referencing_methods_to_sample_result(self, archive, logger, number=10):
+    def populate_results(
+            self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+        '''
+        This function copies the catalyst sample information specified in the dict
+         quantities_results_mapping into the results archive of the entry.
+        '''
+
+        sample_obj = self
+
+        add_catalyst(archive)
+        quantities_results_mapping = {
+            'name': 'catalyst_name',
+            'catalyst_type': 'catalyst_type',
+            'preparation_details.preparation_method': 'preparation_method',
+            'surface.surface_area': 'surface_area',
+            'surface.method_surface_area_determination': 'characterization_methods',
+        }
+
+        for ref_attr, catalyst_attr in quantities_results_mapping.items():
+            value = get_nested_attr(sample_obj, ref_attr)
+            if value is not None:
+                try:
+                    setattr(
+                        archive.results.properties.catalytic.catalyst,
+                        catalyst_attr,
+                        value
+                    )
+                except ValueError:
+                    setattr(
+                        archive.results.properties.catalytic.catalyst,
+                        catalyst_attr,
+                        [value],
+                    )
+
+    def add_referencing_methods(
+            self, archive: 'EntryArchive', logger: 'BoundLogger', number=10) -> None:
         '''
         This function looks for other entries that reference the sample and checks the
-        entry type and if it finds a ELNXRayDiffration entry it adds XRD to the
+        entry type and if it finds a ELNXRayDiffration entry it adds 'XRD' to the
         characterization_methods in result.
 
-        'number' specifies the number of referencing entries that are checked,
-        set to 10 by default
+        Args:
+            archive (EntryArchive): The archive containing the section that is being
+            normalized.
+            logger('Bound Logger'): A structlog logger.
+            number: specifies the number of referencing entries that are checked,
+            set to 10 by default
         '''
         catalyst_sample = self.m_root().metadata.entry_id
 
@@ -434,7 +367,7 @@ class CatalystSample(CompositeSystem, Schema):
             logger.warn(f'Found no entries with reference: "{catalyst_sample}".')
 
     def normalize(self, archive, logger):
-        populate_catalyst_sample_info_to_results(archive, self, logger)
+        self.populate_results(archive, self, logger)
 
         from nomad.datamodel.context import ClientContext
 
@@ -442,4 +375,4 @@ class CatalystSample(CompositeSystem, Schema):
             return
 
         super().normalize(archive, logger)
-        self.add_referencing_methods_to_sample_result(self, archive, logger)
+        self.add_referencing_methods(self, archive, logger)
