@@ -272,7 +272,7 @@ class CatalystSample(CompositeSystem, Schema):
     )
 
     def populate_results(
-            self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+            self, archive: 'EntryArchive') -> None:
         '''
         This function copies the catalyst sample information specified in the dict
          quantities_results_mapping into the results archive of the entry.
