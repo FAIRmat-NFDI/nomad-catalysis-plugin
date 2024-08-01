@@ -272,7 +272,7 @@ class CatalystSample(CompositeSystem, Schema):
     )
 
     def populate_results(
-            self, archive: 'EntryArchive') -> None:
+            self, archive: 'EntryArchive', logger) -> None:
         '''
         This function copies the catalyst sample information specified in the dict
          quantities_results_mapping into the results archive of the entry.
@@ -367,7 +367,7 @@ class CatalystSample(CompositeSystem, Schema):
             logger.warn(f'Found no entries with reference: "{catalyst_sample}".')
 
     def normalize(self, archive, logger):
-        self.populate_results(archive, self, logger)
+        self.populate_results(archive, logger)
 
         from nomad.datamodel.context import ClientContext
 
@@ -375,4 +375,4 @@ class CatalystSample(CompositeSystem, Schema):
             return
 
         super().normalize(archive, logger)
-        self.add_referencing_methods(self, archive, logger)
+        self.add_referencing_methods(archive, logger)
