@@ -319,7 +319,6 @@ class CatalystSample(CompositeSystem, Schema):
             number: specifies the number of referencing entries that are checked,
             set to 10 by default
         '''
-        catalyst_sample = self.m_root().metadata.entry_id
 
         if self.lab_id is None:
             logger.warn(f'Found no entries with reference: "{catalyst_sample}".')
