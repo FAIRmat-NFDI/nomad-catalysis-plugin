@@ -327,7 +327,14 @@ class CatalystSample(CompositeSystem, Schema):
 
         from nomad.search import MetadataPagination, search
 
-        query = {'entry_references.target_entry_id': catalyst_sample}
+        query = {
+            "section_defs.definition_qualified_name:all": [
+            "nomad.metainfo.datamodel.basesection.Activity"
+            ],
+            "entry_references.target_entry_id:all": [
+            archive.metadata.entry_id
+            ]
+        }
         search_result = search(
             owner='all',
             query=query,
