@@ -8,7 +8,6 @@ from nomad.datamodel.data import ArchiveSection, EntryDataCategory, Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
 from nomad.datamodel.metainfo.basesections import (
     CompositeSystem,
-    Process,
 )
 from nomad.datamodel.results import (
     Catalyst,
@@ -58,10 +57,10 @@ class CatalysisElnCategory(EntryDataCategory):
 
 
 def add_catalyst(archive: 'EntryArchive') -> None:
-    '''
+    """
     Adds metainfo structure for catalysis data to the results section of the supplied
     archive.
-    '''
+    """
     if not archive.results:
         archive.results = Results()
     if not archive.results.properties:
@@ -72,8 +71,17 @@ def add_catalyst(archive: 'EntryArchive') -> None:
         archive.results.properties.catalytic.catalyst = Catalyst()
 
 
+def add_catalyst_characterization(archive: 'EntryArchive') -> None:
+    """
+    Adds empty list for catalysis characterization methods to the results
+    section of the supplied archive.
+    """
+    if not archive.results.properties.catalytic.catalyst.characterization_methods:
+        archive.results.properties.catalytic.catalyst.characterization_methods = []
+
+
 def get_nested_attr(obj, attr_path):
-    '''helper function to retrieve nested attributes'''
+    """helper function to retrieve nested attributes"""
     for attr in attr_path.split('.'):
         obj = getattr(obj, attr, None)
         if obj is None:
@@ -82,7 +90,7 @@ def get_nested_attr(obj, attr_path):
 
 
 def set_nested_attr(obj, attr_path, value):
-    '''helper function to set nested attributes'''
+    """helper function to set nested attributes"""
     for attr in attr_path.split('.'):
         obj = getattr(obj, attr, None)
         if obj is None:
@@ -91,6 +99,11 @@ def set_nested_attr(obj, attr_path, value):
 
 
 class Preparation(ArchiveSection):
+    m_def = Section(
+        description="""A section for general information about the
+          preparation of a catalyst sample.""",
+    )
+
     preparation_method = Quantity(
         type=str,
         shape=[],
@@ -112,15 +125,6 @@ class Preparation(ArchiveSection):
             ),
             links=['https://w3id.org/nfdi4cat/voc4cat_0007016'],
         ),
-    )
-
-    preparation_entry_reference = Quantity(
-        type=Process,
-        shape=[],
-        description="""
-        A reference to the entry that contains the details of the preparation method.
-        """,
-        a_eln=dict(component='ReferenceEditQuantity'),
     )
 
     preparator = Quantity(
@@ -149,12 +153,13 @@ class Preparation(ArchiveSection):
         ),
     )
 
-    def normalize(self, archive, logger):
-        super().normalize(archive, logger)
-
 
 class SurfaceArea(ArchiveSection):
     m_def = Section(
+        description="""
+        A section for specifying the specific surface area or dispersion of a catalyst
+        sample and the method that was used determining this quantity.
+        """,
         label_quantity='method_surface_area_determination',
         a_eln=ELNAnnotation(label='Surface Area'),
     )
@@ -165,6 +170,7 @@ class SurfaceArea(ArchiveSection):
         a_eln=dict(
             component='NumberEditQuantity',
             defaultDisplayUnit='m**2/g',
+            description='The specific surface area of the sample in m^2/g.',
             links=['https://w3id.org/nfdi4cat/voc4cat_0000013'],
         ),
     )
@@ -193,27 +199,28 @@ class SurfaceArea(ArchiveSection):
         type=np.float64,
         shape=[],
         description="""
-        The dispersion of the catalyst in %.
+        The percentage of total atoms which are surface atoms of a particle as a measure
+        for the accessibility of the atoms.
         """,
         a_eln=dict(component='NumberEditQuantity'),
     )
 
-    def normalize(self, archive, logger):
-        super().normalize(archive, logger)
-
 
 class CatalystSample(CompositeSystem, Schema):
     m_def = Section(
+        description="""
+        An entry schema for specifying general information about a catalyst sample.
+        """,
         label='Catalyst Sample',
         categories=[CatalysisElnCategory],
     )
 
     preparation_details = SubSection(
-        section_def=Preparation, a_eln=ELNAnnotation(label='Preparation Details')
+        section_def=Preparation,
     )
 
     surface = SubSection(
-        section_def=SurfaceArea, a_eln=ELNAnnotation(label='Surface Area')
+        section_def=SurfaceArea,
     )
 
     storing_institution = Quantity(
@@ -271,12 +278,12 @@ class CatalystSample(CompositeSystem, Schema):
         links=['https://w3id.org/nfdi4cat/voc4cat_0000016'],
     )
 
-    def populate_results(
-            self, archive: 'EntryArchive', logger) -> None:
-        '''
-        This function copies the catalyst sample information specified in the dict
-         quantities_results_mapping into the results archive of the entry.
-        '''
+    def populate_results(self, archive: 'EntryArchive', logger) -> None:
+        """
+        This function copies the catalyst sample information specified in the dictionary
+        quantities_results_mapping in the function below into the results section of the
+        archive of the entry.
+        """
 
         sample_obj = self
 
@@ -296,18 +303,23 @@ class CatalystSample(CompositeSystem, Schema):
                     setattr(
                         archive.results.properties.catalytic.catalyst,
                         catalyst_attr,
-                        value
+                        value,
                     )
-                except ValueError:
+                except ValueError:  # workaround for wrong type in yaml schema
                     setattr(
                         archive.results.properties.catalytic.catalyst,
                         catalyst_attr,
                         [value],
                     )
+                except Exception as e:
+                    logger.warn(
+                        f'Error while copying "{ref_attr}" to results: {e}', exc_info=e
+                    )
 
     def add_referencing_methods(
-            self, archive: 'EntryArchive', logger: 'BoundLogger', number=10) -> None:
-        '''
+        self, archive: 'EntryArchive', logger: 'BoundLogger', number=10
+    ) -> None:
+        """
         This function looks for other entries that reference the sample and checks the
         entry type and if it finds a ELNXRayDiffration entry it adds 'XRD' to the
         characterization_methods in result.
@@ -318,21 +330,19 @@ class CatalystSample(CompositeSystem, Schema):
             logger('Bound Logger'): A structlog logger.
             number: specifies the number of referencing entries that are checked,
             set to 10 by default
-        '''
+        """
 
         if self.lab_id is None:
-            logger.warn(f'Found no entries with reference: "{catalyst_sample}".')
-            return
+            logger.warn("""Sample contains no lab_id, automatic linking of measurements
+                         to this sample entry does not work.""")
 
         from nomad.search import MetadataPagination, search
 
         query = {
-            "section_defs.definition_qualified_name:all": [
-            "nomad.metainfo.datamodel.basesection.Activity"
+            'section_defs.definition_qualified_name:all': [
+                'nomad.datamodel.metainfo.basesections.Activity'
             ],
-            "entry_references.target_entry_id:all": [
-            archive.metadata.entry_id
-            ]
+            'entry_references.target_entry_id': archive.metadata.entry_id,
         }
         search_result = search(
             owner='all',
@@ -344,33 +354,35 @@ class CatalystSample(CompositeSystem, Schema):
         if search_result.pagination.total > 0:
             methods = []
             for entry in search_result.data:
-                if entry['entry_type'] == 'ELNXRayDiffraction':
-                    method = 'XRD'
+                if entry['results']['eln']['methods'] != ['ELNMeasurement']:
+                    method = entry['results']['eln']['methods'][0]
                     methods.append(method)
-                elif entry['entry_type'] == 'CatalystCollection':
-                    pass
-                elif entry['entry_type'] == 'CatalystSampleCollection':
-                    pass
+                else:
+                    method = entry['entry_type']
+                    methods.append(method)
+
             if search_result.pagination.total > number:
                 logger.warn(
                     f'Found {search_result.pagination.total} entries with entry_id:'
-                    f' "{catalyst_sample}". Will only check the the first '
-                    f'"{number}" entries found for XRD method.'
+                    f' "{archive.metadata.entry_id}". Will only check the the first '
+                    f'"{number}" activity entries found for activity methods.'
                 )
             if methods:
-                if (
-                    archive.results.properties.catalytic.catalyst.
-                    characterization_methods
-                ) is None:
-                    (
-                        archive.results.properties.catalytic.catalyst.
-                        characterization_methods) = []
-                (
-                    archive.results.properties.catalytic.catalyst.
-                    characterization_methods.append(methods[0])
-                )
+                add_catalyst_characterization(archive)
+                for method in methods:
+                    if method not in (
+                        archive.results.properties.catalytic.catalyst.characterization_methods
+                    ):
+                        (
+                            archive.results.properties.catalytic.catalyst.characterization_methods.append(
+                                method
+                            )
+                        )
         else:
-            logger.warn(f'Found no entries with reference: "{catalyst_sample}".')
+            logger.warn(
+                f'''Found no entries referencing this entry
+                "{archive.metadata.entry_id}."'''
+            )
 
     def normalize(self, archive, logger):
         self.populate_results(archive, logger)
