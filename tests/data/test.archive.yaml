@@ -1,3 +1,17 @@
 data:
-  m_def: nomad_catalysis.schema_packages.mypackage.MySchema
-  name: Markus
+  m_def: nomad_catalysis.schema_packages.catalysis.CatalystSample
+  name: MoO3
+  catalyst_type: ['bulk catalyst']
+  description: 'Pressing and sieving of 24.22 g, Pressing conditions: 3 t, 1 min'
+  elemental_composition:
+  - element: Mo
+  - element: O
+  form: 'sieve fraction 100-200 \u03BCm'
+  lab_id: '31013'
+  preparation_details:
+    preparation_method: spray-drying
+    preparator: S. Preparator
+  storing_institution: Fritz-Haber-Institut Berlin / Abteilung AC
+  surface:
+    method_surface_area_determination: BET
+    surface_area: 3.27
