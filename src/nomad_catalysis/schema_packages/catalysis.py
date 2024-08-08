@@ -108,7 +108,8 @@ def get_nested_attr(obj, attr_path):
 
 def set_nested_attr(obj, attr_path, value):
     """helper function to set nested attributes"""
-    for attr in attr_path.split('.'):
+    attrs = attr_path.split('.')
+    for attr in attrs[:-1]:
         obj = getattr(obj, attr, None)
         if obj is None:
             return None
@@ -397,7 +398,7 @@ class CatalystSample(CompositeSystem, Schema):
                         )
         else:
             logger.warn(
-                f'''Found no entries referencing this entry
+                f'''Found no activity entries referencing this entry
                 "{archive.metadata.entry_id}."'''
             )
 
@@ -1096,23 +1097,19 @@ class CatalyticReaction(CatalyticReaction_core, PlotSection, Schema):
         categories=[CatalysisElnCategory],
     )
 
-    reactor_setup = SubSection(
-        section_def=ReactorSetup, a_eln=ELNAnnotation(label='Reactor Setup')
-    )
-    reactor_filling = SubSection(
-        section_def=ReactorFilling, a_eln=ELNAnnotation(label='Reactor Filling')
-    )
+    reactor_setup = SubSection(section_def=ReactorSetup)
+    reactor_filling = SubSection(section_def=ReactorFilling)
 
     pretreatment = SubSection(
-        section_def=ReactionConditions_data, a_eln=ELNAnnotation(label='Pretreatment')
+        section_def=ReactionConditions_data, a_eln=ELNAnnotation(label='pretreatment')
     )
     reaction_conditions = SubSection(
         section_def=ReactionConditions_data,
-        a_eln=ELNAnnotation(label='Reaction Conditions'),
+        a_eln=ELNAnnotation(label='reaction conditions'),
     )
     results = Measurement.results.m_copy()
     results.section_def = CatalyticReactionData
-    results.a_eln = ELNAnnotation(label='Reaction Results')
+    results.a_eln = ELNAnnotation(label='reaction results')
     # results = SubSection(section_def=CatalyticReactionData,
     #           a_eln=ELNAnnotation(label='Reaction Results'))
 
