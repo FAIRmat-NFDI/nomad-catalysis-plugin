@@ -868,7 +868,7 @@ class ReactionConditionsData(PlotSection):
         description="""Similar to WHSV, the volumetric flow rate of the gas divided by
         the control volume. In heterogeneous catalysis the volume of the undiluted
         catalyst bed is conventionally used as the control volume. In 1/hour.""",
-        links='https://w3id.org/nfdi4cat/voc4cat_0007023',
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007023'],
         type=np.float64,
         shape=['*'],
         unit='1/hour',
@@ -879,7 +879,7 @@ class ReactionConditionsData(PlotSection):
 
     sampling_frequency = Quantity(  # maybe better use sampling interval?
         description='The number of measurement points per time.',
-        links='https://w3id.org/nfdi4cat/voc4cat_0007026',
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007026'],
         type=np.float64,
         shape=[],
         unit='Hz',
@@ -1176,6 +1176,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         of the measurement.
         """
         add_activity(archive)
+
         quantities_results_mapping = {
             'reaction_conditions.set_temperature': 'reaction_conditions.temperature',
             'reaction_conditions.set_pressure': 'reaction_conditions.pressure',
@@ -1191,7 +1192,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         }
 
         self.map_and_assign_attributes(
-            logger,
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.reaction,
         )
@@ -1224,6 +1224,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         sample_obj = self.samples[0].reference
 
         add_catalyst(archive)
+
         quantities_results_mapping = {
             'name': 'catalyst_name',
             'catalyst_type': 'catalyst_type',
@@ -1231,7 +1232,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'surface.surface_area': 'surface_area',
         }
         self.map_and_assign_attributes(
-            logger,
             mapping=quantities_results_mapping,
             obj=sample_obj,
             target=archive.results.properties.catalytic.catalyst,
