@@ -436,40 +436,40 @@ class ReactorFilling(ArchiveSection):
     catalyst_mass = Quantity(
         type=np.float64,
         shape=[],
-        unit='mg',
+        unit='kg',
         a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='mg'),
     )
 
     catalyst_density = Quantity(
         type=np.float64,
         shape=[],
-        unit='g/mL',
+        unit='kg/m**3',
         a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='g/mL'),
     )
 
-    apparent_catalyst_volume = Quantity(
+    catalyst_volume = Quantity(
         type=np.float64,
         shape=[],
-        unit='mL',
+        unit='m**3',
         a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='mL'),
     )
 
     catalyst_sievefraction_upper_limit = Quantity(
         type=np.float64,
         shape=[],
-        unit='micrometer',
+        unit='m',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='micrometer'),
     )
     catalyst_sievefraction_lower_limit = Quantity(
         type=np.float64,
         shape=[],
-        unit='micrometer',
+        unit='m',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='micrometer'),
     )
     particle_size = Quantity(
         type=np.float64,
         shape=[],
-        unit='micrometer',
+        unit='m',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='micrometer'),
     )
     diluent = Quantity(
@@ -487,17 +487,28 @@ class ReactorFilling(ArchiveSection):
     diluent_sievefraction_upper_limit = Quantity(
         type=np.float64,
         shape=[],
-        unit='micrometer',
+        unit='m',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='micrometer'),
     )
     diluent_sievefraction_lower_limit = Quantity(
         type=np.float64,
         shape=[],
-        unit='micrometer',
+        unit='m',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='micrometer'),
     )
 
     def normalize(self, archive, logger):
+        """The normalizer for the `ReactorFilling` class. It links the catalyst if a
+        sample was referenced in the sample subsection of the entry and
+        fills the catalyst name from the sample subsection.
+        If catalyst mass and density are given, the catalyst volume is calculated.
+
+        Args:
+            archive (EntryArchive): The archive containing the section that is being
+            normalized.
+            logger ('BoundLogger'): A structlog logger.
+        """
+
         super().normalize(archive, logger)
 
         if self.sample_section_reference is None:
@@ -510,11 +521,11 @@ class ReactorFilling(ArchiveSection):
             self.catalyst_name = self.sample_section_reference.name
 
         if (
-            self.apparent_catalyst_volume is None
+            self.catalyst_volume is None
             and self.catalyst_mass is not None
             and self.catalyst_density is not None
         ):
-            self.apparent_catalyst_volume = self.catalyst_mass / self.catalyst_density
+            self.catalyst_volume = self.catalyst_mass / self.catalyst_density
 
 
 class ReactorSetup(Instrument):
@@ -542,28 +553,28 @@ class ReactorSetup(Instrument):
     bed_length = Quantity(
         type=np.float64,
         shape=[],
-        unit='mm',
+        unit='m',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='mm'),
     )
 
     reactor_cross_section_area = Quantity(
         type=np.float64,
         shape=[],
-        unit='mm**2',
+        unit='m**2',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='mm**2'),
     )
 
     reactor_diameter = Quantity(
         type=np.float64,
         shape=[],
-        unit='mm',
+        unit='m',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='mm'),
     )
 
     reactor_volume = Quantity(
         type=np.float64,
         shape=[],
-        unit='ml',
+        unit='m**3',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='ml'),
     )
 
@@ -588,7 +599,7 @@ class Reagent(ArchiveSection):
     flow_rate = Quantity(
         type=np.float64,
         shape=['*'],
-        unit='mL/minutes',
+        unit='m**3/s',
         description='Flow rate of reactant in feed.',
         a_eln=ELNAnnotation(
             component='NumberEditQuantity', defaultDisplayUnit='mL/minute'
@@ -753,7 +764,7 @@ class RatesData(ArchiveSection):
     )
 
 
-class ProductData(Reagent, ArchiveSection):
+class ProductData(Reagent):
     m_def = Section(
         label_quantity='name',
         description="""
@@ -774,7 +785,7 @@ class ProductData(Reagent, ArchiveSection):
         description="""The selectivity of the product in the reaction mixture. The
         value is in %.""",
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
-        iris=['https://w3id.org/nfdi4cat/voc4cat_0000125'],
+        links=['https://w3id.org/nfdi4cat/voc4cat_0000125'],
     )
 
     product_yield = Quantity(
@@ -782,7 +793,7 @@ class ProductData(Reagent, ArchiveSection):
         shape=['*'],
         description="""
         The yield of the product in the reaction mixture, calculated as
-        conversion x selectivity.""",
+        conversion times selectivity.""",
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
 
@@ -818,36 +829,46 @@ class ReactionConditionsData(PlotSection):
     set_pressure = Quantity(
         type=np.float64,
         shape=['*'],
-        unit='bar',
+        unit='Pa',
         a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='bar'),
     )
 
     set_total_flow_rate = Quantity(
         type=np.float64,
         shape=['*'],
-        unit='mL/minute',
+        unit='m**3/s',
         a_eln=ELNAnnotation(
             component='NumberEditQuantity', defaultDisplayUnit='mL/minute'
         ),
     )
 
     weight_hourly_space_velocity = Quantity(
+        description=""" A measure for how often the atmosphere in the reactor is
+        replaced over the catalyst. Calculated as the total flow rate divided by the
+        catalyst mass.""",
         type=np.float64,
         shape=['*'],
-        unit='mL/(g*hour)',
+        unit='m**3/(kg*s)',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='mL/(g*hour)'),
     )
 
     contact_time = Quantity(
+        description="""The time the reactants are in contact with the catalyst. Also
+        the reciprocal of the weight hourly space velocity. Calculated as the catalyst
+        mass divided by the total flow rate.""",
         type=np.float64,
         shape=['*'],
-        unit='g*s/mL',
+        unit='kg*s/m**3',
         a_eln=ELNAnnotation(
             label='W|F', defaultDisplayUnit='g*s/mL', component='NumberEditQuantity'
         ),
     )
 
     gas_hourly_space_velocity = Quantity(
+        description="""Similar to WHSV, the volumetric flow rate of the gas divided by
+        the control volume. In heterogeneous catalysis the volume of the undiluted
+        catalyst bed is conventionally used as the control volume. In 1/hour.""",
+        links='https://w3id.org/nfdi4cat/voc4cat_0007023',
         type=np.float64,
         shape=['*'],
         unit='1/hour',
@@ -857,17 +878,20 @@ class ReactionConditionsData(PlotSection):
     runs = Quantity(type=np.float64, shape=['*'])
 
     sampling_frequency = Quantity(  # maybe better use sampling interval?
+        description='The number of measurement points per time.',
+        links='https://w3id.org/nfdi4cat/voc4cat_0007026',
         type=np.float64,
         shape=[],
         unit='Hz',
-        description='The number of measurement points per time.',
         a_eln=dict(component='NumberEditQuantity'),
     )
 
     time_on_stream = Quantity(
+        description="""The running time of the reaction since gas flow and measurement
+        started.""",
         type=np.float64,
         shape=['*'],
-        unit='hour',
+        unit='s',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='hour'),
     )
 
@@ -1037,14 +1061,14 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
     temperature = Quantity(
         type=np.float64,
         shape=['*'],
-        unit='°C',
+        unit='K',
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
 
     pressure = Quantity(
         type=np.float64,
         shape=['*'],
-        unit='bar',
+        unit='Pa',
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
 
@@ -1056,11 +1080,14 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
     time_on_stream = Quantity(
         type=np.float64,
         shape=['*'],
-        unit='hour',
-        a_eln=ELNAnnotation(component='NumberEditQuantity'),
+        unit='s',
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='hour'),
     )
 
     c_balance = Quantity(
+        definition="""Carbon balance is the ratio of detected carbon in the products
+        to the carbon in the feed. It is a measure of the quality of the gas analysis or
+        could indicate the amount of coke formation""",
         type=np.dtype(np.float64),
         shape=['*'],
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
@@ -1101,17 +1128,45 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     reactor_filling = SubSection(section_def=ReactorFilling)
 
     pretreatment = SubSection(
-        section_def=ReactionConditions_data, a_eln=ELNAnnotation(label='pretreatment')
+        section_def=ReactionConditionsData, a_eln=ELNAnnotation(label='pretreatment')
     )
     reaction_conditions = SubSection(
-        section_def=ReactionConditions_data,
+        section_def=ReactionConditionsData,
         a_eln=ELNAnnotation(label='reaction conditions'),
     )
-    results = Measurement.results.m_copy()
-    results.section_def = CatalyticReactionData
-    results.a_eln = ELNAnnotation(label='reaction results')
-    # results = SubSection(section_def=CatalyticReactionData,
-    #           a_eln=ELNAnnotation(label='Reaction Results'))
+    # results = Measurement.results.m_copy()
+    # results.section_def = CatalyticReactionData
+    # results.a_eln = ELNAnnotation(label='reaction results')
+    results = SubSection(
+        section_def=CatalyticReactionData, a_eln=ELNAnnotation(label='reaction results')
+    )
+
+    def map_and_assign_attributes(self, mapping, target, obj=None) -> None:
+        """
+        A function that loops through the mapping and assigns the values
+        Args:
+            mapping (dict): a dictionary with the mapping of the attributes.
+            target (object): the target object to which the attributes are assigned.
+            obj (object): the object from which the attributes are copied. By default if
+            None is defined, it will be set to self, but can also be a linked sample.
+        """
+        if obj is None:
+            obj = self
+        for ref_attr, reaction_attr in mapping.items():
+            value = get_nested_attr(obj, ref_attr)
+            if value is not None:
+                try:
+                    set_nested_attr(
+                        target,
+                        reaction_attr,
+                        value,
+                    )
+                except ValueError:
+                    set_nested_attr(
+                        target,
+                        reaction_attr,
+                        [value],
+                    )
 
     def populate_reactivity_info(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -1135,24 +1190,29 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'reaction_class': 'type',
         }
 
+        self.map_and_assign_attributes(
+            logger,
+            mapping=quantities_results_mapping,
+            target=archive.results.properties.catalytic.reaction,
+        )
         # Loop through the mapping and assign the values
-        for ref_attr, reaction_attr in quantities_results_mapping.items():
-            value = get_nested_attr(self, ref_attr)
-            if value is not None:
-                try:
-                    set_nested_attr(
-                        archive.results.properties.catalytic.reaction,
-                        reaction_attr,
-                        value,
-                    )
-                except ValueError:
-                    set_nested_attr(
-                        archive.results.properties.catalytic.reaction,
-                        reaction_attr,
-                        [value],
-                    )
-                except Exception:
-                    logger.warn(f'Failed to set {reaction_attr} with value {value}')
+        # for ref_attr, reaction_attr in quantities_results_mapping.items():
+        #     value = get_nested_attr(self, ref_attr)
+        #     if value is not None:
+        #         try:
+        #             set_nested_attr(
+        #                 archive.results.properties.catalytic.reaction,
+        #                 reaction_attr,
+        #                 value,
+        #             )
+        #         except ValueError:
+        #             set_nested_attr(
+        #                 archive.results.properties.catalytic.reaction,
+        #                 reaction_attr,
+        #                 [value],
+        #             )
+        #         except Exception:
+        #             logger.warn(f'Failed to set {reaction_attr} with value {value}')
 
     def populate_catalyst_sample_info(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -1170,25 +1230,30 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'preparation_details.preparation_method': 'preparation_method',
             'surface.surface_area': 'surface_area',
         }
-
+        self.map_and_assign_attributes(
+            logger,
+            mapping=quantities_results_mapping,
+            obj=sample_obj,
+            target=archive.results.properties.catalytic.catalyst,
+        )
         # Loop through the mapping and assign the values
-        for ref_attr, catalyst_attr in quantities_results_mapping.items():
-            value = get_nested_attr(sample_obj, ref_attr)
-            if value is not None:
-                try:
-                    setattr(
-                        archive.results.properties.catalytic.catalyst,
-                        catalyst_attr,
-                        value,
-                    )
-                except ValueError:
-                    setattr(
-                        archive.results.properties.catalytic.catalyst,
-                        catalyst_attr,
-                        [value],
-                    )
-                except Exception:
-                    logger.warn('Something else went wrong when trying setattr')
+        # for ref_attr, catalyst_attr in quantities_results_mapping.items():
+        #     value = get_nested_attr(sample_obj, ref_attr)
+        #     if value is not None:
+        #         try:
+        #             setattr(
+        #                 archive.results.properties.catalytic.catalyst,
+        #                 catalyst_attr,
+        #                 value,
+        #             )
+        #         except ValueError:
+        #             setattr(
+        #                 archive.results.properties.catalytic.catalyst,
+        #                 catalyst_attr,
+        #                 [value],
+        #             )
+        #         except Exception:
+        #             logger.warn('Something else went wrong when trying setattr')
 
         if self.samples[0].reference.name is not None:
             if not archive.results.material:
@@ -1198,13 +1263,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.samples[0].reference.elemental_composition is not None:
             if not archive.results.material:
                 archive.results.material = Material()
-        try:
+
             archive.results.material.elemental_composition = self.samples[
                 0
             ].reference.elemental_composition
-
-        except Exception as e:
-            logger.warn('Could not analyse elemental compostion.', exc_info=e)
 
         for i in self.samples[0].reference.elemental_composition:
             if i.element not in chemical_symbols:
@@ -1399,24 +1461,26 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     def normalize_reaction_conditions(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> None:
-        if self.reaction_conditions is not None:
-            reagents = []
-            for reagent in self.reaction_conditions.reagents:
-                if reagent.pure_component is None or reagent.pure_component == []:
-                    reagent.normalize(archive, logger)
-                reagents.append(reagent)
-            self.reaction_conditions.reagents = reagents
+        if self.reaction_conditions is None:
+            return
+        reagents = []
+        for reagent in self.reaction_conditions.reagents:
+            if reagent.pure_component is None or reagent.pure_component == []:
+                reagent.normalize(archive, logger)
+            reagents.append(reagent)
+        self.reaction_conditions.reagents = reagents
 
-            if self.reactor_filling is not None:
-                if (
-                    self.reaction_conditions.set_total_flow_rate is not None
-                    and self.reactor_filling.catalyst_mass is not None
-                    and self.reaction_conditions.weight_hourly_space_velocity is None
-                ):
-                    self.reaction_conditions.weight_hourly_space_velocity = (
-                        self.reaction_conditions.set_total_flow_rate
-                        / self.reactor_filling.catalyst_mass
-                    )
+        if self.reactor_filling is None:
+            return
+        if (
+            self.reaction_conditions.set_total_flow_rate is not None
+            and self.reactor_filling.catalyst_mass is not None
+            and self.reaction_conditions.weight_hourly_space_velocity is None
+        ):
+            self.reaction_conditions.weight_hourly_space_velocity = (
+                self.reaction_conditions.set_total_flow_rate
+                / self.reactor_filling.catalyst_mass
+            )
 
     def return_conversion_results(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -1488,8 +1552,16 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
         conversions_results = self.return_conversion_results(archive, logger)
 
-        product_results = []
+        add_activity(archive)
+
+        set_nested_attr(
+            archive.results.properties.catalytic.reaction,
+            'reactants',
+            conversions_results,
+        )
+
         if self.results[0].products is not None:
+            product_results = []
             for i in self.results[0].products:
                 if i.pure_component is not None:
                     if i.pure_component.iupac_name is not None:
@@ -1500,16 +1572,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     gas_concentration_out=i.gas_concentration_out,
                 )
                 product_results.append(prod)
-
-        add_activity(archive)
-
-        set_nested_attr(
-            archive.results.properties.catalytic.reaction,
-            'reactants',
-            conversions_results,
-        )
-        set_nested_attr(
-            archive.results.properties.catalytic.reaction, 'products', product_results
-        )
+            set_nested_attr(
+                archive.results.properties.catalytic.reaction,
+                'products',
+                product_results,
+            )
 
         self.plot_figures(archive, logger)
