@@ -517,7 +517,7 @@ class ReactorFilling(ArchiveSection):
             self.apparent_catalyst_volume = self.catalyst_mass / self.catalyst_density
 
 
-class ReactorSetup(Instrument, ArchiveSection):
+class ReactorSetup(Instrument):
     m_def = Section(
         description='Specification about the type of reactor used in the measurement.',
         label_quantity='name',
@@ -802,7 +802,7 @@ class ProductData(Reagent, ArchiveSection):
         super().normalize(archive, logger)
 
 
-class ReactionConditions_data(PlotSection, ArchiveSection):
+class ReactionConditionsData(PlotSection):
     m_def = Section(
         description="""
                     A class containing reaction conditions for a generic reaction."""
@@ -947,7 +947,7 @@ class ReactionConditions_data(PlotSection, ArchiveSection):
         self.plot_figures()
 
 
-class CatalyticReaction_core(Measurement, ArchiveSection):
+class CatalyticReactionCore(Measurement):
     reaction_class = Quantity(
         type=str,
         description="""
@@ -1033,7 +1033,7 @@ class CatalyticReaction_core(Measurement, ArchiveSection):
     )
 
 
-class CatalyticReactionData(PlotSection, MeasurementResult, ArchiveSection):
+class CatalyticReactionData(PlotSection, MeasurementResult):
     temperature = Quantity(
         type=np.float64,
         shape=['*'],
@@ -1078,7 +1078,7 @@ class CatalyticReactionData(PlotSection, MeasurementResult, ArchiveSection):
                     product.normalize(archive, logger)
 
 
-class CatalyticReaction(CatalyticReaction_core, PlotSection, Schema):
+class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     m_def = Section(
         label='Catalytic Reaction (filled manual/ by json directly)',
         a_eln=ELNAnnotation(
@@ -1420,7 +1420,7 @@ class CatalyticReaction(CatalyticReaction_core, PlotSection, Schema):
 
     def return_conversion_results(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
+    ) -> list:
         """
         This function returns the conversion results of the reactants for the results
         section of the archive.
@@ -1430,47 +1430,44 @@ class CatalyticReaction(CatalyticReaction_core, PlotSection, Schema):
 
         return: a list of the reactants with the conversion results.
         """
-        if self.results[0].reactants_conversions is not None:
-            conversions_results = []
-            for i in self.results[0].reactants_conversions:
-                if i.name in ['He', 'helium', 'Ar', 'argon', 'inert']:
+        if self.results[0].reactants_conversions is None:
+            return []
+        conversions_results = []
+        for i in self.results[0].reactants_conversions:
+            if i.name in ['He', 'helium', 'Ar', 'argon', 'inert']:
+                continue
+            for j in self.reaction_conditions.reagents:
+                if i.name != j.name:
                     continue
-                else:
-                    for j in self.reaction_conditions.reagents:
-                        if i.name == j.name:
-                            if j.pure_component.iupac_name is not None:
-                                i.name = j.pure_component.iupac_name
-                            if i.gas_concentration_in is None:
-                                i.gas_concentration_in = j.gas_concentration_in
-                            react = Reactant(
-                                name=i.name,
-                                conversion=i.conversion,
-                                gas_concentration_in=i.gas_concentration_in,
-                                gas_concentration_out=i.gas_concentration_out,
-                            )
-                            conversions_results.append(react)
-                            if (
-                                np.allclose(
-                                    i.gas_concentration_in, j.gas_concentration_in
-                                )
-                                is False
-                            ):
-                                logger.warn(f"""Gas concentration of '{i.name}' is not
-                                            the same in reaction_conditions and
-                                            results.reactants_conversions.""")
+                if j.pure_component.iupac_name is not None:
+                    i.name = j.pure_component.iupac_name
+                if i.gas_concentration_in is None:
+                    i.gas_concentration_in = j.gas_concentration_in
+                react = Reactant(
+                    name=i.name,
+                    conversion=i.conversion,
+                    gas_concentration_in=i.gas_concentration_in,
+                    gas_concentration_out=i.gas_concentration_out,
+                )
+                conversions_results.append(react)
+                if not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
+                    logger.warn(f"""Gas concentration of '{i.name}' is not
+                                the same in reaction_conditions and
+                                results.reactants_conversions.""")
         return conversions_results
 
     def check_sample(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
-        if self.samples:
-            if self.samples[0].lab_id is not None and self.samples[0].reference is None:
-                sample = CompositeSystemReference(
-                    lab_id=self.samples[0].lab_id, name=self.samples[0].name
-                )
-                sample.normalize(archive, logger)
-                self.samples = []
-                self.samples.append(sample)
-            if self.samples[0].reference is not None:
-                self.populate_catalyst_sample_info(archive, logger)
+        if not self.samples:
+            return
+        if self.samples[0].lab_id is not None and self.samples[0].reference is None:
+            sample = CompositeSystemReference(
+                lab_id=self.samples[0].lab_id, name=self.samples[0].name
+            )
+            sample.normalize(archive, logger)
+            self.samples = []
+            self.samples.append(sample)
+        if self.samples[0].reference is not None:
+            self.populate_catalyst_sample_info(archive, logger)
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         super().normalize(archive, logger)
