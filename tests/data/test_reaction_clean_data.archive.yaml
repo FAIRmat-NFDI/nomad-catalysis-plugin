@@ -1,0 +1,15 @@
+data:
+  m_def: nomad_catalysis.schema_packages.catalysis.CatalyticReaction
+  name: C2 oxidation performance MoO3 sample
+  reaction_class: oxidation
+  reaction_name: ethane oxidation
+  location: 'Fritz-Haber-Institut Berlin / Abteilung AC'
+  experimenter: Pierre Kube
+  samples:
+  - sample_name: MoO3
+    sample_id: 30
+  reactor_setup:
+    name: grimsel
+    type: 'fixed-bed reactor'
+    bed_length: 0.1
+  data_file: MoO3_C2_performance.xlsx
