@@ -370,8 +370,8 @@ class CatalystSample(CompositeSystem, Schema):
         """
 
         if self.lab_id is None:
-            logger.warning("""Sample contains no lab_id, automatic linking of measurements
-                         to this sample entry does not work.""")
+            logger.warning("""Sample contains no lab_id, automatic linking of
+                         measurements to this sample entry does not work.""")
 
         from nomad.search import MetadataPagination, search
 
