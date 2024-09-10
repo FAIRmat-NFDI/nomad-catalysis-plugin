@@ -1,0 +1,37 @@
+data:
+  m_def: nomad_catalysis.schema_packages.catalysis.CatalyticReaction
+  name: methanol dehydrogenation 30
+  reaction_class: dehydrogenation
+  reaction_name: methanol dehydrogenation
+  location: 'Fritz-Haber-Institut Berlin / Abteilung AC'
+  experimenter: Julia Schumann
+  samples:
+  - sample_name: methanol dehydrogenation 30
+    sample_id: 30
+  reactor_setup:
+    name: chinchen
+    type: 'fixed-bed reactor'
+    bed_length: 0.1
+  reaction_conditions:
+    reagents:
+    - name: nitrogen
+      gas_concentration_in: [0.802]
+    - name: methanol
+      gas_concentration_in: [0.198]
+    set_pressure: [1.02732]
+    set_temperature: [473.0]
+    gas_hourly_space_velocity: [10.0]
+  reactor_filling:
+    catalyst_name: "Cat_M_000009"
+    particle_size: 250.0
+  results:
+  - products:
+    - name: carbon monoxide
+      selectivity: [67.0]
+    - name: carbon dioxide
+      selectivity: [33.0]
+    - name: methane
+      selectivity: [0.0]
+    reactants_conversions:
+    - name: methanol
+      conversion: [0.04]
