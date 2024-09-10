@@ -116,6 +116,35 @@ def set_nested_attr(obj, attr_path, value):
     setattr(obj, attrs[-1], value)
 
 
+def map_and_assign_attributes(self, mapping, target, obj=None) -> None:
+    """
+    A helper function that loops through a mapping and assigns the values to
+    a target object.
+    Args:
+        mapping (dict): a dictionary with the mapping of the attributes.
+        target (object): the target object to which the attributes are assigned.
+        obj (object): the object from which the attributes are copied. By default if
+        None is defined, it will be set to self, but can also be a linked sample.
+    """
+    if obj is None:
+        obj = self
+    for ref_attr, reaction_attr in mapping.items():
+        value = get_nested_attr(obj, ref_attr)
+        if value is not None:
+            try:
+                set_nested_attr(
+                    target,
+                    reaction_attr,
+                    value,
+                )
+            except ValueError:  # workaround for wrong type in yaml schema
+                set_nested_attr(
+                    target,
+                    reaction_attr,
+                    [value],
+                )
+
+
 class Preparation(ArchiveSection):
     m_def = Section(
         description="""A section for general information about the
@@ -217,7 +246,7 @@ class SurfaceArea(ArchiveSection):
         type=np.float64,
         shape=[],
         description="""
-        The percentage of total atoms which are surface atoms of a particle as a measure
+        The fraction of total atoms which are surface atoms of a particle as a measure
         for the accessibility of the atoms.
         """,
         a_eln=dict(component='NumberEditQuantity'),
@@ -303,8 +332,6 @@ class CatalystSample(CompositeSystem, Schema):
         archive of the entry.
         """
 
-        sample_obj = self
-
         add_catalyst(archive)
         quantities_results_mapping = {
             'name': 'catalyst_name',
@@ -313,26 +340,18 @@ class CatalystSample(CompositeSystem, Schema):
             'surface.surface_area': 'surface_area',
             'surface.method_surface_area_determination': 'characterization_methods',
         }
+        map_and_assign_attributes(
+            self,
+            mapping=quantities_results_mapping,
+            target=archive.results.properties.catalytic.catalyst,
+        )
 
-        for ref_attr, catalyst_attr in quantities_results_mapping.items():
-            value = get_nested_attr(sample_obj, ref_attr)
-            if value is not None:
-                try:
-                    setattr(
-                        archive.results.properties.catalytic.catalyst,
-                        catalyst_attr,
-                        value,
-                    )
-                except ValueError:  # workaround for wrong type in yaml schema
-                    setattr(
-                        archive.results.properties.catalytic.catalyst,
-                        catalyst_attr,
-                        [value],
-                    )
-                except Exception as e:
-                    logger.warn(
-                        f'Error while copying "{ref_attr}" to results: {e}', exc_info=e
-                    )
+        name_material_mapping = {'name': 'material_name'}
+        map_and_assign_attributes(
+            self,
+            mapping=name_material_mapping,
+            target=archive.results.material,
+        )
 
     def add_referencing_methods(
         self, archive: 'EntryArchive', logger: 'BoundLogger', number=10
@@ -351,7 +370,7 @@ class CatalystSample(CompositeSystem, Schema):
         """
 
         if self.lab_id is None:
-            logger.warn("""Sample contains no lab_id, automatic linking of measurements
+            logger.warning("""Sample contains no lab_id, automatic linking of measurements
                          to this sample entry does not work.""")
 
         from nomad.search import MetadataPagination, search
@@ -380,7 +399,7 @@ class CatalystSample(CompositeSystem, Schema):
                     methods.append(method)
 
             if search_result.pagination.total > number:
-                logger.warn(
+                logger.warning(
                     f'Found {search_result.pagination.total} entries with entry_id:'
                     f' "{archive.metadata.entry_id}". Will only check the the first '
                     f'"{number}" activity entries found for activity methods.'
@@ -397,7 +416,7 @@ class CatalystSample(CompositeSystem, Schema):
                             )
                         )
         else:
-            logger.warn(
+            logger.warning(
                 f'''Found no activity entries referencing this entry
                 "{archive.metadata.entry_id}."'''
             )
@@ -623,6 +642,12 @@ class Reagent(ArchiveSection):
             logger ('BoundLogger'): A structlog logger.
         """
         super().normalize(archive, logger)
+
+        if self.gas_concentration_in is not None and self.gas_concentration_in > 1:
+            logger.error(
+                f'Gas concentration for reagent "{self.name}" is above 1, '
+                f'but should be given as fraction.'
+            )
 
         if self.name is None:
             return
@@ -877,7 +902,7 @@ class ReactionConditionsData(PlotSection):
 
     runs = Quantity(type=np.float64, shape=['*'])
 
-    sampling_frequency = Quantity(  # maybe better use sampling interval?
+    sampling_frequency = Quantity(
         description='The number of measurement points per time.',
         links=['https://w3id.org/nfdi4cat/voc4cat_0007026'],
         type=np.float64,
@@ -1107,7 +1132,7 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
 
 class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     m_def = Section(
-        label='Catalytic Reaction (filled manual/ by json directly)',
+        label='Catalytic Reaction',
         a_eln=ELNAnnotation(
             properties=dict(
                 order=[
@@ -1134,39 +1159,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         section_def=ReactionConditionsData,
         a_eln=ELNAnnotation(label='reaction conditions'),
     )
-    # results = Measurement.results.m_copy()
-    # results.section_def = CatalyticReactionData
-    # results.a_eln = ELNAnnotation(label='reaction results')
+
     results = SubSection(
         section_def=CatalyticReactionData, a_eln=ELNAnnotation(label='reaction results')
     )
-
-    def map_and_assign_attributes(self, mapping, target, obj=None) -> None:
-        """
-        A function that loops through the mapping and assigns the values
-        Args:
-            mapping (dict): a dictionary with the mapping of the attributes.
-            target (object): the target object to which the attributes are assigned.
-            obj (object): the object from which the attributes are copied. By default if
-            None is defined, it will be set to self, but can also be a linked sample.
-        """
-        if obj is None:
-            obj = self
-        for ref_attr, reaction_attr in mapping.items():
-            value = get_nested_attr(obj, ref_attr)
-            if value is not None:
-                try:
-                    set_nested_attr(
-                        target,
-                        reaction_attr,
-                        value,
-                    )
-                except ValueError:
-                    set_nested_attr(
-                        target,
-                        reaction_attr,
-                        [value],
-                    )
 
     def populate_reactivity_info(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -1191,28 +1187,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'reaction_class': 'type',
         }
 
-        self.map_and_assign_attributes(
+        map_and_assign_attributes(
+            self,
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.reaction,
         )
-        # Loop through the mapping and assign the values
-        # for ref_attr, reaction_attr in quantities_results_mapping.items():
-        #     value = get_nested_attr(self, ref_attr)
-        #     if value is not None:
-        #         try:
-        #             set_nested_attr(
-        #                 archive.results.properties.catalytic.reaction,
-        #                 reaction_attr,
-        #                 value,
-        #             )
-        #         except ValueError:
-        #             set_nested_attr(
-        #                 archive.results.properties.catalytic.reaction,
-        #                 reaction_attr,
-        #                 [value],
-        #             )
-        #         except Exception:
-        #             logger.warn(f'Failed to set {reaction_attr} with value {value}')
 
     def populate_catalyst_sample_info(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -1231,34 +1210,24 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'preparation_details.preparation_method': 'preparation_method',
             'surface.surface_area': 'surface_area',
         }
-        self.map_and_assign_attributes(
+        map_and_assign_attributes(
+            self,
             mapping=quantities_results_mapping,
             obj=sample_obj,
             target=archive.results.properties.catalytic.catalyst,
         )
-        # Loop through the mapping and assign the values
-        # for ref_attr, catalyst_attr in quantities_results_mapping.items():
-        #     value = get_nested_attr(sample_obj, ref_attr)
-        #     if value is not None:
-        #         try:
-        #             setattr(
-        #                 archive.results.properties.catalytic.catalyst,
-        #                 catalyst_attr,
-        #                 value,
-        #             )
-        #         except ValueError:
-        #             setattr(
-        #                 archive.results.properties.catalytic.catalyst,
-        #                 catalyst_attr,
-        #                 [value],
-        #             )
-        #         except Exception:
-        #             logger.warn('Something else went wrong when trying setattr')
 
         if self.samples[0].reference.name is not None:
             if not archive.results.material:
                 archive.results.material = Material()
-            archive.results.material.material_name = self.samples[0].reference.name
+            name_comb = ''
+            for i in self.samples:
+                if i.reference.name is not None:
+                    if len(name_comb) != 0:
+                        name_comb += '/ '
+                    name_comb += str(i.reference.name)
+            archive.results.material.material_name = name_comb
+            # archive.results.material.material_name = self.samples[0].reference.name
 
         if self.samples[0].reference.elemental_composition is not None:
             if not archive.results.material:
@@ -1270,7 +1239,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         for i in self.samples[0].reference.elemental_composition:
             if i.element not in chemical_symbols:
-                logger.warn(
+                logger.warning(
                     f"'{i.element}' is not a valid element symbol and this "
                     'elemental_composition section will be ignored.'
                 )
@@ -1324,10 +1293,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         """
         if not self.results[0].reactants_conversions:
-            logger.warn('no conversion data found, so no plot is created')
+            logger.warning('no conversion data found, so no plot is created')
             return
         if not self.results[0].reactants_conversions[0].conversion:
-            logger.warn('no conversion data found, so no plot is created')
+            logger.warning('no conversion data found, so no plot is created')
             return
         fig1 = go.Figure()
         for i, c in enumerate(self.results[0].reactants_conversions):
@@ -1387,7 +1356,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             title = var
             y, y_text = self.get_y_data(plot_quantities_dict, var)
             if y is None:
-                logger.warn(f"no '{var}' data found, so no plot is created")
+                logger.warning(f"no '{var}' data found, so no plot is created")
                 continue
             y.to(unit_dict[var])
             fig = self.single_plot(x, x_text, y.to(unit_dict[var]), y_text, title)
@@ -1470,10 +1439,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             reagents.append(reagent)
         self.reaction_conditions.reagents = reagents
 
-        if self.reactor_filling is None:
-            return
         if (
-            self.reaction_conditions.set_total_flow_rate is not None
+            self.reactor_filling is not None
+            and self.reaction_conditions.set_total_flow_rate is not None
             and self.reactor_filling.catalyst_mass is not None
             and self.reaction_conditions.weight_hourly_space_velocity is None
         ):
@@ -1515,7 +1483,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 )
                 conversions_results.append(react)
                 if not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
-                    logger.warn(f"""Gas concentration of '{i.name}' is not
+                    logger.warning(f"""Gas concentration of '{i.name}' is not
                                 the same in reaction_conditions and
                                 results.reactants_conversions.""")
         return conversions_results
@@ -1546,7 +1514,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         self.results[0].normalize(archive, logger)
         if len(self.results) > 1:
-            logger.warn(
+            logger.warning(
                 """Several instances of results found. Only the first result
                 is considered for normalization."""
             )
@@ -1563,9 +1531,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.results[0].products is not None:
             product_results = []
             for i in self.results[0].products:
-                if i.pure_component is not None:
-                    if i.pure_component.iupac_name is not None:
-                        i.name = i.pure_component.iupac_name
+                if (
+                    i.pure_component is not None
+                    and i.pure_component.iupac_name is not None
+                ):
+                    i.name = i.pure_component.iupac_name
                 prod = Product(
                     name=i.name,
                     selectivity=i.selectivity,

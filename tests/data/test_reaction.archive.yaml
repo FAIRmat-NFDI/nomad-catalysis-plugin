@@ -5,6 +5,9 @@ data:
   reaction_name: methanol dehydrogenation
   location: 'Fritz-Haber-Institut Berlin / Abteilung AC'
   experimenter: Julia Schumann
+  samples:
+  - sample_name: methanol dehydrogenation 30
+    sample_id: 30
   reactor_setup:
     name: chinchen
     type: 'fixed-bed reactor'
@@ -12,9 +15,9 @@ data:
   reaction_conditions:
     reagents:
     - name: nitrogen
-      gas_concentration_in: [80.2]
+      gas_concentration_in: [0.802]
     - name: methanol
-      gas_concentration_in: [19.8]
+      gas_concentration_in: [0.198]
     set_pressure: [1.02732]
     set_temperature: [473.0]
     gas_hourly_space_velocity: [10.0]
