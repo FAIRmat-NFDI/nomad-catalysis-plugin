@@ -1,0 +1,7 @@
+data:
+  m_def: nomad_catalysis.schema_packages.catalysis.CatalyticReaction
+  name: haber test measurement
+  reaction_type: combustion
+  reaction_name: ammonia decomposition
+  location: 'Fritz-Haber-Institut Berlin / Abteilung AC'
+  data_file: '2022-11-21_10.56.35_S36891_B. Alkan_.h5'

@@ -12,7 +12,7 @@ from nomad.datamodel.metainfo.annotations import ELNAnnotation
 from nomad.datamodel.metainfo.basesections import (
     CompositeSystem,
     CompositeSystemReference,
-    Instrument,
+    InstrumentReference,
     Measurement,
     MeasurementResult,
     PubChemPureSubstanceSection,
@@ -102,10 +102,12 @@ def get_nested_attr(obj, attr_path):
     """helper function to retrieve nested attributes"""
     for attr in attr_path.split('.'):
         obj = getattr(obj, attr, None)
-        if isinstance(obj, list):  # needed for repeating subsection, e.g. results
-            obj = obj[0]
         if obj is None:
             return None
+        if isinstance(obj, list):  # needed for repeating subsection, e.g. results
+            if obj == []:
+                return None
+            obj = obj[0]
     return obj
 
 
@@ -134,7 +136,7 @@ def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
     for ref_attr, reaction_attr in mapping.items():
         value = get_nested_attr(obj, ref_attr)
         if value is not None:
-            if len(value) > 300:
+            if isinstance(value, list) and len(value) > 300:
                 logger.warning(
                     f"""The quantity '{ref_attr}' is large and will be reduced for
                     the archive results."""
@@ -567,7 +569,7 @@ class ReactorFilling(ArchiveSection):
             self.catalyst_volume = self.catalyst_mass / self.catalyst_density
 
 
-class ReactorSetup(Instrument):
+class ReactorSetup(InstrumentReference):
     m_def = Section(
         description='Specification about the type of reactor used in the measurement.',
         label_quantity='name',
@@ -1176,7 +1178,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         a_browser=dict(adaptor='RawFileAdaptor'),
     )
 
-    reactor_setup = SubSection(section_def=ReactorSetup)
+    instruments = SubSection(
+        section_def=ReactorSetup, a_eln=ELNAnnotation(label='reactor setup')
+    )
     reactor_filling = SubSection(section_def=ReactorFilling)
 
     pretreatment = SubSection(
@@ -1392,6 +1396,16 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             sample.lab_id = str(data['sample_id'][0])
         if 'catalyst' in data.columns:  # is not None:
             sample.name = str(data['catalyst'][0])
+        if sample != []:
+            from nomad.datamodel.context import ClientContext
+
+            if isinstance(archive.m_context, ClientContext):
+                pass
+            else:
+                sample.normalize(archive, logger)
+                samples = []
+                samples.append(sample)
+                self.samples = samples
 
         for reagent in reagents:
             reagent.normalize(archive, logger)
@@ -1429,7 +1443,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         pretreatment = ReactionConditionsData()
         sample = CompositeSystemReference()
         conversions = []
-        conversions2 = []
         rates = []
         reagents = []
         pre_reagents = []
@@ -1444,7 +1457,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         reactor_setup.reactor_type = 'plug flow reactor'
         reactor_setup.reactor_volume = header['Bulk volume [mln]']
         reactor_setup.reactor_cross_section_area = (
-            header['Inner diameter of reactor (D) [mm]'] / 2
+            header['Inner diameter of reactor (D) [mm]'] * ureg.millimeter / 2
         ) ** 2 * np.pi
         reactor_setup.reactor_diameter = (
             header['Inner diameter of reactor (D) [mm]'] * ureg.millimeter
@@ -1504,32 +1517,40 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if col.endswith('Target Calculated Realtime Value [mln|min]'):
                 name_split = col.split('(')
                 gas_name = name_split[1].split(')')
-                if 'NH3' in gas_name:
+                if 'NH3_High' in gas_name:
                     reagent = Reagent(
-                        name='NH3',
+                        name='ammonia',
                         flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
+                        gas_concentration_in=[1.0] * len(analysed[col]),
                     )
-                    reagents.append(reagent)
+                    if reagent.flow_rate.any() > 0.0:
+                        reagents.append(reagent)
+                elif 'NH3_Low' in gas_name:
+                    reagent = Reagent(
+                        name='ammonia',
+                        flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
+                        gas_concentration_in=[1.0] * len(analysed[col]),
+                    )
+                    if reagent.flow_rate.any() > 0.0:
+                        reagents.append(reagent)
                 else:
                     reagent = Reagent(
                         name=gas_name[0],
                         flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
                     )
-                    reagents.append(reagent)
+                    if reagent.flow_rate.any() > 0.0:
+                        reagents.append(reagent)
+
         feed.reagents = reagents
         # feed.flow_rates_total = analysed['MassFlow (Total Gas) [mln|min]']
         conversion = ReactantData(
             name='ammonia',
             conversion=np.nan_to_num(analysed['NH3 Conversion [%]']),
+            conversion_type='reactant-based conversion',
             gas_concentration_in=[1] * len(analysed['NH3 Conversion [%]']),
         )
         conversions.append(conversion)
-        conversion2 = Reactant(
-            name='ammonia',
-            conversion=analysed['NH3 Conversion [%]'],
-            gas_concentration_in=[1] * len(analysed['NH3 Conversion [%]']),
-        )
-        conversions2.append(conversion2)
+
         rate = RatesData(
             name='molecular hydrogen',
             reaction_rate=np.nan_to_num(
@@ -1559,21 +1580,30 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         # sample.name = 'catalyst'
         sample.lab_id = str(data['Header']['Header']['SampleID'][0])
-        sample.normalize(archive, logger)
+        from nomad.datamodel.context import ClientContext
+
+        if isinstance(archive.m_context, ClientContext):
+            pass
+        else:
+            sample.normalize(archive, logger)
+            self.samples.append(sample)
+
         self.results = []
         self.results.append(cat_data)
         self.reaction_conditions = feed
-        self.reactor_setup = reactor_setup
+        self.instruments.append(reactor_setup)
         self.pretreatment = pretreatment
         self.reactor_filling = reactor_filling
-
-        self.samples.append(sample)
 
         products_results = []
         for i in ['molecular nitrogen', 'molecular hydrogen']:
             product = ProductData(name=i)
             products_results.append(product)
         self.results[0].products = products_results
+
+        self.reaction_name = 'ammonia decomposition'
+        self.reaction_type = 'cracking'
+        self.location = 'Fritz-Haber-Institut Berlin / Abteilung AC'
 
     def check_and_read_data_file(self, archive, logger):
         """This functions checks the format of the data file and assigns the right
@@ -1935,9 +1965,12 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         f"""Large arrays in {react.name}, reducing to store in the
                         archive."""
                     )
-                    react.conversion = i.conversion[50::100]
-                    react.gas_concentration_in = i.gas_concentration_in[50::100]
-                    react.gas_concentration_out = i.gas_concentration_out[50::100]
+                    if react.conversion is not None:
+                        react.conversion = i.conversion[50::100]
+                    if react.gas_concentration_in is not None:
+                        react.gas_concentration_in = i.gas_concentration_in[50::100]
+                    if react.gas_concentration_out is not None:
+                        react.gas_concentration_out = i.gas_concentration_out[50::100]
 
                 conversions_results.append(react)
 
@@ -1964,7 +1997,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             logger.info('Data file read successfully.')
         self.normalize_reaction_conditions(archive, logger)
 
-        self.populate_reactivity_info(archive, logger)
+        if self.reaction_conditions is not None or self.results is not None:
+            self.populate_reactivity_info(archive, logger)
         self.check_sample(archive, logger)
 
         if self.results is None or self.results == []:
