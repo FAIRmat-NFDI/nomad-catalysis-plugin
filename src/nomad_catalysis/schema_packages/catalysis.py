@@ -58,6 +58,9 @@ class CatalysisElnCategory(EntryDataCategory):
     m_def = Category(label='Catalysis', categories=[EntryDataCategory])
 
 
+threshold_datapoints = 300
+
+
 def add_catalyst(archive: 'EntryArchive') -> None:
     """
     Adds metainfo structure for catalysis data to the results section of the supplied
@@ -136,7 +139,7 @@ def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
     for ref_attr, reaction_attr in mapping.items():
         value = get_nested_attr(obj, ref_attr)
         if value is not None:
-            if isinstance(value, list) and len(value) > 300:
+            if isinstance(value, list) and len(value) > threshold_datapoints:
                 logger.warning(
                     f"""The quantity '{ref_attr}' is large and will be reduced for
                     the archive results."""
@@ -1195,7 +1198,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         section_def=CatalyticReactionData, a_eln=ELNAnnotation(label='reaction results')
     )
 
-    def read_clean_data(self, archive, logger):
+    def read_clean_data(self, archive, logger):  # noqa: PLR0912, PLR0915
         """
         This function reads the data from the data file and assigns the data to the
         corresponding attributes of the class.
@@ -1229,7 +1232,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if len(data[col]) < 1:
                 continue
             col_split = col.split(' ')
-            if len(col_split) < 2:
+            if len(col_split) < 2:  # noqa: PLR2004
                 continue
 
             if len(data[col]) > number_of_runs:
@@ -1306,7 +1309,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 )
                 rates.append(rate)
 
-            if len(col_split) < 3 or col_split[2] != '(%)':
+            if len(col_split) < 3 or col_split[2] != '(%)':  # noqa: PLR2004
                 continue
 
             if col_split[0] == 'x_p':  # conversion, based on product detection
@@ -1328,7 +1331,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 conversions.append(conversion)
 
             if col_split[0] == 'x_r':  # conversion, based on reactant detection
-                # if data['x '+col_split[1]+' (%)'] is not None:
                 try:
                     conversion = ReactantData(
                         name=col_split[1],
@@ -1347,8 +1349,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         conversion_reactant_based=np.nan_to_num(data[col]),
                         gas_concentration_in=np.nan_to_num(data['x ' + col_split[1]]),
                     )
-                except Exception:
-                    logger.warn('Something went wrong with reading the x_r column.')
 
                 for i, p in enumerate(conversions):
                     if p.name == col_split[1]:
@@ -1425,7 +1425,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.reactor_filling is None and reactor_filling is not None:
             self.reactor_filling = reactor_filling
 
-    def read_haber_data(self, archive, logger):
+    def read_haber_data(self, archive, logger):  # noqa: PLR0912, PLR0915
         """
         This function reads the h5 data from the data file and assigns the data to the
         corresponding attributes of the class.
@@ -1922,7 +1922,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         It checks if the the name of the reactant is not in the list of the inert gases
         and if the name is in the list of the reaction_conditions.reagents, it will try
         to replace the name of the reactant with the IUPAC name of the reagent. If the
-        arrays are larger than 300, it will reduce the size to store in the archive.
+        arrays are larger than 300 (threshold_datapoints), it will reduce the size to
+        store in the archive.
 
         return: a list of the reactants with the conversion results.
         """
@@ -1951,14 +1952,17 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 )
 
                 if (
-                    (react.conversion is not None and len(react.conversion) > 300)
+                    (
+                        react.conversion is not None
+                        and len(react.conversion) > threshold_datapoints
+                    )
                     or (
                         react.gas_concentration_in is not None
-                        and len(react.gas_concentration_in) > 300
+                        and len(react.gas_concentration_in) > threshold_datapoints
                     )
                     or (
                         react.gas_concentration_out is not None
-                        and len(react.gas_concentration_out) > 300
+                        and len(react.gas_concentration_out) > threshold_datapoints
                     )
                 ):
                     logger.warning(
@@ -2033,9 +2037,12 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     selectivity=i.selectivity,
                     gas_concentration_out=i.gas_concentration_out,
                 )
-                if (i.selectivity is not None and len(i.selectivity) > 300) or (
+                if (
+                    i.selectivity is not None
+                    and len(i.selectivity) > threshold_datapoints
+                ) or (
                     i.gas_concentration_out is not None
-                    and len(i.gas_concentration_out) > 300
+                    and len(i.gas_concentration_out) > threshold_datapoints
                 ):
                     logger.warning(
                         f'Large arrays in {i.name}, reducing to store in the archive.'
