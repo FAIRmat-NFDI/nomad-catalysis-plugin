@@ -12,7 +12,7 @@ from nomad.datamodel.metainfo.annotations import ELNAnnotation
 from nomad.datamodel.metainfo.basesections import (
     CompositeSystem,
     CompositeSystemReference,
-    Instrument,
+    InstrumentReference,
     Measurement,
     MeasurementResult,
     PubChemPureSubstanceSection,
@@ -36,6 +36,7 @@ from nomad.metainfo import (
     SubSection,
 )
 from nomad.metainfo.metainfo import Category
+from nomad.units import ureg
 
 if TYPE_CHECKING:
     from nomad.datamodel.datamodel import (
@@ -55,6 +56,9 @@ m_package = SchemaPackage()
 
 class CatalysisElnCategory(EntryDataCategory):
     m_def = Category(label='Catalysis', categories=[EntryDataCategory])
+
+
+threshold_datapoints = 300
 
 
 def add_catalyst(archive: 'EntryArchive') -> None:
@@ -103,6 +107,10 @@ def get_nested_attr(obj, attr_path):
         obj = getattr(obj, attr, None)
         if obj is None:
             return None
+        if isinstance(obj, list):  # needed for repeating subsection, e.g. results
+            if obj == []:
+                return None
+            obj = obj[0]
     return obj
 
 
@@ -116,7 +124,7 @@ def set_nested_attr(obj, attr_path, value):
     setattr(obj, attrs[-1], value)
 
 
-def map_and_assign_attributes(self, mapping, target, obj=None) -> None:
+def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
     """
     A helper function that loops through a mapping and assigns the values to
     a target object.
@@ -131,18 +139,33 @@ def map_and_assign_attributes(self, mapping, target, obj=None) -> None:
     for ref_attr, reaction_attr in mapping.items():
         value = get_nested_attr(obj, ref_attr)
         if value is not None:
+            if isinstance(value, list) and len(value) > threshold_datapoints:
+                logger.warning(
+                    f"""The quantity '{ref_attr}' is large and will be reduced for
+                    the archive results."""
+                )
+                value = value[50::100]
             try:
                 set_nested_attr(
                     target,
                     reaction_attr,
                     value,
                 )
+                logger.info(f""" Mapped attribute '{ref_attr}' into results.""")
             except ValueError:  # workaround for wrong type in yaml schema
                 set_nested_attr(
                     target,
                     reaction_attr,
                     [value],
                 )
+
+
+def check_if_concentration_in_percentage(self, conc_array, logger) -> None:
+    if conc_array is not None and any(y > 1.0 for y in conc_array):
+        logger.error(
+            f'Gas concentration for reagent "{self.name}" is above 1, '
+            f'but should be given as fraction.'
+        )
 
 
 class Preparation(ArchiveSection):
@@ -342,6 +365,7 @@ class CatalystSample(CompositeSystem, Schema):
         }
         map_and_assign_attributes(
             self,
+            logger,
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.catalyst,
         )
@@ -349,6 +373,7 @@ class CatalystSample(CompositeSystem, Schema):
         name_material_mapping = {'name': 'material_name'}
         map_and_assign_attributes(
             self,
+            logger,
             mapping=name_material_mapping,
             target=archive.results.material,
         )
@@ -547,7 +572,7 @@ class ReactorFilling(ArchiveSection):
             self.catalyst_volume = self.catalyst_mass / self.catalyst_density
 
 
-class ReactorSetup(Instrument):
+class ReactorSetup(InstrumentReference):
     m_def = Section(
         description='Specification about the type of reactor used in the measurement.',
         label_quantity='name',
@@ -643,11 +668,7 @@ class Reagent(ArchiveSection):
         """
         super().normalize(archive, logger)
 
-        if self.gas_concentration_in is not None and self.gas_concentration_in > 1:
-            logger.error(
-                f'Gas concentration for reagent "{self.name}" is above 1, '
-                f'but should be given as fraction.'
-            )
+        check_if_concentration_in_percentage(self, self.gas_concentration_in, logger)
 
         if self.name is None:
             return
@@ -997,7 +1018,7 @@ class ReactionConditionsData(PlotSection):
 
 
 class CatalyticReactionCore(Measurement):
-    reaction_class = Quantity(
+    reaction_type = Quantity(
         type=str,
         description="""
         A highlevel classification of the studied reaction.
@@ -1139,7 +1160,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     'name',
                     'data_file',
                     'reaction_name',
-                    'reaction_class',
+                    'reaction_type',
                     'experimenter',
                     'location',
                     'experiment_handbook',
@@ -1148,8 +1169,21 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         ),
         categories=[CatalysisElnCategory],
     )
+    data_file = Quantity(
+        type=str,
+        description="""
+        A file that contains reaction conditions and results of a catalytic measurement.
+        Supported file formats are .csv or .xlsx with columns matching the clean data
+        standards and hf5 files generated by the automated haber reactor at the FHI.
+        More details can be found in the documentation of the nomad-catalysis-plugin.
+        """,
+        a_eln=dict(component='FileEditQuantity'),
+        a_browser=dict(adaptor='RawFileAdaptor'),
+    )
 
-    reactor_setup = SubSection(section_def=ReactorSetup)
+    instruments = SubSection(
+        section_def=ReactorSetup, a_eln=ELNAnnotation(label='reactor setup')
+    )
     reactor_filling = SubSection(section_def=ReactorFilling)
 
     pretreatment = SubSection(
@@ -1163,6 +1197,432 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     results = SubSection(
         section_def=CatalyticReactionData, a_eln=ELNAnnotation(label='reaction results')
     )
+
+    def read_clean_data(self, archive, logger):  # noqa: PLR0912, PLR0915
+        """
+        This function reads the data from the data file and assigns the data to the
+        corresponding attributes of the class.
+        """
+        if self.data_file.endswith('.csv'):
+            with archive.m_context.raw_file(self.data_file) as f:
+                import pandas as pd
+
+                data = pd.read_csv(f.name).dropna(axis=1, how='all')
+        elif self.data_file.endswith('.xlsx'):
+            with archive.m_context.raw_file(self.data_file) as f:
+                import pandas as pd
+
+                data = pd.read_excel(f.name, sheet_name=0)
+
+        data.dropna(axis=1, how='all', inplace=True)
+        feed = ReactionConditionsData()
+        reactor_filling = ReactorFilling()
+        cat_data = CatalyticReactionData()
+        sample = CompositeSystemReference()
+        reagents = []
+        reagent_names = []
+        products = []
+        product_names = []
+        conversions = []
+        conversion_names = []
+        rates = []
+        number_of_runs = 0
+
+        for col in data.columns:
+            if len(data[col]) < 1:
+                continue
+            col_split = col.split(' ')
+            if len(col_split) < 2:  # noqa: PLR2004
+                continue
+
+            number_of_runs = max(number_of_runs, len(data[col]))
+
+            if col_split[0] == 'step':
+                feed.runs = data['step']
+                cat_data.runs = data['step']
+
+            if col_split[0] == 'x':
+                reagent = Reagent(
+                    name=col_split[1], gas_concentration_in=data[col] / 100
+                )
+                reagent_names.append(col_split[1])
+                reagents.append(reagent)
+
+            if col_split[0] == 'mass':
+                catalyst_mass_vector = data[col]
+                if '(g)' in col_split[1]:
+                    reactor_filling.catalyst_mass = catalyst_mass_vector[0] * ureg.gram
+                elif 'mg' in col_split[1]:
+                    reactor_filling.catalyst_mass = (
+                        catalyst_mass_vector[0] * ureg.milligram
+                    )
+            if col_split[0] == 'set_temperature':
+                if 'K' in col_split[1]:
+                    feed.set_temperature = np.nan_to_num(data[col])
+                else:
+                    feed.set_temperature = np.nan_to_num(data[col]) * ureg.celsius
+            if col_split[0] == 'temperature':
+                if 'K' in col_split[1]:
+                    cat_data.temperature = np.nan_to_num(data[col])
+                else:
+                    cat_data.temperature = np.nan_to_num(data[col]) * ureg.celsius
+
+            if col_split[0] == 'TOS':
+                if 's' in col_split[1]:
+                    cat_data.time_on_stream = np.nan_to_num(data[col]) * ureg.second
+                    feed.time_on_stream = np.nan_to_num(data[col]) * ureg.second
+                elif 'min' in col_split[1]:
+                    cat_data.time_on_stream = np.nan_to_num(data[col]) * ureg.minute
+                    feed.time_on_stream = np.nan_to_num(data[col]) * ureg.minute
+                elif 'h' in col_split[1]:
+                    cat_data.time_on_stream = np.nan_to_num(data[col]) * ureg.hour
+                    feed.time_on_stream = np.nan_to_num(data[col]) * ureg.hour
+                else:
+                    logger.warning('Time on stream unit not recognized.')
+
+            if col_split[0] == 'C-balance':
+                cat_data.c_balance = np.nan_to_num(data[col])
+
+            if col_split[0] == 'GHSV':
+                if '1/h' in col_split[1] or 'h^-1' in col_split[1]:
+                    feed.gas_hourly_space_velocity = (
+                        np.nan_to_num(data[col]) * ureg.hour**-1
+                    )
+                else:
+                    logger.warning('Gas hourly space velocity unit not recognized.')
+
+            if col_split[0] == 'Vflow':
+                if 'mL/min' in col_split[1]:
+                    feed.set_total_flow_rate = (
+                        np.nan_to_num(data[col]) * ureg.milliliter / ureg.minute
+                    )
+
+            if col_split[0] == 'set_pressure':
+                feed.set_pressure = np.nan_to_num(data[col]) * ureg.bar
+            if col_split[0] == 'pressure':
+                cat_data.pressure = np.nan_to_num(data[col]) * ureg.bar
+
+            if col_split[0] == 'r':  # reaction rate
+                rate = RatesData(
+                    name=col_split[1], reaction_rate=np.nan_to_num(data[col])
+                )
+                rates.append(rate)
+
+            if len(col_split) < 3 or col_split[2] != '(%)':  # noqa: PLR2004
+                continue
+
+            if col_split[0] == 'x_p':  # conversion, based on product detection
+                conversion = ReactantData(
+                    name=col_split[1],
+                    conversion=np.nan_to_num(data[col]),
+                    conversion_type='product-based conversion',
+                    conversion_product_based=np.nan_to_num(data[col]),
+                )
+                for i, p in enumerate(conversions):
+                    if p.name == col_split[1]:
+                        conversion = conversions.pop(i)
+
+                conversion.conversion_product_based = np.nan_to_num(data[col])
+                conversion.conversion = np.nan_to_num(data[col])
+                conversion.conversion_type = 'product-based conversion'
+
+                conversion_names.append(col_split[1])
+                conversions.append(conversion)
+
+            if col_split[0] == 'x_r':  # conversion, based on reactant detection
+                try:
+                    conversion = ReactantData(
+                        name=col_split[1],
+                        conversion=np.nan_to_num(data[col]),
+                        conversion_type='reactant-based conversion',
+                        conversion_reactant_based=np.nan_to_num(data[col]),
+                        gas_concentration_in=(
+                            np.nan_to_num(data['x ' + col_split[1] + ' (%)']) / 100
+                        ),
+                    )
+                except KeyError:
+                    conversion = ReactantData(
+                        name=col_split[1],
+                        conversion=np.nan_to_num(data[col]),
+                        conversion_type='reactant-based conversion',
+                        conversion_reactant_based=np.nan_to_num(data[col]),
+                        gas_concentration_in=np.nan_to_num(data['x ' + col_split[1]]),
+                    )
+
+                for i, p in enumerate(conversions):
+                    if p.name == col_split[1]:
+                        conversion = conversions.pop(i)
+                        conversion.conversion_reactant_based = np.nan_to_num(data[col])
+                conversions.append(conversion)
+
+            if col_split[0] == 'y':  # concentration out
+                if col_split[1] in reagent_names:
+                    conversion = ReactantData(
+                        name=col_split[1],
+                        gas_concentration_in=np.nan_to_num(
+                            data['x ' + col_split[1] + ' (%)']
+                        )
+                        / 100,
+                        gas_concentration_out=np.nan_to_num(data[col]) / 100,
+                        conversion=np.nan_to_num(
+                            (1 - (data[col] / data['x ' + col_split[1] + ' (%)'])) * 100
+                        ),
+                    )
+                    conversions.append(conversion)
+                else:
+                    product = ProductData(
+                        name=col_split[1],
+                        gas_concentration_out=np.nan_to_num(data[col]),
+                    )
+                    products.append(product)
+                    product_names.append(col_split[1])
+
+            if col_split[0] == 'S_p':  # selectivity
+                product = ProductData(
+                    name=col_split[1], selectivity=np.nan_to_num(data[col])
+                )
+                for i, p in enumerate(products):
+                    if p.name == col_split[1]:
+                        product = products.pop(i)
+                        product.selectivity = np.nan_to_num(data[col])
+                        break
+                products.append(product)
+                product_names.append(col_split[1])
+
+        if 'FHI-ID' in data.columns:
+            sample.lab_id = str(data['FHI-ID'][0])
+        elif 'sample_id' in data.columns:  # is not None:
+            sample.lab_id = str(data['sample_id'][0])
+        if 'catalyst' in data.columns:  # is not None:
+            sample.name = str(data['catalyst'][0])
+        if sample != []:
+            from nomad.datamodel.context import ClientContext
+
+            if isinstance(archive.m_context, ClientContext):
+                pass
+            else:
+                sample.normalize(archive, logger)
+                samples = []
+                samples.append(sample)
+                self.samples = samples
+
+        for reagent in reagents:
+            reagent.normalize(archive, logger)
+        feed.reagents = reagents
+
+        if cat_data.runs is None:
+            cat_data.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
+        cat_data.products = products
+        if conversions != []:
+            cat_data.reactants_conversions = conversions
+        cat_data.rates = rates
+
+        self.reaction_conditions = feed
+        self.results = []
+        self.results.append(cat_data)
+
+        if self.reactor_filling is None and reactor_filling is not None:
+            self.reactor_filling = reactor_filling
+
+    def read_haber_data(self, archive, logger):  # noqa: PLR0912, PLR0915
+        """
+        This function reads the h5 data from the data file and assigns the data to the
+        corresponding attributes of the class.
+        """
+        if self.data_file.endswith('.h5'):
+            with archive.m_context.raw_file(self.data_file) as f:
+                import h5py
+
+                data = h5py.File(f.name, 'r')
+
+        cat_data = CatalyticReactionData()
+        feed = ReactionConditionsData()
+        reactor_setup = ReactorSetup()
+        reactor_filling = ReactorFilling()
+        pretreatment = ReactionConditionsData()
+        sample = CompositeSystemReference()
+        conversions = []
+        rates = []
+        reagents = []
+        pre_reagents = []
+        time_on_stream = []
+        time_on_stream_reaction = []
+        method = list(data['Sorted Data'].keys())
+        for i in method:
+            methodname = i
+        header = data['Header'][methodname]['Header']
+        feed.sampling_frequency = header['Temporal resolution [Hz]'] * ureg.hertz
+        reactor_setup.name = 'Haber'
+        reactor_setup.reactor_type = 'plug flow reactor'
+        reactor_setup.reactor_volume = header['Bulk volume [mln]']
+        reactor_setup.reactor_cross_section_area = (
+            header['Inner diameter of reactor (D) [mm]'] * ureg.millimeter / 2
+        ) ** 2 * np.pi
+        reactor_setup.reactor_diameter = (
+            header['Inner diameter of reactor (D) [mm]'] * ureg.millimeter
+        )
+        reactor_filling.diluent = header['Diluent material'][0].decode()
+        reactor_filling.diluent_sievefraction_upper_limit = (
+            header['Diluent Sieve fraction high [um]'] * ureg.micrometer
+        )
+        reactor_filling.diluent_sievefraction_lower_limit = (
+            header['Diluent Sieve fraction low [um]'] * ureg.micrometer
+        )
+        reactor_filling.catalyst_mass = header['Catalyst Mass [mg]'][0] * ureg.milligram
+        reactor_filling.catalyst_sievefraction_upper_limit = (
+            header['Sieve fraction high [um]'] * ureg.micrometer
+        )
+        reactor_filling.catalyst_sievefraction_lower_limit = (
+            header['Sieve fraction low [um]'] * ureg.micrometer
+        )
+        reactor_filling.particle_size = (
+            header['Particle size (Dp) [mm]'] * ureg.millimeter
+        )
+
+        self.experimenter = header['User'][0].decode()
+
+        pre = data['Sorted Data'][methodname]['H2 Reduction']
+        pretreatment.set_temperature = pre['Catalyst Temperature [C°]'] * ureg.celsius
+        for col in pre.dtype.names:
+            if col == 'Massflow3 (H2) Target Calculated Realtime Value [mln|min]':
+                pre_reagent = Reagent(
+                    name='hydrogen', flow_rate=pre[col] * ureg.milliliter / ureg.minute
+                )
+                pre_reagents.append(pre_reagent)
+            if col == 'Massflow5 (Ar) Target Calculated Realtime Value [mln|min]':
+                pre_reagent = Reagent(
+                    name='argon', flow_rate=pre[col] * ureg.milliliter / ureg.minute
+                )
+                pre_reagents.append(pre_reagent)
+
+        pretreatment.reagents = pre_reagents
+        pretreatment.set_total_flow_rate = (
+            pre['Target Total Gas (After Reactor) [mln|min]']
+            * ureg.milliliter
+            / ureg.minute
+        )
+        number_of_runs = len(pre['Catalyst Temperature [C°]'])
+        pretreatment.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
+
+        time = pre['Relative Time [Seconds]']
+        for i in range(len(time)):
+            t = float(time[i].decode('UTF-8')) - float(time[0].decode('UTF-8'))
+            time_on_stream.append(t)
+        pretreatment.time_on_stream = time_on_stream * ureg.sec
+
+        analysed = data['Sorted Data'][methodname]['NH3 Decomposition']
+
+        for col in analysed.dtype.names:
+            if col.endswith('Target Calculated Realtime Value [mln|min]'):
+                name_split = col.split('(')
+                gas_name = name_split[1].split(')')
+                if 'NH3_High' in gas_name:
+                    reagent = Reagent(
+                        name='ammonia',
+                        flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
+                        gas_concentration_in=[1.0] * len(analysed[col]),
+                    )
+                    if reagent.flow_rate.any() > 0.0:
+                        reagents.append(reagent)
+                elif 'NH3_Low' in gas_name:
+                    reagent = Reagent(
+                        name='ammonia',
+                        flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
+                        gas_concentration_in=[1.0] * len(analysed[col]),
+                    )
+                    if reagent.flow_rate.any() > 0.0:
+                        reagents.append(reagent)
+                else:
+                    reagent = Reagent(
+                        name=gas_name[0],
+                        flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
+                    )
+                    if reagent.flow_rate.any() > 0.0:
+                        reagents.append(reagent)
+
+        feed.reagents = reagents
+        # feed.flow_rates_total = analysed['MassFlow (Total Gas) [mln|min]']
+        conversion = ReactantData(
+            name='ammonia',
+            conversion=np.nan_to_num(analysed['NH3 Conversion [%]']),
+            conversion_type='reactant-based conversion',
+            gas_concentration_in=[1] * len(analysed['NH3 Conversion [%]']),
+        )
+        conversions.append(conversion)
+
+        rate = RatesData(
+            name='molecular hydrogen',
+            reaction_rate=np.nan_to_num(
+                analysed['Space Time Yield [mmolH2 gcat-1 min-1]']
+                * ureg.mmol
+                / ureg.g
+                / ureg.minute
+            ),
+        )
+        rates.append(rate)
+        feed.set_temperature = analysed['Catalyst Temperature [C°]'] * ureg.celsius
+        cat_data.temperature = analysed['Catalyst Temperature [C°]'] * ureg.celsius
+        number_of_runs = len(analysed['NH3 Conversion [%]'])
+        feed.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
+        cat_data.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
+        time = analysed['Relative Time [Seconds]']
+        for i in range(len(time)):
+            t = float(time[i].decode('UTF-8')) - float(time[0].decode('UTF-8'))
+            time_on_stream_reaction.append(t)
+        cat_data.time_on_stream = time_on_stream_reaction * ureg.sec
+
+        cat_data.reactants_conversions = conversions
+        cat_data.rates = rates
+
+        self.method = 'Haber measurement ' + str(methodname)
+        self.datetime = pre['Date'][0].decode()
+
+        # sample.name = 'catalyst'
+        sample.lab_id = str(data['Header']['Header']['SampleID'][0])
+        from nomad.datamodel.context import ClientContext
+
+        if isinstance(archive.m_context, ClientContext):
+            pass
+        else:
+            sample.normalize(archive, logger)
+            self.samples.append(sample)
+
+        self.results = []
+        self.results.append(cat_data)
+        self.reaction_conditions = feed
+        self.instruments.append(reactor_setup)
+        self.pretreatment = pretreatment
+        self.reactor_filling = reactor_filling
+
+        products_results = []
+        for i in ['molecular nitrogen', 'molecular hydrogen']:
+            product = ProductData(name=i)
+            products_results.append(product)
+        self.results[0].products = products_results
+
+        self.reaction_name = 'ammonia decomposition'
+        self.reaction_type = 'cracking'
+        self.location = 'Fritz-Haber-Institut Berlin / Abteilung AC'
+
+    def check_and_read_data_file(self, archive, logger):
+        """This functions checks the format of the data file and assigns the right
+        reader function to read the data file or logs an error if the format is not
+        supported.
+        """
+        if self.data_file is None:
+            logger.warning('No data file found.')
+            return
+
+        if self.data_file.endswith('.csv') or self.data_file.endswith('.xlsx'):
+            self.read_clean_data(archive, logger)
+        elif self.data_file.endswith('.h5'):
+            self.read_haber_data(archive, logger)
+        else:
+            logger.error(
+                """Data file format not supported. Please provide a
+                .csv, .xlsx or .h5 file."""
+            )
+            return
 
     def populate_reactivity_info(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -1180,15 +1640,16 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'reaction_conditions.gas_hourly_space_velocity': 'reaction_conditions.gas_hourly_space_velocity',  # noqa: E501
             'reaction_conditions.set_total_flow_rate': 'reaction_conditions.flow_rate',
             'reaction_conditions.time_on_stream': 'reaction_conditions.time_on_stream',
-            'results[0].temperature': 'reaction_conditions.temperature',
-            'results[0].pressure': 'reaction_conditions.pressure',
-            'results[0].time_on_stream': 'reaction_conditions.time_on_stream',
+            'results.temperature': 'reaction_conditions.temperature',
+            'results.pressure': 'reaction_conditions.pressure',
+            'results.time_on_stream': 'reaction_conditions.time_on_stream',
             'reaction_name': 'name',
-            'reaction_class': 'type',
+            'reaction_type': 'type',
         }
 
         map_and_assign_attributes(
             self,
+            logger,
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.reaction,
         )
@@ -1212,6 +1673,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         }
         map_and_assign_attributes(
             self,
+            logger,
             mapping=quantities_results_mapping,
             obj=sample_obj,
             target=archive.results.properties.catalytic.catalyst,
@@ -1295,7 +1757,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if not self.results[0].reactants_conversions:
             logger.warning('no conversion data found, so no plot is created')
             return
-        if not self.results[0].reactants_conversions[0].conversion:
+        if not self.results[0].reactants_conversions[0].conversion.any():
             logger.warning('no conversion data found, so no plot is created')
             return
         fig1 = go.Figure()
@@ -1362,7 +1824,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             fig = self.single_plot(x, x_text, y.to(unit_dict[var]), y_text, title)
             self.figures.append(PlotlyFigure(label=title, figure=fig.to_plotly_json()))
 
-        if self.results[0].products[0].selectivity:
+        if self.results[0].products[0].selectivity is not None:
             fig0 = go.Figure()
             for i, c in enumerate(self.results[0].products):
                 fig0.add_trace(
@@ -1390,7 +1852,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 fig.add_trace(
                     go.Scatter(
                         x=x,
-                        y=self.results[0].rates[i].rate,
+                        y=self.results[0].rates[i].reaction_rate,
                         name=self.results[0].rates[i].name,
                     )
                 )
@@ -1402,8 +1864,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
         if not self.results[0].reactants_conversions:
             return
-        if self.results[0].reactants_conversions[0].conversion and (
-            self.results[0].products[0].selectivity
+        if self.results[0].reactants_conversions[0].conversion is not None and (
+            self.results[0].products[0].selectivity is not None
         ):
             for i, c in enumerate(self.results[0].reactants_conversions):
                 name = self.results[0].reactants_conversions[i].name
@@ -1458,7 +1920,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         section of the archive.
         It checks if the the name of the reactant is not in the list of the inert gases
         and if the name is in the list of the reaction_conditions.reagents, it will try
-        to replace the name of the reactant with the IUPAC name of the reagent.
+        to replace the name of the reactant with the IUPAC name of the reagent. If the
+        arrays are larger than 300 (threshold_datapoints), it will reduce the size to
+        store in the archive.
 
         return: a list of the reactants with the conversion results.
         """
@@ -1475,17 +1939,44 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     i.name = j.pure_component.iupac_name
                 if i.gas_concentration_in is None:
                     i.gas_concentration_in = j.gas_concentration_in
+                elif not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
+                    logger.warning(f"""Gas concentration of '{i.name}' is not
+                                the same in reaction_conditions and
+                                results.reactants_conversions.""")
                 react = Reactant(
                     name=i.name,
                     conversion=i.conversion,
                     gas_concentration_in=i.gas_concentration_in,
                     gas_concentration_out=i.gas_concentration_out,
                 )
+
+                if (
+                    (
+                        react.conversion is not None
+                        and len(react.conversion) > threshold_datapoints
+                    )
+                    or (
+                        react.gas_concentration_in is not None
+                        and len(react.gas_concentration_in) > threshold_datapoints
+                    )
+                    or (
+                        react.gas_concentration_out is not None
+                        and len(react.gas_concentration_out) > threshold_datapoints
+                    )
+                ):
+                    logger.warning(
+                        f"""Large arrays in {react.name}, reducing to store in the
+                        archive."""
+                    )
+                    if react.conversion is not None:
+                        react.conversion = i.conversion[50::100]
+                    if react.gas_concentration_in is not None:
+                        react.gas_concentration_in = i.gas_concentration_in[50::100]
+                    if react.gas_concentration_out is not None:
+                        react.gas_concentration_out = i.gas_concentration_out[50::100]
+
                 conversions_results.append(react)
-                if not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
-                    logger.warning(f"""Gas concentration of '{i.name}' is not
-                                the same in reaction_conditions and
-                                results.reactants_conversions.""")
+
         return conversions_results
 
     def check_sample(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
@@ -1504,9 +1995,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         super().normalize(archive, logger)
 
+        if self.data_file is not None:
+            self.check_and_read_data_file(archive, logger)
+            logger.info('Data file read successfully.')
         self.normalize_reaction_conditions(archive, logger)
 
-        self.populate_reactivity_info(archive, logger)
+        if self.reaction_conditions is not None or self.results is not None:
+            self.populate_reactivity_info(archive, logger)
         self.check_sample(archive, logger)
 
         if self.results is None or self.results == []:
@@ -1541,7 +2036,23 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     selectivity=i.selectivity,
                     gas_concentration_out=i.gas_concentration_out,
                 )
+                if (
+                    i.selectivity is not None
+                    and len(i.selectivity) > threshold_datapoints
+                ) or (
+                    i.gas_concentration_out is not None
+                    and len(i.gas_concentration_out) > threshold_datapoints
+                ):
+                    logger.warning(
+                        f'Large arrays in {i.name}, reducing to store in the archive.'
+                    )
+                    prod = Product(
+                        name=i.name,
+                        selectivity=i.selectivity[50::100],
+                        gas_concentration_out=i.gas_concentration_out[50::100],
+                    )
                 product_results.append(prod)
+
             set_nested_attr(
                 archive.results.properties.catalytic.reaction,
                 'products',
