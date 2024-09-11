@@ -1235,8 +1235,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if len(col_split) < 2:  # noqa: PLR2004
                 continue
 
-            if len(data[col]) > number_of_runs:
-                number_of_runs = len(data[col])
+            number_of_runs = max(number_of_runs, len(data[col]))
 
             if col_split[0] == 'step':
                 feed.runs = data['step']
