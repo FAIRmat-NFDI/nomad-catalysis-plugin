@@ -102,6 +102,8 @@ def get_nested_attr(obj, attr_path):
     """helper function to retrieve nested attributes"""
     for attr in attr_path.split('.'):
         obj = getattr(obj, attr, None)
+        if isinstance(obj, list):  # needed for repeating subsection, e.g. results
+            obj = obj[0]
         if obj is None:
             return None
     return obj
@@ -117,7 +119,7 @@ def set_nested_attr(obj, attr_path, value):
     setattr(obj, attrs[-1], value)
 
 
-def map_and_assign_attributes(self, mapping, target, obj=None) -> None:
+def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
     """
     A helper function that loops through a mapping and assigns the values to
     a target object.
@@ -132,12 +134,19 @@ def map_and_assign_attributes(self, mapping, target, obj=None) -> None:
     for ref_attr, reaction_attr in mapping.items():
         value = get_nested_attr(obj, ref_attr)
         if value is not None:
+            if len(value) > 300:
+                logger.warning(
+                    f"""The quantity '{ref_attr}' is large and will be reduced for
+                    the archive results."""
+                )
+                value = value[50::100]
             try:
                 set_nested_attr(
                     target,
                     reaction_attr,
                     value,
                 )
+                logger.info(f""" Mapped attribute '{ref_attr}' into results.""")
             except ValueError:  # workaround for wrong type in yaml schema
                 set_nested_attr(
                     target,
@@ -351,6 +360,7 @@ class CatalystSample(CompositeSystem, Schema):
         }
         map_and_assign_attributes(
             self,
+            logger,
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.catalyst,
         )
@@ -358,6 +368,7 @@ class CatalystSample(CompositeSystem, Schema):
         name_material_mapping = {'name': 'material_name'}
         map_and_assign_attributes(
             self,
+            logger,
             mapping=name_material_mapping,
             target=archive.results.material,
         )
@@ -1002,7 +1013,7 @@ class ReactionConditionsData(PlotSection):
 
 
 class CatalyticReactionCore(Measurement):
-    reaction_class = Quantity(
+    reaction_type = Quantity(
         type=str,
         description="""
         A highlevel classification of the studied reaction.
@@ -1144,7 +1155,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     'name',
                     'data_file',
                     'reaction_name',
-                    'reaction_class',
+                    'reaction_type',
                     'experimenter',
                     'location',
                     'experiment_handbook',
@@ -1230,7 +1241,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 )
                 reagent_names.append(col_split[1])
                 reagents.append(reagent)
-                logger.info(f'Found reagent {col_split[1]}')
 
             if col_split[0] == 'mass':
                 catalyst_mass_vector = data[col]
@@ -1509,7 +1519,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         feed.reagents = reagents
         # feed.flow_rates_total = analysed['MassFlow (Total Gas) [mln|min]']
         conversion = ReactantData(
-            name='ammonia', conversion=np.nan_to_num(analysed['NH3 Conversion [%]'])
+            name='ammonia',
+            conversion=np.nan_to_num(analysed['NH3 Conversion [%]']),
+            gas_concentration_in=[1] * len(analysed['NH3 Conversion [%]']),
         )
         conversions.append(conversion)
         conversion2 = Reactant(
@@ -1548,7 +1560,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         # sample.name = 'catalyst'
         sample.lab_id = str(data['Header']['Header']['SampleID'][0])
         sample.normalize(archive, logger)
-
+        self.results = []
         self.results.append(cat_data)
         self.reaction_conditions = feed
         self.reactor_setup = reactor_setup
@@ -1559,7 +1571,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         products_results = []
         for i in ['molecular nitrogen', 'molecular hydrogen']:
-            product = Product(name=i)
+            product = ProductData(name=i)
             products_results.append(product)
         self.results[0].products = products_results
 
@@ -1599,22 +1611,16 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'reaction_conditions.gas_hourly_space_velocity': 'reaction_conditions.gas_hourly_space_velocity',  # noqa: E501
             'reaction_conditions.set_total_flow_rate': 'reaction_conditions.flow_rate',
             'reaction_conditions.time_on_stream': 'reaction_conditions.time_on_stream',
-            'results[0].temperature': 'reaction_conditions.temperature',
-            'results[0].pressure': 'reaction_conditions.pressure',
-            'results[0].time_on_stream': 'reaction_conditions.time_on_stream',
+            'results.temperature': 'reaction_conditions.temperature',
+            'results.pressure': 'reaction_conditions.pressure',
+            'results.time_on_stream': 'reaction_conditions.time_on_stream',
             'reaction_name': 'name',
-            'reaction_class': 'type',
+            'reaction_type': 'type',
         }
-        # TODO: reduce the size of the arrays for results section if they are too large
-        # example from haber reader reducing array size for results section:
-        # if len(analysed['NH3 Conversion [%]']) > 50:
-        #     conversion2 = Reactant(
-        #         name='ammonia',
-        #         conversion=analysed['NH3 Conversion [%]'][50::100],
-        #         gas_concentration_in=[1] * len(analysed['NH3 Conversion [%]'][50::100]),
-        #     )
+
         map_and_assign_attributes(
             self,
+            logger,
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.reaction,
         )
@@ -1638,6 +1644,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         }
         map_and_assign_attributes(
             self,
+            logger,
             mapping=quantities_results_mapping,
             obj=sample_obj,
             target=archive.results.properties.catalytic.catalyst,
@@ -1788,7 +1795,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             fig = self.single_plot(x, x_text, y.to(unit_dict[var]), y_text, title)
             self.figures.append(PlotlyFigure(label=title, figure=fig.to_plotly_json()))
 
-        if self.results[0].products[0].selectivity.any():
+        if self.results[0].products[0].selectivity is not None:
             fig0 = go.Figure()
             for i, c in enumerate(self.results[0].products):
                 fig0.add_trace(
@@ -1816,7 +1823,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 fig.add_trace(
                     go.Scatter(
                         x=x,
-                        y=self.results[0].rates[i].rate,
+                        y=self.results[0].rates[i].reaction_rate,
                         name=self.results[0].rates[i].name,
                     )
                 )
@@ -1828,8 +1835,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
         if not self.results[0].reactants_conversions:
             return
-        if self.results[0].reactants_conversions[0].conversion.any() and (
-            self.results[0].products[0].selectivity.any()
+        if self.results[0].reactants_conversions[0].conversion is not None and (
+            self.results[0].products[0].selectivity is not None
         ):
             for i, c in enumerate(self.results[0].reactants_conversions):
                 name = self.results[0].reactants_conversions[i].name
@@ -1884,7 +1891,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         section of the archive.
         It checks if the the name of the reactant is not in the list of the inert gases
         and if the name is in the list of the reaction_conditions.reagents, it will try
-        to replace the name of the reactant with the IUPAC name of the reagent.
+        to replace the name of the reactant with the IUPAC name of the reagent. If the
+        arrays are larger than 300, it will reduce the size to store in the archive.
 
         return: a list of the reactants with the conversion results.
         """
@@ -1901,17 +1909,38 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     i.name = j.pure_component.iupac_name
                 if i.gas_concentration_in is None:
                     i.gas_concentration_in = j.gas_concentration_in
+                elif not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
+                    logger.warning(f"""Gas concentration of '{i.name}' is not
+                                the same in reaction_conditions and
+                                results.reactants_conversions.""")
                 react = Reactant(
                     name=i.name,
                     conversion=i.conversion,
                     gas_concentration_in=i.gas_concentration_in,
                     gas_concentration_out=i.gas_concentration_out,
                 )
+
+                if (
+                    (react.conversion is not None and len(react.conversion) > 300)
+                    or (
+                        react.gas_concentration_in is not None
+                        and len(react.gas_concentration_in) > 300
+                    )
+                    or (
+                        react.gas_concentration_out is not None
+                        and len(react.gas_concentration_out) > 300
+                    )
+                ):
+                    logger.warning(
+                        f"""Large arrays in {react.name}, reducing to store in the
+                        archive."""
+                    )
+                    react.conversion = i.conversion[50::100]
+                    react.gas_concentration_in = i.gas_concentration_in[50::100]
+                    react.gas_concentration_out = i.gas_concentration_out[50::100]
+
                 conversions_results.append(react)
-                if not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
-                    logger.warning(f"""Gas concentration of '{i.name}' is not
-                                the same in reaction_conditions and
-                                results.reactants_conversions.""")
+
         return conversions_results
 
     def check_sample(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
@@ -1970,7 +1999,20 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     selectivity=i.selectivity,
                     gas_concentration_out=i.gas_concentration_out,
                 )
+                if (i.selectivity is not None and len(i.selectivity) > 300) or (
+                    i.gas_concentration_out is not None
+                    and len(i.gas_concentration_out) > 300
+                ):
+                    logger.warning(
+                        f'Large arrays in {i.name}, reducing to store in the archive.'
+                    )
+                    prod = Product(
+                        name=i.name,
+                        selectivity=i.selectivity[50::100],
+                        gas_concentration_out=i.gas_concentration_out[50::100],
+                    )
                 product_results.append(prod)
+
             set_nested_attr(
                 archive.results.properties.catalytic.reaction,
                 'products',
