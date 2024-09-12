@@ -139,12 +139,15 @@ def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
     for ref_attr, reaction_attr in mapping.items():
         value = get_nested_attr(obj, ref_attr)
         if value is not None:
-            if isinstance(value, list) and len(value) > threshold_datapoints:
-                logger.warning(
-                    f"""The quantity '{ref_attr}' is large and will be reduced for
-                    the archive results."""
-                )
-                value = value[50::100]
+            try:
+                if len(value) > threshold_datapoints:
+                    logger.info(
+                        f"""The quantity '{ref_attr}' is large and will be reduced for
+                        the archive results."""
+                    )
+                    value = value[50::100]
+            except TypeError:
+                pass
             try:
                 set_nested_attr(
                     target,
@@ -282,6 +285,7 @@ class CatalystSample(CompositeSystem, Schema):
         An entry schema for specifying general information about a catalyst sample.
         """,
         label='Catalyst Sample',
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007003'],
         categories=[CatalysisElnCategory],
     )
 
@@ -637,7 +641,7 @@ class Reagent(ArchiveSection):
         type=np.float64,
         shape=['*'],
         description="""Volumetric fraction of reactant in feed. The value must be
-        between 0 and 1""",
+        between 0 and 1.""",
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
     flow_rate = Quantity(
@@ -714,7 +718,7 @@ class Reagent(ArchiveSection):
                 self.pure_component.normalize(archive, logger)
 
         if self.name is None and self.pure_component is not None:
-            self.name = self.pure_component.molecular_formula
+            self.name = self.pure_component.iupac_name
 
 
 class ReactantData(Reagent):
@@ -726,7 +730,7 @@ class ReactantData(Reagent):
     gas_concentration_out = Quantity(
         type=np.float64,
         shape=['*'],
-        description="""Volumetric fraction of reactant in outlet. the value must be
+        description="""Volumetric fraction of reactant in outlet. The value must be
         between 0 and 1""",
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
@@ -761,6 +765,7 @@ class RatesData(ArchiveSection):
         The reaction rate for mmol of product (or reactant) formed (depleted) per
         catalyst (g) per time (hour).
         """,
+        a_eln=ELNAnnotation(defaultDisplayUnit='mmol/g/hour'),
     )
 
     specific_mass_rate = Quantity(
@@ -771,6 +776,7 @@ class RatesData(ArchiveSection):
         The specific reaction rate normalized by active (metal) catalyst mass, instead
         of mass of total catalyst.
         """,
+        a_eln=ELNAnnotation(defaultDisplayUnit='mmol/g/hour'),
     )
 
     specific_surface_area_rate = Quantity(
@@ -781,6 +787,7 @@ class RatesData(ArchiveSection):
         The specific reaction rate normalized by active (metal) surface area of
         catalyst, instead of mass of total catalyst.
         """,
+        a_eln=ELNAnnotation(defaultDisplayUnit='mmol/m**2/hour'),
     )
     space_time_yield = Quantity(
         type=np.float64,
@@ -789,6 +796,7 @@ class RatesData(ArchiveSection):
         description="""
         The amount of product formed (in g), per total catalyst (g) per time (hour).
         """,
+        a_eln=ELNAnnotation(defaultDisplayUnit='g/g/hour'),
     )
     rate = Quantity(
         type=np.float64,
@@ -797,6 +805,7 @@ class RatesData(ArchiveSection):
         description="""
         The amount of reactant converted (in g), per total catalyst (g) per time (hour).
         """,
+        a_eln=ELNAnnotation(defaultDisplayUnit='g/g/hour'),
     )
 
     turn_over_frequency = Quantity(
@@ -807,6 +816,7 @@ class RatesData(ArchiveSection):
         The turn oder frequency, calculated from mol of reactant or product, per number
         of sites, over time.
         """,
+        a_eln=ELNAnnotation(defaultDisplayUnit='1/hour'),
     )
 
 
@@ -895,7 +905,7 @@ class ReactionConditionsData(PlotSection):
         type=np.float64,
         shape=['*'],
         unit='m**3/(kg*s)',
-        a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='mL/(g*hour)'),
+        a_eln=dict(defaultDisplayUnit='mL/(g*hour)'),
     )
 
     contact_time = Quantity(
@@ -913,12 +923,12 @@ class ReactionConditionsData(PlotSection):
     gas_hourly_space_velocity = Quantity(
         description="""Similar to WHSV, the volumetric flow rate of the gas divided by
         the control volume. In heterogeneous catalysis the volume of the undiluted
-        catalyst bed is conventionally used as the control volume. In 1/hour.""",
+        catalyst bed is conventionally used as the control volume.""",
         links=['https://w3id.org/nfdi4cat/voc4cat_0007023'],
         type=np.float64,
         shape=['*'],
-        unit='1/hour',
-        a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='1/hour'),
+        unit='1/s',
+        a_eln=dict(defaultDisplayUnit='1/hour'),
     )
 
     runs = Quantity(type=np.float64, shape=['*'])
@@ -989,7 +999,7 @@ class ReactionConditionsData(PlotSection):
                             fig5.add_trace(
                                 go.Scatter(
                                     x=x,
-                                    y=self.set_total_flow_rate,
+                                    y=self.set_total_flow_rate.to('mL/minute'),
                                     name='Total Flow Rates',
                                 )
                             )
@@ -1013,6 +1023,17 @@ class ReactionConditionsData(PlotSection):
         super().normalize(archive, logger)
         for reagent in self.reagents:
             reagent.normalize(archive, logger)
+
+        if (
+            self.set_total_flow_rate is not None
+            and self.m_root().data.reactor_filling is not None
+            and self.m_root().data.reactor_filling.catalyst_mass is not None
+            and self.weight_hourly_space_velocity is None
+        ):
+            self.weight_hourly_space_velocity = (
+                self.set_total_flow_rate
+                / self.m_root().data.reactor_filling.catalyst_mass
+            )
 
         self.plot_figures()
 
@@ -1121,7 +1142,7 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
     runs = Quantity(
         type=np.float64,
         shape=['*'],
-        a_eln=ELNAnnotation(component='NumberEditQuantity'),
+        # a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
     time_on_stream = Quantity(
         type=np.float64,
@@ -1149,11 +1170,16 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
             for product in self.products:
                 if product.pure_component is None or product.pure_component == []:
                     product.normalize(archive, logger)
+        if self.runs is None:
+            self.runs = np.arange(1, len(self.temperature) + 1)
 
 
 class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     m_def = Section(
         label='Catalytic Reaction',
+        description="""An activity entry containing information about a catalytic
+        reaction.""",
+        links=['https://w3id.org/nfdi4cat/voc4cat_0005007'],
         a_eln=ELNAnnotation(
             properties=dict(
                 order=[
@@ -1541,7 +1567,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         reagents.append(reagent)
 
         feed.reagents = reagents
-        # feed.flow_rates_total = analysed['MassFlow (Total Gas) [mln|min]']
+        total_flow_rate = np.zeros(len(reagents[0].flow_rate))
+        for reagent in reagents:
+            total_flow_rate += reagent.flow_rate
+        feed.set_total_flow_rate = total_flow_rate
+
         conversion = ReactantData(
             name='ammonia',
             conversion=np.nan_to_num(analysed['NH3 Conversion [%]']),
@@ -1585,11 +1615,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             pass
         else:
             sample.normalize(archive, logger)
+            self.samples = []
             self.samples.append(sample)
 
         self.results = []
         self.results.append(cat_data)
         self.reaction_conditions = feed
+        self.instruments = []
         self.instruments.append(reactor_setup)
         self.pretreatment = pretreatment
         self.reactor_filling = reactor_filling
@@ -1821,6 +1853,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 logger.warning(f"no '{var}' data found, so no plot is created")
                 continue
             y.to(unit_dict[var])
+            y_text = y_text + ' (' + unit_dict[var] + ')'
             fig = self.single_plot(x, x_text, y.to(unit_dict[var]), y_text, title)
             self.figures.append(PlotlyFigure(label=title, figure=fig.to_plotly_json()))
 
@@ -1858,7 +1891,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 )
             fig.update_layout(title_text='Rates', showlegend=True)
             fig.update_xaxes(title_text=x_text)
-            fig.update_yaxes(title_text='rates (g product/g cat/h)')
+            fig.update_yaxes(title_text='reaction rates (mmol product/g cat/h)')
             self.figures.append(
                 PlotlyFigure(label='Rates', figure=fig.to_plotly_json())
             )
@@ -1894,23 +1927,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     ) -> None:
         if self.reaction_conditions is None:
             return
-        reagents = []
-        for reagent in self.reaction_conditions.reagents:
-            if reagent.pure_component is None or reagent.pure_component == []:
-                reagent.normalize(archive, logger)
-            reagents.append(reagent)
-        self.reaction_conditions.reagents = reagents
 
-        if (
-            self.reactor_filling is not None
-            and self.reaction_conditions.set_total_flow_rate is not None
-            and self.reactor_filling.catalyst_mass is not None
-            and self.reaction_conditions.weight_hourly_space_velocity is None
-        ):
-            self.reaction_conditions.weight_hourly_space_velocity = (
-                self.reaction_conditions.set_total_flow_rate
-                / self.reactor_filling.catalyst_mass
-            )
+        self.reaction_conditions.normalize(archive, logger)
 
     def return_conversion_results(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -1926,8 +1944,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         return: a list of the reactants with the conversion results.
         """
-        if self.results[0].reactants_conversions is None:
-            return []
+
         conversions_results = []
         for i in self.results[0].reactants_conversions:
             if i.name in ['He', 'helium', 'Ar', 'argon', 'inert']:
@@ -1935,8 +1952,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             for j in self.reaction_conditions.reagents:
                 if i.name != j.name:
                     continue
-                if j.pure_component.iupac_name is not None:
+                if (
+                    j.pure_component.iupac_name is not None
+                    and j.pure_component.iupac_name != 'azane'
+                ):
                     i.name = j.pure_component.iupac_name
+                elif j.pure_component.iupac_name == 'azane':
+                    i.name = 'ammonia'
                 if i.gas_concentration_in is None:
                     i.gas_concentration_in = j.gas_concentration_in
                 elif not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
@@ -1964,7 +1986,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         and len(react.gas_concentration_out) > threshold_datapoints
                     )
                 ):
-                    logger.warning(
+                    logger.info(
                         f"""Large arrays in {react.name}, reducing to store in the
                         archive."""
                     )
@@ -1978,6 +2000,74 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 conversions_results.append(react)
 
         return conversions_results
+
+    def write_conversion_results(
+        self, archive: 'EntryArchive', logger: 'BoundLogger'
+    ) -> None:
+        """This function writes the conversion results to the archive."""
+
+        if self.results[0].reactants_conversions is None:
+            return []
+
+        conversions_results = self.return_conversion_results(archive, logger)
+
+        add_activity(archive)
+
+        set_nested_attr(
+            archive.results.properties.catalytic.reaction,
+            'reactants',
+            conversions_results,
+        )
+
+    def write_products_results(
+        self, archive: 'EntryArchive', logger: 'BoundLogger'
+    ) -> None:
+        """This function writes the product results to the archive. If the arrays are
+        larger than the number stored in "threshold_datapoints" (300), it will reduce
+        the size to store in the archive.
+        """
+        if self.results[0].products is None:
+            return
+        product_results = []
+        for i in self.results[0].products:
+            if (
+                i.pure_component is not None
+                and i.pure_component.iupac_name is not None
+                and i.pure_component.iupac_name != 'azane'
+            ):
+                i.name = i.pure_component.iupac_name
+            elif (
+                i.pure_component is not None and i.pure_component.iupac_name == 'azane'
+            ):
+                i.name = 'ammonia'
+            prod = Product(
+                name=i.name,
+                selectivity=i.selectivity,
+                gas_concentration_out=i.gas_concentration_out,
+            )
+            if (
+                i.selectivity is not None and len(i.selectivity) > threshold_datapoints
+            ) or (
+                i.gas_concentration_out is not None
+                and len(i.gas_concentration_out) > threshold_datapoints
+            ):
+                logger.warning(
+                    f'Large arrays in {i.name}, reducing to store in the archive.'
+                )
+                prod = Product(
+                    name=i.name,
+                    selectivity=i.selectivity[50::100],
+                    gas_concentration_out=i.gas_concentration_out[50::100],
+                )
+            product_results.append(prod)
+
+        add_activity(archive)
+
+        set_nested_attr(
+            archive.results.properties.catalytic.reaction,
+            'products',
+            product_results,
+        )
 
     def check_sample(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         if not self.samples:
@@ -1998,7 +2088,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.data_file is not None:
             self.check_and_read_data_file(archive, logger)
             logger.info('Data file read successfully.')
+
         self.normalize_reaction_conditions(archive, logger)
+        if self.pretreatment is not None:
+            self.pretreatment.normalize(archive, logger)
 
         if self.reaction_conditions is not None or self.results is not None:
             self.populate_reactivity_info(archive, logger)
@@ -2013,50 +2106,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 """Several instances of results found. Only the first result
                 is considered for normalization."""
             )
-        conversions_results = self.return_conversion_results(archive, logger)
-
-        add_activity(archive)
-
-        set_nested_attr(
-            archive.results.properties.catalytic.reaction,
-            'reactants',
-            conversions_results,
-        )
-
-        if self.results[0].products is not None:
-            product_results = []
-            for i in self.results[0].products:
-                if (
-                    i.pure_component is not None
-                    and i.pure_component.iupac_name is not None
-                ):
-                    i.name = i.pure_component.iupac_name
-                prod = Product(
-                    name=i.name,
-                    selectivity=i.selectivity,
-                    gas_concentration_out=i.gas_concentration_out,
-                )
-                if (
-                    i.selectivity is not None
-                    and len(i.selectivity) > threshold_datapoints
-                ) or (
-                    i.gas_concentration_out is not None
-                    and len(i.gas_concentration_out) > threshold_datapoints
-                ):
-                    logger.warning(
-                        f'Large arrays in {i.name}, reducing to store in the archive.'
-                    )
-                    prod = Product(
-                        name=i.name,
-                        selectivity=i.selectivity[50::100],
-                        gas_concentration_out=i.gas_concentration_out[50::100],
-                    )
-                product_results.append(prod)
-
-            set_nested_attr(
-                archive.results.properties.catalytic.reaction,
-                'products',
-                product_results,
-            )
+        self.write_conversion_results(archive, logger)
+        self.write_products_results(archive, logger)
 
         self.plot_figures(archive, logger)
