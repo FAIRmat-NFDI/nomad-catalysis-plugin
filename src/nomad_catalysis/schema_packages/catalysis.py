@@ -853,7 +853,16 @@ class ProductData(Reagent):
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
 
-    rates = SubSection(section_def=RatesData)
+    space_time_yield = Quantity(
+        type=np.float64,
+        shape=['*'],
+        unit='1/s',
+        description="""
+        The amount of product formed (in g), per total catalyst (g) per time (s).
+        """,
+        links=['https://w3id.org/nfdi4cat/voc4cat_0005006'],
+        a_eln=ELNAnnotation(defaultDisplayUnit='g/g/hour'),
+    )
 
     def normalize(self, archive, logger):
         """
@@ -2044,21 +2053,25 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 name=i.name,
                 selectivity=i.selectivity,
                 gas_concentration_out=i.gas_concentration_out,
+                space_time_yield=i.space_time_yield,
             )
+            if i.selectivity is not None and len(i.selectivity) > threshold_datapoints:
+                prod.selectivity = i.selectivity[50::100]
+                logger.info(
+                    f"""Large arrays in product {i.name}, reducing to store
+                    in the archive."""
+                )
             if (
-                i.selectivity is not None and len(i.selectivity) > threshold_datapoints
-            ) or (
                 i.gas_concentration_out is not None
                 and len(i.gas_concentration_out) > threshold_datapoints
             ):
-                logger.warning(
-                    f'Large arrays in {i.name}, reducing to store in the archive.'
-                )
-                prod = Product(
-                    name=i.name,
-                    selectivity=i.selectivity[50::100],
-                    gas_concentration_out=i.gas_concentration_out[50::100],
-                )
+                prod.gas_concentration_out = i.gas_concentration_out[50::100]
+            if (
+                i.space_time_yield is not None
+                and len(i.space_time_yield) > threshold_datapoints
+            ):
+                prod.space_time_yield = i.space_time_yield[50::100]
+
             product_results.append(prod)
 
         add_activity(archive)
