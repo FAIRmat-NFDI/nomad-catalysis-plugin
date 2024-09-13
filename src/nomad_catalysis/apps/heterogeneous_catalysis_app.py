@@ -178,7 +178,7 @@ heterogeneous_catalysis_app = yaml.safe_load(
             size: 1000
             x:
               quantity: results.properties.catalytic.reaction.reactants[*].gas_concentration_in
-              title: 'gas concentration (%)'
+              title: 'gas concentration'
             y:
               quantity: results.properties.catalytic.reaction.reaction_conditions.temperature
             title: 'Reactant feed concentration vs. Temperature'
