@@ -475,7 +475,7 @@ class ReactorFilling(ArchiveSection):
 
     sample_section_reference = Quantity(
         type=CompositeSystemReference,
-        description='A reference to the sample used in the measurement.',
+        description='A reference to the sample reference used in the measurement.',
         a_eln=ELNAnnotation(
             component='ReferenceEditQuantity', label='Sample Reference'
         ),
@@ -1277,9 +1277,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 cat_data.runs = data['step']
 
             if col_split[0] == 'x':
-                reagent = Reagent(
-                    name=col_split[1], gas_concentration_in=data[col] / 100
-                )
+                if '%' in col_split[2]:
+                    gas_in = data[col] / 100
+                else:
+                    gas_in = data[col]
+                reagent = Reagent(name=col_split[1], gas_concentration_in=gas_in)
                 reagent_names.append(col_split[1])
                 reagents.append(reagent)
 
