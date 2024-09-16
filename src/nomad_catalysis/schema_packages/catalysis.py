@@ -477,7 +477,7 @@ class ReactorFilling(ArchiveSection):
         type=CompositeSystemReference,
         description='A reference to the sample reference used in the measurement.',
         a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity', label='Sample Reference'
+            component='ReferenceEditQuantity',
         ),
     )
 
@@ -561,9 +561,10 @@ class ReactorFilling(ArchiveSection):
 
         if self.sample_section_reference is None:
             if self.m_root().data.samples:
-                first_sample = self.m_root().data.samples[0]
-                if hasattr(first_sample, 'reference'):
-                    self.sample_section_reference = first_sample
+                pass  # does not seem to work, how can I reference the first sample?
+                # first_sample = self.m_root().data.samples[0]
+                # if hasattr(first_sample, 'reference'):
+                # self.sample_section_reference = '#/data/samples[0]'
 
         if self.catalyst_name is None and self.sample_section_reference is not None:
             self.catalyst_name = self.sample_section_reference.name
@@ -1277,7 +1278,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 cat_data.runs = data['step']
 
             if col_split[0] == 'x':
-                if '%' in col_split[2]:
+                if len(col_split) == 3 and ('%' in col_split[2]):  # noqa: PLR2004
                     gas_in = data[col] / 100
                 else:
                     gas_in = data[col]
@@ -1432,16 +1433,21 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             sample.lab_id = str(data['sample_id'][0])
         if 'catalyst' in data.columns:  # is not None:
             sample.name = str(data['catalyst'][0])
-        if sample != []:
+
+        if (
+            (self.samples is None or self.samples == [])
+            and sample != []
+            and sample is not None
+        ):
             from nomad.datamodel.context import ClientContext
 
             if isinstance(archive.m_context, ClientContext):
                 pass
             else:
                 sample.normalize(archive, logger)
-                samples = []
-                samples.append(sample)
-                self.samples = samples
+            samples = []
+            samples.append(sample)
+            self.samples = samples
 
         for reagent in reagents:
             reagent.normalize(archive, logger)
