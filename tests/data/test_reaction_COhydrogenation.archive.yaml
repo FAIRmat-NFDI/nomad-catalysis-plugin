@@ -1,0 +1,12 @@
+data:
+  m_def: nomad_catalysis.schema_packages.catalysis.CatalyticReaction
+  data_file: Reactor1_xs_vs_TOF.xlsx
+  experimenter: M. Khatamirad
+  location: TU Berlin / BasCat
+  name: Rh-SiO2_COhydrogenation
+  reaction_name: CO hydrogenation
+  reaction_type: hydrogenation
+  reactor_filling:
+    catalyst_mass: 0.251
+  samples:
+  - lab_id: '3624'

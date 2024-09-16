@@ -5,9 +5,6 @@ data:
   reaction_name: ethane oxidation
   location: 'Fritz-Haber-Institut Berlin / Abteilung AC'
   experimenter: Pierre Kube
-  samples:
-  - sample_name: MoO3
-    sample_id: 30
   reactor_setup:
     name: grimsel
     type: 'fixed-bed reactor'
