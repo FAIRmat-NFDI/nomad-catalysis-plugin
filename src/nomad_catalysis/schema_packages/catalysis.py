@@ -1180,7 +1180,7 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
             for product in self.products:
                 if product.pure_component is None or product.pure_component == []:
                     product.normalize(archive, logger)
-        if self.runs is None:
+        if self.runs is None and self.temperature is not None:
             self.runs = np.arange(1, len(self.temperature) + 1)
 
 
