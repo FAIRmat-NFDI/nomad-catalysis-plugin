@@ -790,15 +790,7 @@ class RatesData(ArchiveSection):
         """,
         a_eln=ELNAnnotation(defaultDisplayUnit='mmol/m**2/hour'),
     )
-    space_time_yield = Quantity(
-        type=np.float64,
-        shape=['*'],
-        unit='g/g/hour',
-        description="""
-        The amount of product formed (in g), per total catalyst (g) per time (hour).
-        """,
-        a_eln=ELNAnnotation(defaultDisplayUnit='g/g/hour'),
-    )
+
     rate = Quantity(
         type=np.float64,
         shape=['*'],
@@ -900,6 +892,15 @@ class ReactionConditionsData(PlotSection):
     )
 
     set_total_flow_rate = Quantity(
+        type=np.float64,
+        shape=['*'],
+        unit='m**3/s',
+        a_eln=ELNAnnotation(
+            component='NumberEditQuantity', defaultDisplayUnit='mL/minute'
+        ),
+    )
+
+    total_flow_rate = Quantity(
         type=np.float64,
         shape=['*'],
         unit='m**3/s',
@@ -1555,19 +1556,12 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         analysed = data['Sorted Data'][methodname]['NH3 Decomposition']
 
+        set_total_flow = np.zeros(len(analysed['Relative Time [Seconds]']))
         for col in analysed.dtype.names:
             if col.endswith('Target Calculated Realtime Value [mln|min]'):
                 name_split = col.split('(')
                 gas_name = name_split[1].split(')')
-                if 'NH3_High' in gas_name:
-                    reagent = Reagent(
-                        name='ammonia',
-                        flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
-                        gas_concentration_in=[1.0] * len(analysed[col]),
-                    )
-                    if reagent.flow_rate.any() > 0.0:
-                        reagents.append(reagent)
-                elif 'NH3_Low' in gas_name:
+                if 'NH3_High' in gas_name or 'NH3_Low' in gas_name:
                     reagent = Reagent(
                         name='ammonia',
                         flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
@@ -1582,13 +1576,19 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     )
                     if reagent.flow_rate.any() > 0.0:
                         reagents.append(reagent)
+            if col.endswith('Target Setpoint [mln|min]'):
+                set_total_flow += analysed[col] * ureg.milliliter / ureg.minute
 
         feed.reagents = reagents
         total_flow_rate = np.zeros(len(reagents[0].flow_rate))
         for reagent in reagents:
             total_flow_rate += reagent.flow_rate
-        feed.set_total_flow_rate = total_flow_rate
+        feed.total_flow_rate = total_flow_rate
 
+        feed.set_total_flow_rate = set_total_flow
+        feed.contact_time = (
+            analysed['W|F [gs|ml]'] * ureg.second * ureg.gram / ureg.milliliter
+        )
         conversion = ReactantData(
             name='ammonia',
             conversion=np.nan_to_num(analysed['NH3 Conversion [%]']),
