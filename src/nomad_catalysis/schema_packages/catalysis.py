@@ -74,6 +74,8 @@ def add_catalyst(archive: 'EntryArchive') -> None:
         archive.results.properties.catalytic = CatalyticProperties()
     if not archive.results.properties.catalytic.catalyst:
         archive.results.properties.catalytic.catalyst = Catalyst()
+    if not archive.results.material:
+        archive.results.material = Material()
 
 
 def add_catalyst_characterization(archive: 'EntryArchive') -> None:
@@ -1266,17 +1268,17 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         number_of_runs = 0
 
         for col in data.columns:
-            if len(data[col]) < 1:
+            if len(data[col]) < 2:
                 continue
+            if col == 'step':
+                feed.runs = data['step']
+                cat_data.runs = data['step']
+
             col_split = col.split(' ')
             if len(col_split) < 2:  # noqa: PLR2004
                 continue
 
             number_of_runs = max(number_of_runs, len(data[col]))
-
-            if col_split[0] == 'step':
-                feed.runs = data['step']
-                cat_data.runs = data['step']
 
             if col_split[0] == 'x':
                 if len(col_split) == 3 and ('%' in col_split[2]):  # noqa: PLR2004
@@ -1411,7 +1413,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 else:
                     product = ProductData(
                         name=col_split[1],
-                        gas_concentration_out=np.nan_to_num(data[col]),
+                        gas_concentration_out=np.nan_to_num(data[col]) / 100,
                     )
                     products.append(product)
                     product_names.append(col_split[1])
@@ -1434,6 +1436,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             sample.lab_id = str(data['sample_id'][0])
         if 'catalyst' in data.columns:  # is not None:
             sample.name = str(data['catalyst'][0])
+            reactor_filling.catalyst_name = str(data['catalyst'][0])
 
         if (
             (self.samples is None or self.samples == [])
@@ -1450,7 +1453,15 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             samples.append(sample)
             self.samples = samples
 
-        for reagent in reagents:
+        for n, reagent in enumerate(reagents):
+            if (
+                self.reaction_conditions is not None
+                and self.reaction_conditions.reagents is not None
+                and self.reaction_conditions.reagents[n].pure_component is not None
+                and self.reaction_conditions.reagents[n].pure_component.iupac_name
+                is not None
+            ):
+                continue
             reagent.normalize(archive, logger)
         feed.reagents = reagents
 
