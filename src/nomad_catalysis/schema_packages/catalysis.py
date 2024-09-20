@@ -38,6 +38,8 @@ from nomad.metainfo import (
 from nomad.metainfo.metainfo import Category
 from nomad.units import ureg
 
+from .chemical_data import chemical_data
+
 if TYPE_CHECKING:
     from nomad.datamodel.datamodel import (
         EntryArchive,
@@ -664,6 +666,33 @@ class Reagent(ArchiveSection):
 
     pure_component = SubSection(section_def=PubChemPureSubstanceSection)
 
+    def update_chemical_info(self):
+        """
+        This function mapps the chemical information of the reagent from a local
+        dictionary chemical data and returns a pure_component object.
+        """
+
+        # Resolve aliases to primary keys if necessary
+        chemical_key = chemical_data.get(self.name)
+        # If the value is a string, it refers to another key, so resolve it
+        if isinstance(chemical_key, str):
+            chemical_key = chemical_data[chemical_key]
+        else:
+            chemical_key = chemical_key
+
+        pure_component = PubChemPureSubstanceSection()
+        if chemical_key:
+            pure_component.name = self.name
+            pure_component.pub_chem_id = chemical_key.get('pub_chem_id')
+            pure_component.iupac_name = chemical_key.get('iupac_name')
+            pure_component.molecular_formula = chemical_key.get('molecular_formula')
+            pure_component.molecular_mass = chemical_key.get('molecular_mass')
+            pure_component.inchi = chemical_key.get('inchi', None)  # Optional
+            pure_component.inchi_key = chemical_key.get('inchi_key', None)  # Optional
+            pure_component.cas_number = chemical_key.get('cas_number', None)  # Optional
+
+        return pure_component
+
     def normalize(self, archive, logger):
         """
         The normalizer will run for the subsection `PureSubstanceComponent` class.
@@ -686,40 +715,16 @@ class Reagent(ArchiveSection):
             return
         if self.name in ['C5-1', 'C6-1', 'nC5', 'nC6', 'Unknown', 'inert', 'P>=5C']:
             return
-        elif self.name == 'n-Butene':
-            self.name = '1-butene'
-        elif self.name == 'MAN':
-            self.name = 'maleic anhydride'
         elif '_' in self.name:
             self.name = self.name.replace('_', ' ')
 
         if self.name and self.pure_component is None:
             import time
 
-            self.pure_component = PubChemPureSubstanceSection(name=self.name)
-            if self.name == 'propionic acid':
-                self.pub_chem_id = 1032
-                self.pure_component.iupac_name = 'propanoic acid'
-                self.pure_component.molecular_formula = 'C3H6O2'
-                self.pure_component.molecular_mass = 74.08
-                return
-            elif self.name in ['CO', 'carbon monoxide']:
-                self.pub_chem_id = 281
-                self.pure_component.iupac_name = 'carbon monoxide'
-                self.pure_component.molecular_formula = 'CO'
-                self.pure_component.molecular_mass = 28.01
-                self.pure_component.inchi = 'InChI=1S/CO/c1-2'
-                self.pure_component.inchi_key = 'UGFAIRIUMAVXCW-UHFFFAOYSA-N'
-                self.pure_component.cas_number = '630-08-0'
-                return
-            elif self.name in ['CO2', 'carbon dioxide']:
-                self.pub_chem_id = 280
-                self.pure_component.iupac_name = 'carbon dioxide'
-                self.pure_component.molecular_formula = 'CO2'
-                self.pure_component.molecular_mass = 44.01
-                self.pure_component.inchi = 'InChI=1S/CO2/c2-1-3'
-                self.pure_component.inchi_key = 'CURLTUGMZLYLDI-UHFFFAOYSA-N'
-                self.pure_component.cas_number = '124-38-9'
+            pure_component = self.update_chemical_info()
+            self.pure_component = pure_component
+
+            if self.pure_component.iupac_name is not None:
                 return
             else:
                 time.sleep(1)
