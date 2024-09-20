@@ -19,12 +19,13 @@ chemical_data = {
         'cas_number': '124-38-9',
     },
     'CO2': 'carbon dioxide',  # Reference to 'carbon dioxide'
-    'propionic acid': {
+    'propanoic acid': {
         'pub_chem_id': 1032,
         'iupac_name': 'propanoic acid',
         'molecular_formula': 'C3H6O2',
         'molecular_mass': 74.08,
     },
+    'propionic acid': 'propanoic acid',  # Reference to 'propanoic acid'
     'ammonia': {
         'pub_chem_id': 222,
         'iupac_name': 'ammonia',  # actually 'azane'
@@ -166,12 +167,7 @@ chemical_data = {
         'inchi': 'InChI=1S/C3H4/c1-3-2/h1H,3H2',
     },
     'propine': 'propyne',  # Reference to 'propyne'
-    'propionic acid': {
-        'pub_chem_id': 1032,
-        'iupac_name': 'propanoic acid',
-        'molecular_formula': 'C3H6O2',
-        'molecular_mass': 74.08,
-    },
+    'C3H4': 'propyne',  # Reference to 'propyne'
     'prop-2-enoic acid': {
         'pub_chem_id': 6581,
         'iupac_name': 'prop-2-enoic acid',

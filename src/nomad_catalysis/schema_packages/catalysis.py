@@ -677,8 +677,6 @@ class Reagent(ArchiveSection):
         # If the value is a string, it refers to another key, so resolve it
         if isinstance(chemical_key, str):
             chemical_key = chemical_data[chemical_key]
-        else:
-            chemical_key = chemical_key
 
         pure_component = PubChemPureSubstanceSection()
         if chemical_key:
