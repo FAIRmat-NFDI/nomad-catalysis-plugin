@@ -137,4 +137,5 @@
         - product_yield
         - space_time_yield
         - pure_component:
-            iupac_name
+            - name
+            - iupac_name
