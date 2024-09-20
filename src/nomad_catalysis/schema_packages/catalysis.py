@@ -375,6 +375,11 @@ class CatalystSample(CompositeSystem, Schema):
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.catalyst,
         )
+        if len(self.catalyst_type) > 1:
+            for n in range(1, len(self.catalyst_type)):
+                archive.results.properties.catalytic.catalyst.catalyst_type.append(
+                    self.catalyst_type[n]
+                )
 
         name_material_mapping = {'name': 'material_name'}
         map_and_assign_attributes(
@@ -402,7 +407,7 @@ class CatalystSample(CompositeSystem, Schema):
 
         if self.lab_id is None:
             logger.warning("""Sample contains no lab_id, automatic linking of
-                         measurements to this sample entry does not work.""")
+                         measurements to this sample entry might be more difficult.""")
 
         from nomad.search import MetadataPagination, search
 
@@ -1268,7 +1273,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         number_of_runs = 0
 
         for col in data.columns:
-            if len(data[col]) < 2:
+            if len(data[col]) < 2:  # noqa: PLR2004
                 continue
             if col == 'step':
                 feed.runs = data['step']
