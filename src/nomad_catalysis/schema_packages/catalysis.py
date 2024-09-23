@@ -716,15 +716,17 @@ class Reagent(ArchiveSection):
         elif '_' in self.name:
             self.name = self.name.replace('_', ' ')
 
-        if self.name and self.pure_component is None:
-            import time
-
+        if self.name and (
+            self.pure_component is None or self.pure_component.iupac_name is None
+        ):
             pure_component = self.update_chemical_info()
             self.pure_component = pure_component
 
             if self.pure_component.iupac_name is not None:
                 return
             else:
+                import time
+
                 time.sleep(1)
                 self.pure_component.normalize(archive, logger)
 
