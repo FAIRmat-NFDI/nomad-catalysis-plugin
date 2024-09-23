@@ -6,9 +6,9 @@ a guide of how to use the plugin and effectively manage and share catalysis rese
 in NOMAD.
 
 This plugin was developed as part of Task Area E2 "Heterogeneous Catalysis" of the
-(FAIRmat)[https://www.fairmat-nfdi.eu/fairmat] project within the National Research Data
-Infrastucture ((NFDI)[https://www.nfdi.de]). It can currently be tested in the
-(Example Oasis)[https://nomad-lab.eu/prod/v1/oasis/gui/] provided by FAIRmat/NOMAD-lab.
+[FAIRmat](https://www.fairmat-nfdi.eu/fairmat) project within the National Research Data
+Infrastucture ([NFDI](https://www.nfdi.de)). It can currently be tested in the
+[Example Oasis](https://nomad-lab.eu/prod/v1/oasis/gui/) provided by FAIRmat/NOMAD-lab.
 NOMAD facilitates the collection, storage, analysis and dissemination of research data,
 adhering to the principles of FAIR (Findable, Accessible, Interoperable, and Reusable)
 data management.
@@ -24,7 +24,7 @@ development and feedback about the plugin and documentation is welcome.
 <div markdown="block">
 
 ## Included Entry Types
-This plugin includes two new NOMAD entry types: `CatalystSample` and `CatalyticReaction`.
+This plugin includes two new NOMAD entry types: `CatalystSample` and `CatalyticReaction`. More information can be found in the [References](reference/references.md) and the [How-to guides](How_to/use_this_plugin.md).
 
 ### Tutorial
 
