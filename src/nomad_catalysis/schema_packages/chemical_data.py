@@ -288,6 +288,7 @@ chemical_data = {
         'cas_number': '107-18-6',
     },
     'allyl alcohol': 'prop-2-en-1-ol',  # Reference to 'allyl alcohol'
+    'allylalcohol': 'prop-2-en-1-ol',  # Reference to 'prop-2-en-1-ol'
     'propan-1-ol': {
         'pub_chem_id': 1031,
         'iupac_name': 'propan-1-ol',
