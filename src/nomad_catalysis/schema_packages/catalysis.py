@@ -679,8 +679,8 @@ class Reagent(ArchiveSection):
             chemical_key = chemical_data[chemical_key]
 
         pure_component = PubChemPureSubstanceSection()
+        pure_component.name = self.name
         if chemical_key:
-            pure_component.name = self.name
             pure_component.pub_chem_id = chemical_key.get('pub_chem_id')
             pure_component.iupac_name = chemical_key.get('iupac_name')
             pure_component.molecular_formula = chemical_key.get('molecular_formula')
@@ -723,11 +723,13 @@ class Reagent(ArchiveSection):
             self.pure_component = pure_component
 
             if self.pure_component.iupac_name is not None:
+                logger.info(f'found {self.name} in chemical_data, no pubchem call made')
                 return
             else:
+                import random
                 import time
 
-                time.sleep(1)
+                time.sleep(random.uniform(0.5, 5))
                 self.pure_component.normalize(archive, logger)
 
         if self.name is None and self.pure_component is not None:
