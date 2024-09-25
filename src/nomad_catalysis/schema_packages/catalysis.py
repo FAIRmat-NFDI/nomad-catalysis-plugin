@@ -679,8 +679,8 @@ class Reagent(ArchiveSection):
             chemical_key = chemical_data[chemical_key]
 
         pure_component = PubChemPureSubstanceSection()
+        pure_component.name = self.name
         if chemical_key:
-            pure_component.name = self.name
             pure_component.pub_chem_id = chemical_key.get('pub_chem_id')
             pure_component.iupac_name = chemical_key.get('iupac_name')
             pure_component.molecular_formula = chemical_key.get('molecular_formula')
@@ -723,11 +723,13 @@ class Reagent(ArchiveSection):
             self.pure_component = pure_component
 
             if self.pure_component.iupac_name is not None:
+                logger.info(f'found {self.name} in chemical_data, no pubchem call made')
                 return
             else:
+                import random
                 import time
 
-                time.sleep(1)
+                time.sleep(random.uniform(0.5, 5))
                 self.pure_component.normalize(archive, logger)
 
         if self.name is None and self.pure_component is not None:
@@ -1342,8 +1344,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 else:
                     logger.warning('Gas hourly space velocity unit not recognized.')
 
-            if col_split[0] == 'Vflow':
-                if 'mL/min' in col_split[1]:
+            if col_split[0] == 'Vflow' or col_split[0] == 'flow_rate':
+                if 'mL/min' in col_split[1] or 'mln' in col_split[1]:
                     feed.set_total_flow_rate = (
                         np.nan_to_num(data[col]) * ureg.milliliter / ureg.minute
                     )
@@ -1467,6 +1469,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if (
                 self.reaction_conditions is not None
                 and self.reaction_conditions.reagents is not None
+                and self.reaction_conditions.reagents != []
                 and self.reaction_conditions.reagents[n].pure_component is not None
                 and self.reaction_conditions.reagents[n].pure_component.iupac_name
                 is not None
@@ -1895,7 +1898,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             fig = self.single_plot(x, x_text, y.to(unit_dict[var]), y_text, title)
             self.figures.append(PlotlyFigure(label=title, figure=fig.to_plotly_json()))
 
-        if self.results[0].products[0].selectivity is not None:
+        if (
+            self.results[0].products is not None
+            and self.results[0].products != []
+            and self.results[0].products[0].selectivity is not None
+        ):
             fig0 = go.Figure()
             for i, c in enumerate(self.results[0].products):
                 fig0.add_trace(
