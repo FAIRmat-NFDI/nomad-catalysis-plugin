@@ -1975,6 +1975,123 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         self.reaction_conditions.normalize(archive, logger)
 
+    def reduce_haber_data(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+        """
+        This function reduces the size of the arrays in the results section of the archive
+        to store in the archive.
+        """
+        if self.instruments[0].name == 'Haber':
+            Temp_ = []
+            Whsv_ = []
+            flow_ = []
+            Rate_ = []
+            Conv_ = []
+            NH3conc_ = []
+            Time_ = []
+            for i in range(50, len(self.reaction_conditions.set_temperature) - 50, 10):
+                deltaT = (
+                    self.reaction_conditions.set_temperature[i]
+                    - self.reaction_conditions.set_temperature[50 + i]
+                )
+                if abs(deltaT) < 0.05 * ureg.kelvin:
+                    T = self.reaction_conditions.set_temperature[i]
+                    W = self.reaction_conditions.weight_hourly_space_velocity[i]
+                    F = self.reaction_conditions.total_flow_rate[i]
+                    C = self.results[0].reactants_conversions[0].conversion[i]
+                    Conc = self.reaction_conditions.reagents[0].gas_concentration_in[i]
+                    R = self.results[0].rates[0].reaction_rate[i]
+                    Z = self.results[0].time_on_stream[i]
+
+                    Temp_.append(T.magnitude)
+                    Whsv_.append(W.magnitude)
+                    flow_.append(F.magnitude)
+                    NH3conc_.append(Conc)
+                    Conv_.append(C)
+                    Rate_.append(R.magnitude)
+                    Time_.append(Z.magnitude)
+
+            # getting the temperature values of each step
+            from itertools import groupby
+
+            Temp_program = [key for key, _group in groupby(Temp_)]
+            # Temp_program = Temp_program.reset_index(drop=True)
+
+            Temps = []
+            flows = []
+            WHSVs = []
+            NH3concs = []
+            Convs = []
+            Rates = []
+            Times = []
+
+            for step in range(len(Temp_program)):
+                # defining the nested lists names
+                Temp_h = []
+                flow_h = []
+                WHSV_h = []
+                NH3conc_h = []
+                Conv_h = []
+                Rate_h = []
+                Time = []
+
+                for j in range(len(Temp_) - 1):
+                    if Temp_[j] == Temp_program[step] and (
+                        step < (len(Temp_program) / 2) and j < (len(Temp_) / 2)
+                    ):
+                        Temp_h.append(Temp_[j])
+                        flow_h.append(flow_[j])
+                        WHSV_h.append(Whsv_[j])
+                        Conv_h.append(Conv_[j])
+                        Rate_h.append(Rate_[j])
+                        NH3conc_h.append(NH3conc_[j])
+                        Time.append(Time_[j])
+                    elif (
+                        step < (len(Temp_program) / 2) and Temp_[j] > Temp_program[step]
+                    ):
+                        continue
+                    elif (
+                        step >= (len(Temp_program) / 2)
+                        and j > (len(Temp_) / 2)
+                        and Temp_[j] == Temp_program[step]
+                    ):
+                        Temp_h.append(Temp_[j])
+                        flow_h.append(flow_[j])
+                        WHSV_h.append(Whsv_[j])
+                        Conv_h.append(Conv_[j])
+                        Rate_h.append(Rate_[j])
+                        NH3conc_h.append(NH3conc_[j])
+                        Time.append(Time_[j])
+                    elif (
+                        step >= (len(Temp_program) / 2)
+                        and Temp_[j] < Temp_program[step]
+                    ):
+                        continue
+
+                Temps.append(np.mean(Temp_h))
+                flows.append(np.mean(flow_h))
+                WHSVs.append(np.mean(WHSV_h))
+                Convs.append(np.mean(Conv_h))
+                Rates.append(np.mean(Rate_h))
+                NH3concs.append(np.mean(NH3conc_h))
+                Times.append(Time[-1])
+
+            archive.results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity = WHSVs
+            archive.results.properties.catalytic.reaction.reaction_conditions.flow_rate = (
+                flows * ureg.m**3 / ureg.second
+            )
+            archive.results.properties.catalytic.reaction.reaction_conditions.temperature = (
+                Temps * ureg.kelvin
+            )
+            archive.results.properties.catalytic.reaction.reaction_conditions.time_on_stream = (
+                Times * ureg.second
+            )
+
+        react = Reactant(
+            name='ammonia', conversion=Convs, gas_concentration_in=NH3concs
+        )
+
+        return react
+
     def return_conversion_results(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> list:
@@ -2035,12 +2152,21 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         f"""Large arrays in {react.name}, reducing to store in the
                         archive."""
                     )
-                    if react.conversion is not None:
-                        react.conversion = i.conversion[50::100]
-                    if react.gas_concentration_in is not None:
-                        react.gas_concentration_in = i.gas_concentration_in[50::100]
-                    if react.gas_concentration_out is not None:
-                        react.gas_concentration_out = i.gas_concentration_out[50::100]
+                    if (
+                        self.instruments is not None
+                        and self.instruments != []
+                        and self.instruments[0].name == 'Haber'
+                    ):
+                        react = self.reduce_haber_data(archive, logger)
+                    else:
+                        if react.conversion is not None:
+                            react.conversion = i.conversion[50::100]
+                        if react.gas_concentration_in is not None:
+                            react.gas_concentration_in = i.gas_concentration_in[50::100]
+                        if react.gas_concentration_out is not None:
+                            react.gas_concentration_out = i.gas_concentration_out[
+                                50::100
+                            ]
 
                 conversions_results.append(react)
 
