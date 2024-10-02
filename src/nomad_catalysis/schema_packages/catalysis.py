@@ -24,6 +24,7 @@ from nomad.datamodel.results import (
     Material,
     Product,
     Properties,
+    Rate,
     Reactant,
     Reaction,
     ReactionConditions,
@@ -377,7 +378,7 @@ class CatalystSample(CompositeSystem, Schema):
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.catalyst,
         )
-        if len(self.catalyst_type) > 1:
+        if self.catalyst_type is list and len(self.catalyst_type) > 1:
             for n in range(1, len(self.catalyst_type)):
                 archive.results.properties.catalytic.catalyst.catalyst_type.append(
                     self.catalyst_type[n]
@@ -677,7 +678,12 @@ class Reagent(ArchiveSection):
         # If the value is a string, it refers to another key, so resolve it
         if isinstance(chemical_key, str):
             chemical_key = chemical_data[chemical_key]
-
+        # If the value is not a string or a dictionary, it is not in the database, try
+        # to resolve it by removing capital letters
+        elif not isinstance(chemical_key, dict):
+            chemical_key = chemical_data.get(self.name.lower())
+            if isinstance(chemical_key, str):
+                chemical_key = chemical_data[chemical_key]
         pure_component = PubChemPureSubstanceSection()
         pure_component.name = self.name
         if chemical_key:
@@ -1925,18 +1931,66 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
 
         if self.results[0].rates:
+            rates_list = [
+                'reaction_rate',
+                'rate',
+                'specific_mass_rate',
+                'specific_surface_area_rate',
+                'turnover_frequency',
+            ]
+            rates_units = {
+                'reaction_rate': ['mmol reagent/g_cat/h', 'mmol/g/hour'],
+                'rate': ['g reagent/g_cat/h', '1/hour'],
+                'specific_mass_rate': ['mmol reagent/g_cat/h', '1/hour'],
+                'specific_surface_area_rate': [
+                    'mmol reagent/m**2 cat/h',
+                    'mmol/m**2/hour',
+                ],
+                'turnover_frequency': ['1/h', '1/hour'],
+            }
+            previous_rate = []
+
             fig = go.Figure()
             for i, c in enumerate(self.results[0].rates):
-                fig.add_trace(
-                    go.Scatter(
-                        x=x,
-                        y=self.results[0].rates[i].reaction_rate,
-                        name=self.results[0].rates[i].name,
-                    )
-                )
+                if i == 0:
+                    for rate_str in rates_list:
+                        y, y_text = self.get_y_data(
+                            {rate_str: 'rates.' + rate_str}, rate_str
+                        )
+                        if y is not None:
+                            y.to(rates_units[rate_str][1])
+                            fig.add_trace(
+                                go.Scatter(
+                                    x=x,
+                                    y=y,
+                                    name=self.results[0].rates[i].name,
+                                )
+                            )
+                            y_text = y_text + ' (' + rates_units[rate_str][0] + ')'
+                            previous_rate = rate_str
+                            break
+                else:
+                    y = getattr(self.results[0].rates[i], previous_rate)
+                    if y is not None:
+                        y.to(rates_units[previous_rate][1])
+                        fig.add_trace(
+                            go.Scatter(
+                                x=x,
+                                y=y,
+                                name=self.results[0].rates[i].name + ' ' + rate_str,
+                            )
+                        )
+
+                # fig.add_trace(
+                #     go.Scatter(
+                #         x=x,
+                #         y=self.results[0].rates[i].reaction_rate,
+                #         name=self.results[0].rates[i].name,
+                #     )
+                # )
             fig.update_layout(title_text='Rates', showlegend=True)
             fig.update_xaxes(title_text=x_text)
-            fig.update_yaxes(title_text='reaction rates (mmol product/g cat/h)')
+            fig.update_yaxes(title_text=y_text)
             self.figures.append(
                 PlotlyFigure(label='Rates', figure=fig.to_plotly_json())
             )
@@ -2005,9 +2059,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 'Temp': self.reaction_conditions.set_temperature,
                 'Whsv': self.reaction_conditions.weight_hourly_space_velocity,
                 'Flow': self.reaction_conditions.total_flow_rate,
-                'Rate': self.results[0].reactants_conversions[0].conversion,
-                'Conv': self.reaction_conditions.reagents[0].gas_concentration_in,
-                'NH3conc': self.results[0].rates[0].reaction_rate,
+                'Conv': self.results[0].reactants_conversions[0].conversion,
+                'NH3conc': self.reaction_conditions.reagents[0].gas_concentration_in,
+                'Rate': self.results[0].rates[0].reaction_rate,
                 'Time': self.results[0].time_on_stream,
             }
             data_dict_no_ramps = {}
@@ -2082,6 +2136,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             archive.results.properties.catalytic.reaction.reaction_conditions.time_on_stream = (  # noqa: E501
                 Times * ureg.second
             )
+            h2_rate = Rate(
+                name='molecular hydrogen',
+                reaction_rate=Rates * ureg.mmol / ureg.g / ureg.hour,
+            )
+            archive.results.properties.catalytic.reaction.rate = [h2_rate]
 
         react = Reactant(
             name='ammonia', conversion=Convs, gas_concentration_in=NH3concs

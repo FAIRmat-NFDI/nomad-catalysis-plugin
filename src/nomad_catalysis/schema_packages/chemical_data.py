@@ -136,7 +136,6 @@ chemical_data = {
         'cas_number': '74-82-8',
     },
     'CH4': 'methane',  # Reference to 'methane'
-    'Methane': 'methane',  # Reference to 'methane'
     'ethane': {
         'pub_chem_id': 6324,
         'iupac_name': 'ethane',
@@ -250,6 +249,7 @@ chemical_data = {
         'cas_number': '106-97-8',
     },
     'n-butane': 'butane',  # Reference to 'butane'
+    'n-Butane': 'butane',  # Reference to 'butane'
     'nbutane': 'butane',  # Reference to 'butane'
     '2-methylpropane': {
         'pub_chem_id': 6360,
@@ -266,6 +266,33 @@ chemical_data = {
     'isobutane': '2-methylpropane',
     'Isobutane': '2-methylpropane',
     'ibutane': '2-methylpropane',
+    'butan-1-ol': {
+        'pub_chem_id': 263,
+        'iupac_name': 'butan-1-ol',
+        'molecular_formula': 'C4H10O',
+        'molecular_mass': 74.073164938,
+        'molar_mass': 74.12,
+        'monoisotopic_mass': 74.073164938,
+        'inchi': 'InChI=1S/C4H10O/c1-2-3-4-5/h5H,2-4H2,1H3',
+        'inchi_key': 'LRHPLDYGYMQRHN-UHFFFAOYSA-N',
+        'smile': 'CCCCO',
+        'canonical_smile': 'CCCCO',
+        'cas_number': '71-36-3',
+    },
+    'butanol': 'butan-1-ol',  # Reference to 'butan-1-ol'
+    'butanal': {
+        'pub_chem_id': 261,
+        'iupac_name': 'butanal',
+        'molecular_formula': 'C4H8O',
+        'molecular_mass': 72.057514874,
+        'molar_mass': 72.11,
+        'monoisotopic_mass': 72.057514874,
+        'inchi': 'InChI=1S/C4H8O/c1-2-3-4-5/h4H,2-3H2,1H3',
+        'inchi_key': 'ZTQSAGDEMFDKMZ-UHFFFAOYSA-N',
+        'smile': 'CCCC=O',
+        'canonical_smile': 'CCCC=O',
+    },
+    'butyraldehyde': 'butanal',  # Reference to 'butanal'
     'pent-1-ene': {
         'pub_chem_id': 8004,
         'iupac_name': 'pent-1-ene',
@@ -303,7 +330,6 @@ chemical_data = {
     'methyl alcohol': 'methanol',  # Reference to 'methanol'
     'MeOH': 'methanol',  # Reference to 'methanol'
     'CH3OH': 'methanol',  # Reference to 'methanol'
-    'Methanol': 'methanol',  # Reference to 'methanol'
     'formic acid': {
         'pub_chem_id': 284,
         'iupac_name': 'formic acid',
@@ -375,6 +401,8 @@ chemical_data = {
     },
     '1-propanol': 'propan-1-ol',  # Reference to 'propan-1-ol'
     'n-propanol': 'propan-1-ol',  # Reference to 'propan-1-ol'
+    'npropanol': 'propan-1-ol',  # Reference to 'propan-1-ol'
+    'propanol': 'propan-1-ol',  # Reference to 'propan-1-ol'
     'methyl acetate': {
         'pub_chem_id': 6589,
         'iupac_name': 'methyl acetate',
@@ -410,6 +438,11 @@ chemical_data = {
     },
     'butylene': '1-butene',  # Reference to '1-butene'
     'n-Butene': '1-butene',  # Reference to '1-butene'
+    'butene': {
+        'iupac_name': 'butene',
+        'molecular_formula': 'C4H8',
+    },  # unspecified isomer
+    'nictbutene': 'butene',  # Reference to 'butene', unspecified isomer
     'furan': {
         'pub_chem_id': 8029,
         'iupac_name': 'furan',
@@ -429,4 +462,8 @@ chemical_data = {
     },
     'maleic anhydride': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
     'MAN': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
+    'p>=5c': {
+        'name': 'p>=5c',
+        'iupac_name': 'C5+',
+    },  # unspecified longer hydrocarbon
 }
