@@ -160,8 +160,8 @@ heterogeneous_catalysis_app = yaml.safe_load(
             nbins: 30
             x:
               quantity: results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity
-              unit: 'ml/(g*s)'
-            title: 'Reaction Weight Hourly Space Velocity'
+              unit: 'ml/(g*hr)'
+            title: 'Weight Hourly Space Velocity'
             scale: linear
             showinput: false
             type: histogram

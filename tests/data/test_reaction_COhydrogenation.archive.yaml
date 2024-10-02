@@ -8,5 +8,3 @@ data:
   reaction_type: hydrogenation
   reactor_filling:
     catalyst_mass: 0.251
-  samples:
-  - lab_id: '3624'

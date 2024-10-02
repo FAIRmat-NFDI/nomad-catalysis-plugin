@@ -24,6 +24,7 @@ from nomad.datamodel.results import (
     Material,
     Product,
     Properties,
+    Rate,
     Reactant,
     Reaction,
     ReactionConditions,
@@ -377,7 +378,7 @@ class CatalystSample(CompositeSystem, Schema):
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.catalyst,
         )
-        if len(self.catalyst_type) > 1:
+        if self.catalyst_type is list and len(self.catalyst_type) > 1:
             for n in range(1, len(self.catalyst_type)):
                 archive.results.properties.catalytic.catalyst.catalyst_type.append(
                     self.catalyst_type[n]
@@ -677,7 +678,12 @@ class Reagent(ArchiveSection):
         # If the value is a string, it refers to another key, so resolve it
         if isinstance(chemical_key, str):
             chemical_key = chemical_data[chemical_key]
-
+        # If the value is not a string or a dictionary, it is not in the database, try
+        # to resolve it by removing capital letters
+        elif not isinstance(chemical_key, dict):
+            chemical_key = chemical_data.get(self.name.lower())
+            if isinstance(chemical_key, str):
+                chemical_key = chemical_data[chemical_key]
         pure_component = PubChemPureSubstanceSection()
         pure_component.name = self.name
         if chemical_key:
@@ -1865,6 +1871,61 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         fig.update_yaxes(title_text=y_text)
         return fig
 
+    def make_rates_plot(self, x, x_text):
+        rates_list = [
+            'reaction_rate',
+            'rate',
+            'specific_mass_rate',
+            'specific_surface_area_rate',
+            'turnover_frequency',
+        ]
+        rates_units = {
+            'reaction_rate': ['mmol reagent/g_cat/h', 'mmol/g/hour'],
+            'rate': ['g reagent/g_cat/h', '1/hour'],
+            'specific_mass_rate': ['mmol reagent/g_cat/h', '1/hour'],
+            'specific_surface_area_rate': [
+                'mmol reagent/m**2 cat/h',
+                'mmol/m**2/hour',
+            ],
+            'turnover_frequency': ['1/h', '1/hour'],
+        }
+        previous_rate = []
+
+        fig = go.Figure()
+        for i, c in enumerate(self.results[0].rates):
+            if i == 0:
+                for rate_str in rates_list:
+                    y, y_text = self.get_y_data(
+                        {rate_str: 'rates.' + rate_str}, rate_str
+                    )
+                    if y is not None:
+                        y.to(rates_units[rate_str][1])
+                        fig.add_trace(
+                            go.Scatter(
+                                x=x,
+                                y=y,
+                                name=self.results[0].rates[i].name,
+                            )
+                        )
+                        y_text = y_text + ' (' + rates_units[rate_str][0] + ')'
+                        previous_rate = rate_str
+                        break
+            else:
+                y = getattr(self.results[0].rates[i], previous_rate)
+                if y is not None:
+                    y.to(rates_units[previous_rate][1])
+                    fig.add_trace(
+                        go.Scatter(
+                            x=x,
+                            y=y,
+                            name=self.results[0].rates[i].name + ' ' + rate_str,
+                        )
+                    )
+        fig.update_layout(title_text='Rates', showlegend=True)
+        fig.update_xaxes(title_text=x_text)
+        fig.update_yaxes(title_text=y_text)
+        self.figures.append(PlotlyFigure(label='Rates', figure=fig.to_plotly_json()))
+
     def plot_figures(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
         This function creates the figures for the CatalyticReaction class.
@@ -1925,21 +1986,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
 
         if self.results[0].rates:
-            fig = go.Figure()
-            for i, c in enumerate(self.results[0].rates):
-                fig.add_trace(
-                    go.Scatter(
-                        x=x,
-                        y=self.results[0].rates[i].reaction_rate,
-                        name=self.results[0].rates[i].name,
-                    )
-                )
-            fig.update_layout(title_text='Rates', showlegend=True)
-            fig.update_xaxes(title_text=x_text)
-            fig.update_yaxes(title_text='reaction rates (mmol product/g cat/h)')
-            self.figures.append(
-                PlotlyFigure(label='Rates', figure=fig.to_plotly_json())
-            )
+            self.make_rates_plot(x, x_text)
+
         if not self.results[0].reactants_conversions:
             return
         if self.results[0].reactants_conversions[0].conversion is not None and (
@@ -1975,6 +2023,161 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         self.reaction_conditions.normalize(archive, logger)
 
+    def remove_ramps_from_data(self, data_with_ramps: np.array, data) -> np.array:
+        """
+        This function removes the ramps with changeing conditions from the data.
+        Args:
+            data_with_ramps (np.array): the data with ramps which is used to determine
+            the indices of the ramps, in this case the temperature data
+            data (np.array): the data which is supposed to be cleaned from the ramps
+        """
+        data_ = []
+        for i in range(50, len(data_with_ramps) - 50, 10):
+            deltaT = data_with_ramps[i] - data_with_ramps[50 + i]
+            if abs(deltaT) < 0.05 * ureg.kelvin:
+                T = data[i]
+                try:
+                    data_.append(T.magnitude)
+                except AttributeError:
+                    data_.append(T)
+        return data_
+
+    def reduce_haber_data(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+        """
+        This function reduces the size of the arrays for the results section of the
+        archive, by removing sections with changeing temperature conditions and
+        averaging the values at each steady state.
+        """
+        if self.instruments[0].name == 'Haber':
+            data_dict = {
+                'Temp': self.reaction_conditions.set_temperature,
+                'Whsv': self.reaction_conditions.weight_hourly_space_velocity,
+                'Flow': self.reaction_conditions.total_flow_rate,
+                'Conv': self.results[0].reactants_conversions[0].conversion,
+                'NH3conc': self.reaction_conditions.reagents[0].gas_concentration_in,
+                'Rate': self.results[0].rates[0].reaction_rate,
+                'Time': self.results[0].time_on_stream,
+            }
+            data_dict_no_ramps = {}
+            for key in data_dict:
+                data_dict_no_ramps[key] = self.remove_ramps_from_data(
+                    data_dict['Temp'], data_dict[key]
+                )
+
+            # getting the temperature values of each step
+            from itertools import groupby
+
+            Temp_program = [key for key, _group in groupby(data_dict_no_ramps['Temp'])]
+            # Temp_program = Temp_program.reset_index(drop=True)
+            Temp_ = data_dict_no_ramps['Temp']
+
+            Temps = []
+            flows = []
+            WHSVs = []
+            NH3concs = []
+            Convs = []
+            Rates = []
+            Times = []
+
+            for step in range(len(Temp_program)):
+                data_dict_single_step = {}
+                for key in data_dict_no_ramps:
+                    data_dict_single_step[key] = []
+
+                for j in range(len(Temp_) - 1):
+                    if Temp_[j] == Temp_program[step] and (
+                        step < (len(Temp_program) / 2) and j < (len(Temp_) / 2)
+                    ):
+                        for key in data_dict_no_ramps:
+                            data_dict_single_step[key].append(
+                                data_dict_no_ramps[key][j]
+                            )
+
+                    elif (
+                        step < (len(Temp_program) / 2) and Temp_[j] > Temp_program[step]
+                    ):
+                        continue
+                    elif (
+                        step >= (len(Temp_program) / 2)
+                        and j > (len(Temp_) / 2)
+                        and Temp_[j] == Temp_program[step]
+                    ):
+                        for key in data_dict_no_ramps:
+                            data_dict_single_step[key].append(
+                                data_dict_no_ramps[key][j]
+                            )
+                    elif (
+                        step >= (len(Temp_program) / 2)
+                        and Temp_[j] < Temp_program[step]
+                    ):
+                        continue
+
+                Temps.append(np.mean(data_dict_single_step['Temp']))
+                flows.append(np.mean(data_dict_single_step['Flow']))
+                WHSVs.append(np.mean(data_dict_single_step['Whsv']))
+                Convs.append(np.mean(data_dict_single_step['Conv']))
+                Rates.append(np.mean(data_dict_single_step['Rate']))
+                NH3concs.append(np.mean(data_dict_single_step['NH3conc']))
+                Times.append(data_dict_single_step['Time'][-1])
+
+            archive.results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity = WHSVs  # noqa: E501
+            archive.results.properties.catalytic.reaction.reaction_conditions.flow_rate = (  # noqa: E501
+                flows * ureg.m**3 / ureg.second
+            )
+            archive.results.properties.catalytic.reaction.reaction_conditions.temperature = (  # noqa: E501
+                Temps * ureg.kelvin
+            )
+            archive.results.properties.catalytic.reaction.reaction_conditions.time_on_stream = (  # noqa: E501
+                Times * ureg.second
+            )
+            h2_rate = Rate(
+                name='molecular hydrogen',
+                reaction_rate=Rates * ureg.mmol / ureg.g / ureg.hour,
+            )
+            archive.results.properties.catalytic.reaction.rate = [h2_rate]
+
+        react = Reactant(
+            name='ammonia', conversion=Convs, gas_concentration_in=NH3concs
+        )
+
+        return react
+
+    def check_react(self, react, threshold_datapoints, archive, logger):
+        """
+        This function checks if the arrays in the reactant are larger than the number
+        stored in "threshold_datapoints" (300). If the arrays are larger, it will reduce
+        the size to store in the archive. If it is a haber measurement, it will call the
+        function "reduce_haber_data" which averages the values at each steady state. If
+        it is not a haber measurement, it will reduce the size of the arrays by taking
+        every 100th value.
+        Args:
+            react (Reactant): the reactant object
+            threshold_datapoints (int): the size limit of the arrays above which the
+                arrays will be reduced in size.
+        return: the reactant object with the reduced arrays.
+        """
+        for key1 in react:
+            if (
+                getattr(react, key1) is not None
+                and len(getattr(react, key1)) > threshold_datapoints
+            ):
+                logger.info(
+                    f"""Large arrays in {react.name}, reducing to store in the
+                    archive."""
+                )
+                if (
+                    self.instruments is not None
+                    and self.instruments != []
+                    and self.instruments[0].name == 'Haber'
+                ):
+                    react = self.reduce_haber_data(archive, logger)
+                else:
+                    for key in react:
+                        if getattr(react, key) is not None:
+                            setattr(react, key, getattr(react, key)[50::100])
+                break
+        return react
+
     def return_conversion_results(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> list:
@@ -1997,13 +2200,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             for j in self.reaction_conditions.reagents:
                 if i.name != j.name:
                     continue
-                if (
-                    j.pure_component.iupac_name is not None
-                    and j.pure_component.iupac_name != 'azane'
-                ):
+                if j.pure_component.iupac_name is not None:
                     i.name = j.pure_component.iupac_name
-                elif j.pure_component.iupac_name == 'azane':
-                    i.name = 'ammonia'
+
                 if i.gas_concentration_in is None:
                     i.gas_concentration_in = j.gas_concentration_in
                 elif not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
@@ -2016,31 +2215,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     gas_concentration_in=i.gas_concentration_in,
                     gas_concentration_out=i.gas_concentration_out,
                 )
-
-                if (
-                    (
-                        react.conversion is not None
-                        and len(react.conversion) > threshold_datapoints
-                    )
-                    or (
-                        react.gas_concentration_in is not None
-                        and len(react.gas_concentration_in) > threshold_datapoints
-                    )
-                    or (
-                        react.gas_concentration_out is not None
-                        and len(react.gas_concentration_out) > threshold_datapoints
-                    )
-                ):
-                    logger.info(
-                        f"""Large arrays in {react.name}, reducing to store in the
-                        archive."""
-                    )
-                    if react.conversion is not None:
-                        react.conversion = i.conversion[50::100]
-                    if react.gas_concentration_in is not None:
-                        react.gas_concentration_in = i.gas_concentration_in[50::100]
-                    if react.gas_concentration_out is not None:
-                        react.gas_concentration_out = i.gas_concentration_out[50::100]
+                react = self.check_react(react, threshold_datapoints, archive, logger)
 
                 conversions_results.append(react)
 

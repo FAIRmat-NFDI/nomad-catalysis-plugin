@@ -6,6 +6,10 @@ chemical_data = {
         'molar_mass': 28.01,
         'inchi': 'InChI=1S/CO/c1-2',
         'inchi_key': 'UGFAIRIUMAVXCW-UHFFFAOYSA-N',
+        'molecular_mass': 27.994914619,
+        'monoisotopic_mass': 27.994914619,
+        'smile': '[C-]#[O+]',
+        'canonical_smile': '[C-]#[O+]',
         'cas_number': '630-08-0',
     },
     'CO': 'carbon monoxide',  # Reference to 'CO'
@@ -13,9 +17,13 @@ chemical_data = {
         'pub_chem_id': 280,
         'iupac_name': 'carbon dioxide',
         'molecular_formula': 'CO2',
-        'molar_mass': 44.01,
+        'molecular_mass': 43.989829239,
+        'molar_mass': 44.009,
+        'monoisotopic_mass': 43.989829239,
         'inchi': 'InChI=1S/CO2/c2-1-3',
         'inchi_key': 'CURLTUGMZLYLDI-UHFFFAOYSA-N',
+        'smile': 'C(=O)=O',
+        'canonical_smile': 'C(=O)=O',
         'cas_number': '124-38-9',
     },
     'CO2': 'carbon dioxide',  # Reference to 'carbon dioxide'
@@ -30,19 +38,28 @@ chemical_data = {
         'pub_chem_id': 222,
         'iupac_name': 'ammonia',  # actually 'azane'
         'molecular_formula': 'H3N',
-        'molar_mass': 17.03,
+        'molecular_mass': 17.0265491,
+        'molar_mass': 17.031,
+        'monoisotopic_mass': 17.0265491,
         'inchi': 'InChI=1S/H3N/h1H3',
         'inchi_key': 'QGZKDVFQNNGYKY-UHFFFAOYSA-N',
+        'smile': 'N',
+        'canonical_smile': 'N',
         'cas_number': '7664-41-7',
     },
     'NH3': 'ammonia',  # Reference to 'ammonia'
+    'Ammonia': 'ammonia',  # Reference to 'ammonia'
     'molecular hydrogen': {
         'pub_chem_id': 783,
         'iupac_name': 'molecular hydrogen',
         'molecular_formula': 'H2',
+        'molecular_mass': 2.0156500638,
         'molar_mass': 2.016,
+        'monoisotopic_mass': 2.0156500638,
         'inchi': 'InChI=1S/H2/h1H',
         'inchi_key': 'UFHFLCQGNIYNRP-UHFFFAOYSA-N',
+        'smile': '[HH]',
+        'canonical_smile': '[HH]',
         'cas_number': '1333-74-0',
     },
     'H2': 'molecular hydrogen',  # Reference to 'molecular hydrogen'
@@ -51,17 +68,27 @@ chemical_data = {
         'pub_chem_id': 962,
         'iupac_name': 'water',  # actually 'oxidane'
         'molecular_formula': 'H2O',
+        'molecular_mass': 18.010564683,
         'molar_mass': 18.015,
+        'monoisotopic_mass': 18.010564683,
         'inchi': 'InChI=1S/H2O/h1H2',
+        'inchi_key': 'XLYOFNOQVPJJNP-UHFFFAOYSA-N',
+        'smile': 'O',
+        'canonical_smile': 'O',
+        'cas_number': '7732-18-5',
     },
     'H2O': 'water',  # Reference to 'water'
     'argon': {
         'pub_chem_id': 23968,
         'iupac_name': 'argon',
         'molecular_formula': 'Ar',
+        'molecular_mass': 39.96238312,
         'molar_mass': 39.9,
+        'monoisotopic_mass': 39.96238312,
         'inchi': 'InChI=1S/Ar',
         'inchi_key': 'XKRFYHLGVUSROY-UHFFFAOYSA-N',
+        'smile': '[Ar]',
+        'canonical_smile': '[Ar]',
         'cas_number': '7440-37-1',
     },
     'Ar': 'argon',  # Reference to 'argon'
@@ -69,9 +96,13 @@ chemical_data = {
         'pub_chem_id': 947,
         'iupac_name': 'molecular nitrogen',
         'molecular_formula': 'N2',
+        'molecular_mass': 28.006148008,
         'molar_mass': 28.014,
+        'monoisotopic_mass': 28.006148008,
         'inchi': 'InChI=1S/N2/c1-2',
         'inchi_key': 'IJGRMHOSHXDMSA-UHFFFAOYSA-N',
+        'smile': 'N#N',
+        'canonical_smile': 'N#N',
         'cas_number': '7727-37-9',
     },
     'nitrogen': 'molecular nitrogen',  # Reference to 'molecular nitrogen'
@@ -80,9 +111,13 @@ chemical_data = {
         'pub_chem_id': 977,
         'iupac_name': 'molecular oxygen',
         'molecular_formula': 'O2',
-        'molar_mass': 32.00,
+        'molecular_mass': 31.989829239,
+        'molar_mass': 31.999,
+        'monoisotopic_mass': 31.989829239,
         'inchi': 'InChI=1S/O2/c1-2',
         'inchi_key': 'MYMOFIZGZYHOMD-UHFFFAOYSA-N',
+        'smile': 'O=O',
+        'canonical_smile': 'O=O',
         'cas_number': '7782-44-7',
     },
     'oxygen': 'molecular oxygen',  # Reference to 'molecular oxygen'
@@ -91,9 +126,13 @@ chemical_data = {
         'pub_chem_id': 297,
         'iupac_name': 'methane',
         'molecular_formula': 'CH4',
+        'molecular_mass': 16.0313001276,
         'molar_mass': 16.043,
+        'monoisotopic_mass': 16.0313001276,
         'inchi': 'InChI=1S/CH4/h1H4',
         'inchi_key': 'VNWKTOKETHGBQD-UHFFFAOYSA-N',
+        'smile': 'C',
+        'canonical_smile': 'C',
         'cas_number': '74-82-8',
     },
     'CH4': 'methane',  # Reference to 'methane'
@@ -210,6 +249,7 @@ chemical_data = {
         'cas_number': '106-97-8',
     },
     'n-butane': 'butane',  # Reference to 'butane'
+    'n-Butane': 'butane',  # Reference to 'butane'
     'nbutane': 'butane',  # Reference to 'butane'
     '2-methylpropane': {
         'pub_chem_id': 6360,
@@ -226,6 +266,33 @@ chemical_data = {
     'isobutane': '2-methylpropane',
     'Isobutane': '2-methylpropane',
     'ibutane': '2-methylpropane',
+    'butan-1-ol': {
+        'pub_chem_id': 263,
+        'iupac_name': 'butan-1-ol',
+        'molecular_formula': 'C4H10O',
+        'molecular_mass': 74.073164938,
+        'molar_mass': 74.12,
+        'monoisotopic_mass': 74.073164938,
+        'inchi': 'InChI=1S/C4H10O/c1-2-3-4-5/h5H,2-4H2,1H3',
+        'inchi_key': 'LRHPLDYGYMQRHN-UHFFFAOYSA-N',
+        'smile': 'CCCCO',
+        'canonical_smile': 'CCCCO',
+        'cas_number': '71-36-3',
+    },
+    'butanol': 'butan-1-ol',  # Reference to 'butan-1-ol'
+    'butanal': {
+        'pub_chem_id': 261,
+        'iupac_name': 'butanal',
+        'molecular_formula': 'C4H8O',
+        'molecular_mass': 72.057514874,
+        'molar_mass': 72.11,
+        'monoisotopic_mass': 72.057514874,
+        'inchi': 'InChI=1S/C4H8O/c1-2-3-4-5/h4H,2-3H2,1H3',
+        'inchi_key': 'ZTQSAGDEMFDKMZ-UHFFFAOYSA-N',
+        'smile': 'CCCC=O',
+        'canonical_smile': 'CCCC=O',
+    },
+    'butyraldehyde': 'butanal',  # Reference to 'butanal'
     'pent-1-ene': {
         'pub_chem_id': 8004,
         'iupac_name': 'pent-1-ene',
@@ -263,7 +330,6 @@ chemical_data = {
     'methyl alcohol': 'methanol',  # Reference to 'methanol'
     'MeOH': 'methanol',  # Reference to 'methanol'
     'CH3OH': 'methanol',  # Reference to 'methanol'
-    'Methanol': 'methanol',  # Reference to 'methanol'
     'formic acid': {
         'pub_chem_id': 284,
         'iupac_name': 'formic acid',
@@ -335,6 +401,8 @@ chemical_data = {
     },
     '1-propanol': 'propan-1-ol',  # Reference to 'propan-1-ol'
     'n-propanol': 'propan-1-ol',  # Reference to 'propan-1-ol'
+    'npropanol': 'propan-1-ol',  # Reference to 'propan-1-ol'
+    'propanol': 'propan-1-ol',  # Reference to 'propan-1-ol'
     'methyl acetate': {
         'pub_chem_id': 6589,
         'iupac_name': 'methyl acetate',
@@ -370,6 +438,11 @@ chemical_data = {
     },
     'butylene': '1-butene',  # Reference to '1-butene'
     'n-Butene': '1-butene',  # Reference to '1-butene'
+    'butene': {
+        'iupac_name': 'butene',
+        'molecular_formula': 'C4H8',
+    },  # unspecified isomer
+    'nictbutene': 'butene',  # Reference to 'butene', unspecified isomer
     'furan': {
         'pub_chem_id': 8029,
         'iupac_name': 'furan',
@@ -389,4 +462,8 @@ chemical_data = {
     },
     'maleic anhydride': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
     'MAN': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
+    'p>=5c': {
+        'name': 'p>=5c',
+        'iupac_name': 'C5+',
+    },  # unspecified longer hydrocarbon
 }
