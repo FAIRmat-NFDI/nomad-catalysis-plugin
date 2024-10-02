@@ -1871,6 +1871,61 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         fig.update_yaxes(title_text=y_text)
         return fig
 
+    def make_rates_plot(self, x, x_text):
+        rates_list = [
+            'reaction_rate',
+            'rate',
+            'specific_mass_rate',
+            'specific_surface_area_rate',
+            'turnover_frequency',
+        ]
+        rates_units = {
+            'reaction_rate': ['mmol reagent/g_cat/h', 'mmol/g/hour'],
+            'rate': ['g reagent/g_cat/h', '1/hour'],
+            'specific_mass_rate': ['mmol reagent/g_cat/h', '1/hour'],
+            'specific_surface_area_rate': [
+                'mmol reagent/m**2 cat/h',
+                'mmol/m**2/hour',
+            ],
+            'turnover_frequency': ['1/h', '1/hour'],
+        }
+        previous_rate = []
+
+        fig = go.Figure()
+        for i, c in enumerate(self.results[0].rates):
+            if i == 0:
+                for rate_str in rates_list:
+                    y, y_text = self.get_y_data(
+                        {rate_str: 'rates.' + rate_str}, rate_str
+                    )
+                    if y is not None:
+                        y.to(rates_units[rate_str][1])
+                        fig.add_trace(
+                            go.Scatter(
+                                x=x,
+                                y=y,
+                                name=self.results[0].rates[i].name,
+                            )
+                        )
+                        y_text = y_text + ' (' + rates_units[rate_str][0] + ')'
+                        previous_rate = rate_str
+                        break
+            else:
+                y = getattr(self.results[0].rates[i], previous_rate)
+                if y is not None:
+                    y.to(rates_units[previous_rate][1])
+                    fig.add_trace(
+                        go.Scatter(
+                            x=x,
+                            y=y,
+                            name=self.results[0].rates[i].name + ' ' + rate_str,
+                        )
+                    )
+        fig.update_layout(title_text='Rates', showlegend=True)
+        fig.update_xaxes(title_text=x_text)
+        fig.update_yaxes(title_text=y_text)
+        self.figures.append(PlotlyFigure(label='Rates', figure=fig.to_plotly_json()))
+
     def plot_figures(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
         This function creates the figures for the CatalyticReaction class.
@@ -1931,69 +1986,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
 
         if self.results[0].rates:
-            rates_list = [
-                'reaction_rate',
-                'rate',
-                'specific_mass_rate',
-                'specific_surface_area_rate',
-                'turnover_frequency',
-            ]
-            rates_units = {
-                'reaction_rate': ['mmol reagent/g_cat/h', 'mmol/g/hour'],
-                'rate': ['g reagent/g_cat/h', '1/hour'],
-                'specific_mass_rate': ['mmol reagent/g_cat/h', '1/hour'],
-                'specific_surface_area_rate': [
-                    'mmol reagent/m**2 cat/h',
-                    'mmol/m**2/hour',
-                ],
-                'turnover_frequency': ['1/h', '1/hour'],
-            }
-            previous_rate = []
+            self.make_rates_plot(x, x_text)
 
-            fig = go.Figure()
-            for i, c in enumerate(self.results[0].rates):
-                if i == 0:
-                    for rate_str in rates_list:
-                        y, y_text = self.get_y_data(
-                            {rate_str: 'rates.' + rate_str}, rate_str
-                        )
-                        if y is not None:
-                            y.to(rates_units[rate_str][1])
-                            fig.add_trace(
-                                go.Scatter(
-                                    x=x,
-                                    y=y,
-                                    name=self.results[0].rates[i].name,
-                                )
-                            )
-                            y_text = y_text + ' (' + rates_units[rate_str][0] + ')'
-                            previous_rate = rate_str
-                            break
-                else:
-                    y = getattr(self.results[0].rates[i], previous_rate)
-                    if y is not None:
-                        y.to(rates_units[previous_rate][1])
-                        fig.add_trace(
-                            go.Scatter(
-                                x=x,
-                                y=y,
-                                name=self.results[0].rates[i].name + ' ' + rate_str,
-                            )
-                        )
-
-                # fig.add_trace(
-                #     go.Scatter(
-                #         x=x,
-                #         y=self.results[0].rates[i].reaction_rate,
-                #         name=self.results[0].rates[i].name,
-                #     )
-                # )
-            fig.update_layout(title_text='Rates', showlegend=True)
-            fig.update_xaxes(title_text=x_text)
-            fig.update_yaxes(title_text=y_text)
-            self.figures.append(
-                PlotlyFigure(label='Rates', figure=fig.to_plotly_json())
-            )
         if not self.results[0].reactants_conversions:
             return
         if self.results[0].reactants_conversions[0].conversion is not None and (
