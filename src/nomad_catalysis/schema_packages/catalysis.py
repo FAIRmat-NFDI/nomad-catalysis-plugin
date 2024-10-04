@@ -2215,7 +2215,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 if i.name != j.name:
                     continue
                 if j.pure_component.iupac_name is not None:
-                    i.name = j.pure_component.iupac_name
+                    iupac_name = j.pure_component.iupac_name
+                else:
+                    iupac_name = j.name
 
                 if i.gas_concentration_in is None:
                     i.gas_concentration_in = j.gas_concentration_in
@@ -2224,7 +2226,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                                 the same in reaction_conditions and
                                 results.reactants_conversions.""")
                 react = Reactant(
-                    name=i.name,
+                    name=iupac_name,
                     conversion=i.conversion,
                     gas_concentration_in=i.gas_concentration_in,
                     gas_concentration_out=i.gas_concentration_out,
