@@ -60,32 +60,103 @@ heterogeneous_catalysis_app = yaml.safe_load(
             comment: {}
             datasets: {}
             published: {label: Access}
-        filter_menus:
-          options:
-            material:
-              label: Catalyst Material
-            elements:
-              label: Elements / Formula
-              level: 1
-              size: xl
-            structure:
-              label: Structure / Symmetry
-              level: 1
-            heterogeneouscatalyst:
-              label: Catalytic Properties
-            eln:
-              label: Electronic Lab Notebook
-            custom_quantities:
-              label: User Defined Quantities
-              size: l
-            author:
-              label: Author / Origin / Dataset
-              size: m
-            metadata:
-              label: Visibility / IDs / Schema
-            optimade:
-              label: Optimade
-              size: m
+        menu:
+          items:
+          - type: menu
+            title: Material
+          - type: menu
+            title: Elements / Formula
+            indentation: 1
+            size: xxl
+            items:
+            - type: periodic_table
+              search_quantity: results.material.elements
+            - type: terms
+              search_quantity: results.material.chemical_formula_hill
+              width: 6
+              options: 0
+            - type: terms
+              search_quantity: results.material.chemical_formula_iupac
+              width: 6
+              options: 0
+            - type: terms
+              search_quantity: results.material.chemical_formula_reduced
+              width: 6
+              options: 0
+            - search_quantity: results.material.chemical_formula_anonymous
+              type: terms
+              width: 6
+              options: 0
+            - type: histogram
+              x:
+                search_quantity: results.material.n_elements
+          - type: menu
+            title: Heterogeneous Catalysis
+          - type: menu
+            title: Reactions
+            size: md
+            indentation: 1
+            items:
+            - search_quantity: results.properties.catalytic.reaction.name
+              type: terms
+            - type: nested_object
+              path: results.properties.catalytic.reaction.reactants
+              items:
+              - search_quantity: results.properties.catalytic.reaction.reactants.name
+                type: terms
+              - type: histogram
+                x:
+                  search_quantity: results.properties.catalytic.reaction.reactants.conversion
+              - type: histogram
+                x:
+                  search_quantity: results.properties.catalytic.reaction.reactants.gas_concentration_in
+              - type: histogram
+                x:
+                  search_quantity: results.properties.catalytic.reaction.reactants.gas_concentration_out
+            - type: nested_object
+              path: results.properties.catalytic.reaction.products
+              items:
+              - search_quantity: results.properties.catalytic.reaction.products.name
+                type: terms
+              - type: histogram
+                x:
+                  search_quantity: results.properties.catalytic.reaction.products.selectivity
+              - type: histogram
+                x:
+                  search_quantity: results.properties.catalytic.reaction.products.gas_concentration_out
+            - type: histogram
+              x:
+                search_quantity: results.properties.catalytic.reaction.reaction_conditions.temperature
+          - type: menu
+            title: Catalysts
+            indentation: 1
+            size: md
+            items:
+            - search_quantity: results.properties.catalytic.catalyst.catalyst_type
+              type: terms
+            - search_quantity: results.properties.catalytic.catalyst.preparation_method
+              type: terms
+            - search_quantity: results.properties.catalytic.catalyst.catalyst_name
+              type: terms
+            - search_quantity: results.properties.catalytic.catalyst.characterization_methods
+              type: terms
+            - type: histogram
+              x:
+                search_quantity: results.properties.catalytic.catalyst.surface_area
+              autorange: false
+            # eln:
+            #   label: Electronic Lab Notebook
+            # custom_quantities:
+            #   label: User Defined Quantities
+            #   size: l
+            # author:
+            #   label: Author / Origin / Dataset
+            #   size: m
+            # metadata:
+            #   label: Visibility / IDs / Schema
+            # optimade:
+            #   label: Optimade
+            #   size: m
         dashboard:
           widgets:
           - layout:
