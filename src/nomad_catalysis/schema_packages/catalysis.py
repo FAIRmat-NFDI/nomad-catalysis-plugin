@@ -715,6 +715,20 @@ class Reagent(ArchiveSection):
 
         check_if_concentration_in_percentage(self, self.gas_concentration_in, logger)
 
+        if (
+            self.flow_rate is not None
+            and self.m_parent
+            and (
+                getattr(self.m_parent, 'total_flow_rate', None)
+                or getattr(self.m_parent, 'set_total_flow_rate', None)
+            )
+            and self.gas_concentration_in is None
+        ):
+            total_flow = getattr(self.m_parent, 'total_flow_rate', None)
+            if total_flow is None:
+                total_flow = getattr(self.m_parent, 'set_total_flow_rate', None)
+            self.gas_concentration_in = self.flow_rate / total_flow
+
         if self.name is None:
             return
         if self.name in ['C5-1', 'C6-1', 'nC5', 'nC6', 'Unknown', 'inert', 'P>=5C']:
@@ -2201,7 +2215,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 if i.name != j.name:
                     continue
                 if j.pure_component.iupac_name is not None:
-                    i.name = j.pure_component.iupac_name
+                    iupac_name = j.pure_component.iupac_name
+                else:
+                    iupac_name = j.name
 
                 if i.gas_concentration_in is None:
                     i.gas_concentration_in = j.gas_concentration_in
@@ -2210,7 +2226,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                                 the same in reaction_conditions and
                                 results.reactants_conversions.""")
                 react = Reactant(
-                    name=i.name,
+                    name=iupac_name,
                     conversion=i.conversion,
                     gas_concentration_in=i.gas_concentration_in,
                     gas_concentration_out=i.gas_concentration_out,
