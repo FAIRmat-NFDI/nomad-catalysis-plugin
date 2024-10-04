@@ -715,6 +715,20 @@ class Reagent(ArchiveSection):
 
         check_if_concentration_in_percentage(self, self.gas_concentration_in, logger)
 
+        if (
+            self.flow_rate is not None
+            and self.m_parent
+            and (
+                getattr(self.m_parent, 'total_flow_rate', None)
+                or getattr(self.m_parent, 'set_total_flow_rate', None)
+            )
+            and self.gas_concentration_in is None
+        ):
+            total_flow = getattr(self.m_parent, 'total_flow_rate', None)
+            if total_flow is None:
+                total_flow = getattr(self.m_parent, 'set_total_flow_rate', None)
+            self.gas_concentration_in = self.flow_rate / total_flow
+
         if self.name is None:
             return
         if self.name in ['C5-1', 'C6-1', 'nC5', 'nC6', 'Unknown', 'inert', 'P>=5C']:
