@@ -711,12 +711,12 @@ class Reagent(ArchiveSection):
             normalized.
             logger ('BoundLogger'): A structlog logger.
         """
-        super().normalize(archive, logger)
+        # super().normalize(archive, logger)
 
         check_if_concentration_in_percentage(self, self.gas_concentration_in, logger)
 
         if (
-            self.flow_rate is not None
+            isinstance(self.flow_rate, np.ndarray)
             and self.m_parent
             and (
                 getattr(self.m_parent, 'total_flow_rate', None)

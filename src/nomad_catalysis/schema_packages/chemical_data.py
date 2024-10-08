@@ -211,6 +211,7 @@ chemical_data = {
         'inchi': 'InChI=1S/C3H4/c1-3-2/h1H,3H2',
     },
     'propine': 'propyne',  # Reference to 'propyne'
+    'propin': 'propyne',  # Reference to 'propyne'
     'C3H4': 'propyne',  # Reference to 'propyne'
     'prop-2-enoic acid': {
         'pub_chem_id': 6581,
