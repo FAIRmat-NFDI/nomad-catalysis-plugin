@@ -1275,15 +1275,15 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         corresponding attributes of the class.
         """
         if self.data_file.endswith('.csv'):
-            with archive.m_context.raw_file(self.data_file) as f:
+            with archive.m_context.raw_file(self.data_file, 'rt') as f:
                 import pandas as pd
 
-                data = pd.read_csv(f.name).dropna(axis=1, how='all')
+                data = pd.read_csv(f).dropna(axis=1, how='all')
         elif self.data_file.endswith('.xlsx'):
-            with archive.m_context.raw_file(self.data_file) as f:
+            with archive.m_context.raw_file(self.data_file, 'rb') as f:
                 import pandas as pd
 
-                data = pd.read_excel(f.name, sheet_name=0)
+                data = pd.read_excel(f, sheet_name=0)
 
         data.dropna(axis=1, how='all', inplace=True)
         feed = ReactionConditionsData()
@@ -1518,7 +1518,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         corresponding attributes of the class.
         """
         if self.data_file.endswith('.h5'):
-            with archive.m_context.raw_file(self.data_file) as f:
+            with archive.m_context.raw_file(self.data_file, 'rb') as f:
                 import h5py
 
                 data = h5py.File(f.name, 'r')
