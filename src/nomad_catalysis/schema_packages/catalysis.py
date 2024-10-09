@@ -687,7 +687,7 @@ class Reagent(ArchiveSection):
         pure_component = PubChemPureSubstanceSection()
         pure_component.name = self.name
         if chemical_key:
-            pure_component.pub_chem_id = chemical_key.get('pub_chem_id')
+            pure_component.pub_chem_cid = chemical_key.get('pub_chem_id')
             pure_component.iupac_name = chemical_key.get('iupac_name')
             pure_component.molecular_formula = chemical_key.get('molecular_formula')
             pure_component.molecular_mass = chemical_key.get('molecular_mass')
@@ -1521,181 +1521,199 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             with archive.m_context.raw_file(self.data_file, 'rb') as f:
                 import h5py
 
-                data = h5py.File(f.name, 'r')
+                data = h5py.File(f, 'r')
 
-        cat_data = CatalyticReactionData()
-        feed = ReactionConditionsData()
-        reactor_setup = ReactorSetup()
-        reactor_filling = ReactorFilling()
-        pretreatment = ReactionConditionsData()
-        sample = CompositeSystemReference()
-        conversions = []
-        rates = []
-        reagents = []
-        pre_reagents = []
-        time_on_stream = []
-        time_on_stream_reaction = []
-        method = list(data['Sorted Data'].keys())
-        for i in method:
-            methodname = i
-        header = data['Header'][methodname]['Header']
-        feed.sampling_frequency = header['Temporal resolution [Hz]'] * ureg.hertz
-        reactor_setup.name = 'Haber'
-        reactor_setup.reactor_type = 'plug flow reactor'
-        reactor_setup.reactor_volume = header['Bulk volume [mln]']
-        reactor_setup.reactor_cross_section_area = (
-            header['Inner diameter of reactor (D) [mm]'] * ureg.millimeter / 2
-        ) ** 2 * np.pi
-        reactor_setup.reactor_diameter = (
-            header['Inner diameter of reactor (D) [mm]'] * ureg.millimeter
-        )
-        reactor_filling.diluent = header['Diluent material'][0].decode()
-        reactor_filling.diluent_sievefraction_upper_limit = (
-            header['Diluent Sieve fraction high [um]'] * ureg.micrometer
-        )
-        reactor_filling.diluent_sievefraction_lower_limit = (
-            header['Diluent Sieve fraction low [um]'] * ureg.micrometer
-        )
-        reactor_filling.catalyst_mass = header['Catalyst Mass [mg]'][0] * ureg.milligram
-        reactor_filling.catalyst_sievefraction_upper_limit = (
-            header['Sieve fraction high [um]'] * ureg.micrometer
-        )
-        reactor_filling.catalyst_sievefraction_lower_limit = (
-            header['Sieve fraction low [um]'] * ureg.micrometer
-        )
-        reactor_filling.particle_size = (
-            header['Particle size (Dp) [mm]'] * ureg.millimeter
-        )
-
-        self.experimenter = header['User'][0].decode()
-
-        pre = data['Sorted Data'][methodname]['H2 Reduction']
-        pretreatment.set_temperature = pre['Catalyst Temperature [C°]'] * ureg.celsius
-        for col in pre.dtype.names:
-            if col == 'Massflow3 (H2) Target Calculated Realtime Value [mln|min]':
-                pre_reagent = Reagent(
-                    name='hydrogen', flow_rate=pre[col] * ureg.milliliter / ureg.minute
+                cat_data = CatalyticReactionData()
+                feed = ReactionConditionsData()
+                reactor_setup = ReactorSetup()
+                reactor_filling = ReactorFilling()
+                pretreatment = ReactionConditionsData()
+                sample = CompositeSystemReference()
+                conversions = []
+                rates = []
+                reagents = []
+                pre_reagents = []
+                time_on_stream = []
+                time_on_stream_reaction = []
+                method = list(data['Sorted Data'].keys())
+                for i in method:
+                    methodname = i
+                header = data['Header'][methodname]['Header']
+                feed.sampling_frequency = (
+                    header['Temporal resolution [Hz]'] * ureg.hertz
                 )
-                pre_reagents.append(pre_reagent)
-            if col == 'Massflow5 (Ar) Target Calculated Realtime Value [mln|min]':
-                pre_reagent = Reagent(
-                    name='argon', flow_rate=pre[col] * ureg.milliliter / ureg.minute
+                reactor_setup.name = 'Haber'
+                reactor_setup.reactor_type = 'plug flow reactor'
+                reactor_setup.reactor_volume = header['Bulk volume [mln]']
+                reactor_setup.reactor_cross_section_area = (
+                    header['Inner diameter of reactor (D) [mm]'] * ureg.millimeter / 2
+                ) ** 2 * np.pi
+                reactor_setup.reactor_diameter = (
+                    header['Inner diameter of reactor (D) [mm]'] * ureg.millimeter
                 )
-                pre_reagents.append(pre_reagent)
+                reactor_filling.diluent = header['Diluent material'][0].decode()
+                reactor_filling.diluent_sievefraction_upper_limit = (
+                    header['Diluent Sieve fraction high [um]'] * ureg.micrometer
+                )
+                reactor_filling.diluent_sievefraction_lower_limit = (
+                    header['Diluent Sieve fraction low [um]'] * ureg.micrometer
+                )
+                reactor_filling.catalyst_mass = (
+                    header['Catalyst Mass [mg]'][0] * ureg.milligram
+                )
+                reactor_filling.catalyst_sievefraction_upper_limit = (
+                    header['Sieve fraction high [um]'] * ureg.micrometer
+                )
+                reactor_filling.catalyst_sievefraction_lower_limit = (
+                    header['Sieve fraction low [um]'] * ureg.micrometer
+                )
+                reactor_filling.particle_size = (
+                    header['Particle size (Dp) [mm]'] * ureg.millimeter
+                )
 
-        pretreatment.reagents = pre_reagents
-        pretreatment.set_total_flow_rate = (
-            pre['Target Total Gas (After Reactor) [mln|min]']
-            * ureg.milliliter
-            / ureg.minute
-        )
-        number_of_runs = len(pre['Catalyst Temperature [C°]'])
-        pretreatment.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
+                self.experimenter = header['User'][0].decode()
 
-        time = pre['Relative Time [Seconds]']
-        for i in range(len(time)):
-            t = float(time[i].decode('UTF-8')) - float(time[0].decode('UTF-8'))
-            time_on_stream.append(t)
-        pretreatment.time_on_stream = time_on_stream * ureg.sec
+                pre = data['Sorted Data'][methodname]['H2 Reduction']
+                pretreatment.set_temperature = (
+                    pre['Catalyst Temperature [C°]'] * ureg.celsius
+                )
+                for col in pre.dtype.names:
+                    if (
+                        col
+                        == 'Massflow3 (H2) Target Calculated Realtime Value [mln|min]'
+                    ):
+                        pre_reagent = Reagent(
+                            name='hydrogen',
+                            flow_rate=pre[col] * ureg.milliliter / ureg.minute,
+                        )
+                        pre_reagents.append(pre_reagent)
+                    if (
+                        col
+                        == 'Massflow5 (Ar) Target Calculated Realtime Value [mln|min]'
+                    ):
+                        pre_reagent = Reagent(
+                            name='argon',
+                            flow_rate=pre[col] * ureg.milliliter / ureg.minute,
+                        )
+                        pre_reagents.append(pre_reagent)
 
-        analysed = data['Sorted Data'][methodname]['NH3 Decomposition']
+                pretreatment.reagents = pre_reagents
+                pretreatment.set_total_flow_rate = (
+                    pre['Target Total Gas (After Reactor) [mln|min]']
+                    * ureg.milliliter
+                    / ureg.minute
+                )
+                number_of_runs = len(pre['Catalyst Temperature [C°]'])
+                pretreatment.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
 
-        set_total_flow = np.zeros(len(analysed['Relative Time [Seconds]']))
-        for col in analysed.dtype.names:
-            if col.endswith('Target Calculated Realtime Value [mln|min]'):
-                name_split = col.split('(')
-                gas_name = name_split[1].split(')')
-                if 'NH3_High' in gas_name or 'NH3_Low' in gas_name:
-                    reagent = Reagent(
-                        name='ammonia',
-                        flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
-                        gas_concentration_in=[1.0] * len(analysed[col]),
-                    )
-                    if reagent.flow_rate.any() > 0.0:
-                        reagents.append(reagent)
+                time = pre['Relative Time [Seconds]']
+                for i in range(len(time)):
+                    t = float(time[i].decode('UTF-8')) - float(time[0].decode('UTF-8'))
+                    time_on_stream.append(t)
+                pretreatment.time_on_stream = time_on_stream * ureg.sec
+
+                analysed = data['Sorted Data'][methodname]['NH3 Decomposition']
+
+                set_total_flow = np.zeros(len(analysed['Relative Time [Seconds]']))
+                for col in analysed.dtype.names:
+                    if col.endswith('Target Calculated Realtime Value [mln|min]'):
+                        name_split = col.split('(')
+                        gas_name = name_split[1].split(')')
+                        if 'NH3_High' in gas_name or 'NH3_Low' in gas_name:
+                            reagent = Reagent(
+                                name='ammonia',
+                                flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
+                                gas_concentration_in=[1.0] * len(analysed[col]),
+                            )
+                            if reagent.flow_rate.any() > 0.0:
+                                reagents.append(reagent)
+                        else:
+                            reagent = Reagent(
+                                name=gas_name[0],
+                                flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
+                            )
+                            if reagent.flow_rate.any() > 0.0:
+                                reagents.append(reagent)
+                    if col.endswith('Target Setpoint [mln|min]'):
+                        set_total_flow += analysed[col] * ureg.milliliter / ureg.minute
+
+                feed.reagents = reagents
+                total_flow_rate = np.zeros(len(reagents[0].flow_rate))
+                for reagent in reagents:
+                    total_flow_rate += reagent.flow_rate
+                feed.total_flow_rate = total_flow_rate
+
+                feed.set_total_flow_rate = set_total_flow
+                feed.contact_time = (
+                    analysed['W|F [gs|ml]'] * ureg.second * ureg.gram / ureg.milliliter
+                )
+                conversion = ReactantData(
+                    name='ammonia',
+                    conversion=np.nan_to_num(analysed['NH3 Conversion [%]']),
+                    conversion_type='reactant-based conversion',
+                    gas_concentration_in=[1] * len(analysed['NH3 Conversion [%]']),
+                )
+                conversions.append(conversion)
+
+                rate = RatesData(
+                    name='molecular hydrogen',
+                    reaction_rate=np.nan_to_num(
+                        analysed['Space Time Yield [mmolH2 gcat-1 min-1]']
+                        * ureg.mmol
+                        / ureg.g
+                        / ureg.minute
+                    ),
+                )
+                rates.append(rate)
+                feed.set_temperature = (
+                    analysed['Catalyst Temperature [C°]'] * ureg.celsius
+                )
+                cat_data.temperature = (
+                    analysed['Catalyst Temperature [C°]'] * ureg.celsius
+                )
+                number_of_runs = len(analysed['NH3 Conversion [%]'])
+                feed.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
+                cat_data.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
+                time = analysed['Relative Time [Seconds]']
+                for i in range(len(time)):
+                    t = float(time[i].decode('UTF-8')) - float(time[0].decode('UTF-8'))
+                    time_on_stream_reaction.append(t)
+                cat_data.time_on_stream = time_on_stream_reaction * ureg.sec
+
+                cat_data.reactants_conversions = conversions
+                cat_data.rates = rates
+
+                self.method = 'Haber measurement ' + str(methodname)
+                self.datetime = pre['Date'][0].decode()
+
+                # sample.name = 'catalyst'
+                sample.lab_id = str(data['Header']['Header']['SampleID'][0])
+                from nomad.datamodel.context import ClientContext
+
+                if isinstance(archive.m_context, ClientContext):
+                    pass
                 else:
-                    reagent = Reagent(
-                        name=gas_name[0],
-                        flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
-                    )
-                    if reagent.flow_rate.any() > 0.0:
-                        reagents.append(reagent)
-            if col.endswith('Target Setpoint [mln|min]'):
-                set_total_flow += analysed[col] * ureg.milliliter / ureg.minute
+                    sample.normalize(archive, logger)
+                    self.samples = []
+                    self.samples.append(sample)
 
-        feed.reagents = reagents
-        total_flow_rate = np.zeros(len(reagents[0].flow_rate))
-        for reagent in reagents:
-            total_flow_rate += reagent.flow_rate
-        feed.total_flow_rate = total_flow_rate
+                self.results = []
+                self.results.append(cat_data)
+                self.reaction_conditions = feed
+                self.instruments = []
+                self.instruments.append(reactor_setup)
+                self.pretreatment = pretreatment
+                self.reactor_filling = reactor_filling
 
-        feed.set_total_flow_rate = set_total_flow
-        feed.contact_time = (
-            analysed['W|F [gs|ml]'] * ureg.second * ureg.gram / ureg.milliliter
-        )
-        conversion = ReactantData(
-            name='ammonia',
-            conversion=np.nan_to_num(analysed['NH3 Conversion [%]']),
-            conversion_type='reactant-based conversion',
-            gas_concentration_in=[1] * len(analysed['NH3 Conversion [%]']),
-        )
-        conversions.append(conversion)
+                products_results = []
+                for i in ['molecular nitrogen', 'molecular hydrogen']:
+                    product = ProductData(name=i)
+                    products_results.append(product)
+                self.results[0].products = products_results
 
-        rate = RatesData(
-            name='molecular hydrogen',
-            reaction_rate=np.nan_to_num(
-                analysed['Space Time Yield [mmolH2 gcat-1 min-1]']
-                * ureg.mmol
-                / ureg.g
-                / ureg.minute
-            ),
-        )
-        rates.append(rate)
-        feed.set_temperature = analysed['Catalyst Temperature [C°]'] * ureg.celsius
-        cat_data.temperature = analysed['Catalyst Temperature [C°]'] * ureg.celsius
-        number_of_runs = len(analysed['NH3 Conversion [%]'])
-        feed.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
-        cat_data.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
-        time = analysed['Relative Time [Seconds]']
-        for i in range(len(time)):
-            t = float(time[i].decode('UTF-8')) - float(time[0].decode('UTF-8'))
-            time_on_stream_reaction.append(t)
-        cat_data.time_on_stream = time_on_stream_reaction * ureg.sec
-
-        cat_data.reactants_conversions = conversions
-        cat_data.rates = rates
-
-        self.method = 'Haber measurement ' + str(methodname)
-        self.datetime = pre['Date'][0].decode()
-
-        # sample.name = 'catalyst'
-        sample.lab_id = str(data['Header']['Header']['SampleID'][0])
-        from nomad.datamodel.context import ClientContext
-
-        if isinstance(archive.m_context, ClientContext):
-            pass
-        else:
-            sample.normalize(archive, logger)
-            self.samples = []
-            self.samples.append(sample)
-
-        self.results = []
-        self.results.append(cat_data)
-        self.reaction_conditions = feed
-        self.instruments = []
-        self.instruments.append(reactor_setup)
-        self.pretreatment = pretreatment
-        self.reactor_filling = reactor_filling
-
-        products_results = []
-        for i in ['molecular nitrogen', 'molecular hydrogen']:
-            product = ProductData(name=i)
-            products_results.append(product)
-        self.results[0].products = products_results
-
-        self.reaction_name = 'ammonia decomposition'
-        self.reaction_type = 'cracking'
-        self.location = 'Fritz-Haber-Institut Berlin / Abteilung AC'
+                self.reaction_name = 'ammonia decomposition'
+                self.reaction_type = 'cracking'
+                self.location = 'Fritz-Haber-Institut Berlin / Abteilung AC'
 
     def check_and_read_data_file(self, archive, logger):
         """This functions checks the format of the data file and assigns the right
@@ -1826,15 +1844,15 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         """
         y = get_nested_attr(self.results[0], plot_quantities_dict[var])
         if y is not None:
-            return y, var
+            return y, var.replace('_', ' ')
         y = get_nested_attr(self.reaction_conditions, plot_quantities_dict[var])
         if y is not None:
-            return y, var
+            return y, var.replace('_', ' ')
         y = get_nested_attr(
             self.reaction_conditions, 'set_' + plot_quantities_dict[var]
         )
         if y is not None:
-            return y, 'set ' + var
+            return y, 'Set ' + var.replace('_', ' ')
         return None, var
 
     def conversion_plot(self, x, x_text, logger: 'BoundLogger') -> None:
@@ -2020,7 +2038,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         )
                     )
                 fig.update_layout(title_text='S-X plot ' + str(i), showlegend=True)
-                fig.update_xaxes(title_text=name + ' Conversion (%)')
+                fig.update_xaxes(title_text=name + ' conversion (%)')
                 fig.update_yaxes(title_text='Selectivity (%)')
                 self.figures.append(
                     PlotlyFigure(
