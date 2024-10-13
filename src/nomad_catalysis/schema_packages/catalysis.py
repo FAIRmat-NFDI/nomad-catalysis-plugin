@@ -2161,7 +2161,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 NH3concs.append(np.mean(data_dict_single_step['NH3conc']))
                 Times.append(data_dict_single_step['Time'][-1])
 
-            archive.results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity = (
+            archive.results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity = (  # noqa: E501
                 WHSVs * ureg.m**3 / ureg.kg / ureg.second
             )  # noqa: E501
             archive.results.properties.catalytic.reaction.reaction_conditions.flow_rate = (  # noqa: E501
