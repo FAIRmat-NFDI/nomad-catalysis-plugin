@@ -716,7 +716,7 @@ class Reagent(ArchiveSection):
         check_if_concentration_in_percentage(self, self.gas_concentration_in, logger)
 
         if (
-            isinstance(self.flow_rate, np.ndarray)
+            self.flow_rate
             and self.m_parent
             and (
                 getattr(self.m_parent, 'total_flow_rate', None)
@@ -1070,6 +1070,15 @@ class ReactionConditionsData(PlotSection):
             reagent.normalize(archive, logger)
 
         if (
+            self.total_flow_rate is not None
+            and self.m_root().data.reactor_filling is not None
+            and self.m_root().data.reactor_filling.catalyst_mass is not None
+            and self.weight_hourly_space_velocity is None
+        ):
+            self.weight_hourly_space_velocity = (
+                self.total_flow_rate / self.m_root().data.reactor_filling.catalyst_mass
+            )
+        elif (
             self.set_total_flow_rate is not None
             and self.m_root().data.reactor_filling is not None
             and self.m_root().data.reactor_filling.catalyst_mass is not None
@@ -2152,7 +2161,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 NH3concs.append(np.mean(data_dict_single_step['NH3conc']))
                 Times.append(data_dict_single_step['Time'][-1])
 
-            archive.results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity = WHSVs  # noqa: E501
+            archive.results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity = (
+                WHSVs * ureg.m**3 / ureg.kg / ureg.second
+            )  # noqa: E501
             archive.results.properties.catalytic.reaction.reaction_conditions.flow_rate = (  # noqa: E501
                 flows * ureg.m**3 / ureg.second
             )

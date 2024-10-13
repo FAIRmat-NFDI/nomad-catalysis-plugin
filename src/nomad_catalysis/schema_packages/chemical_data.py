@@ -92,6 +92,20 @@ chemical_data = {
         'cas_number': '7440-37-1',
     },
     'Ar': 'argon',  # Reference to 'argon'
+    'helium': {
+        'pub_chem_id': 23987,
+        'iupac_name': 'helium',
+        'molecular_formula': 'He',
+        'molecular_mass': 4.002603254,
+        'molar_mass': 4.0026,
+        'monoisotopic_mass': 4.002603254,
+        'inchi': 'InChI=1S/He',
+        'inchi_key': 'SWQJXJOGLNCZEY-UHFFFAOYSA-N',
+        'smile': '[He]',
+        'canonical_smile': '[He]',
+        'cas_number': '7440-59-7',
+    },
+    'He': 'helium',  # Reference to 'helium'
     'molecular nitrogen': {
         'pub_chem_id': 947,
         'iupac_name': 'molecular nitrogen',
