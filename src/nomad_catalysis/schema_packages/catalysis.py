@@ -714,16 +714,17 @@ class Reagent(ArchiveSection):
         # super().normalize(archive, logger)
 
         check_if_concentration_in_percentage(self, self.gas_concentration_in, logger)
-
-        if (
-            self.flow_rate
-            and self.m_parent
-            and getattr(self.m_parent, 'set_total_flow_rate', None)
-            and self.gas_concentration_in is None
-        ):
-            total_flow = getattr(self.m_parent, 'set_total_flow_rate', None)
-            self.gas_concentration_in = self.flow_rate / total_flow
-
+        try:
+            if (
+                not self.gas_concentration_in
+                and self.flow_rate
+                and self.m_parent
+                and getattr(self.m_parent, 'set_total_flow_rate', None)
+            ):
+                total_flow = getattr(self.m_parent, 'set_total_flow_rate', None)
+                self.gas_concentration_in = self.flow_rate / total_flow
+        except (TypeError, ValueError):  # because truth value of array is ambiguous
+            pass
         if self.name is None:
             return
         if self.name in ['C5-1', 'C6-1', 'nC5', 'nC6', 'Unknown', 'inert', 'P>=5C']:
