@@ -2216,6 +2216,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     react = self.reduce_haber_data(archive, logger)
                 else:
                     for key in react:
+                        if key == 'name':
+                            continue
                         if getattr(react, key) is not None:
                             setattr(react, key, getattr(react, key)[50::100])
                 break
@@ -2263,7 +2265,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 react = self.check_react(react, threshold_datapoints, archive, logger)
 
                 conversions_results.append(react)
-
+                break
         return conversions_results
 
     def write_conversion_results(
