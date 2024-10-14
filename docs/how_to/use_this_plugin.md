@@ -2,14 +2,25 @@
 
 This plugin can be used in a NOMAD Oasis installation.
 
-## Add This Plugin to Your NOMAD installation
+There are 3 main ways to create catalysis entries in the NOMAD / NOMAD Oasis:
+- manually via the graphical user interface (GUI)
+- dropping archive.json files directly in an upload
+- using the tabular parser, for creating multiple entries when the data has already been collected in csv or xlsx files
+First I will detail how to create single entries and explain the structure of the schemas. Later I will add how to add larger datasets more quickly.
 
-Read the [NOMAD plugin documentation](https://nomad-lab.eu/prod/v1/staging/docs/plugins/plugins.html#add-a-plugin-to-your-nomad) for all details on how to deploy the plugin on your NOMAD instance.
+## 1. Manual Creation of Entries from the GUI
+When creating single entries, it may be easiest to manually fill the schemas in the GUI. Under Publish > Uploads press `Create A New Upload`. You can now click `Create from Schema` and select a built-in schema from the EntryData Category **Catalysis**. After entering a unique name for the entry (unique at least within the upload folder) you can create an instance of the selected schema, either a catalyst sample entry or a measurement of a functional catalyst analysis.
+![image with screenshot of the NOMAD GUI](ScreenshotCreateBuiltInSchema.png)
+
+## The **Catalyst Sample** schema
+TODO
+
+## The **Catalytic Reaction** schema
 
 
-## Populate the CatalyticReaction schema from a data file
+### Populate the CatalyticReaction schema from a data file
 
-Currently 2 types of data files are recognized in the data_file quantity and information
+Currently two types of data files are recognized in the data_file quantity and information
 is extracted directly to populate the `CatalyticReaction` schema.
 The first type is an excel or csv table, and as long as the column headers follow some
 guidelines, the data can be extracted by NOMAD. The formated originated from the clean
@@ -50,7 +61,7 @@ The following column headers will be recognized and mapped into the NOMAD schema
     - methodename
         - 'Header'
     - 'Header'
-- *Raw Data*
+- 'Raw Data'
 - 'Sorted Data'
     - methodname
         - 'H2 Reduction'
@@ -81,13 +92,13 @@ The following column headers will be recognized and mapped into the NOMAD schema
 | ['Date'][0].decode()| datetime|
 |#### ['Sorted Data'][methodname]['NH3 Decomposition']| |
 | ['Relative Time [Seconds]']| reaction_conditions.time_on_stream|
-| reagent + 'Target Calculated Realtime Value [mln&#124;min]', <br> reagent can be 'NH3_high', 'NH3_low' or the name of the reagent| reaction_conditions.reagent[n].name and <br> reaction_conditions.reagent[n].flow_rate|
-| reagent + 'Target Setpoint [mln&#124;min]'| reaction_conditions.set_total_flow_rate|
+| {name} + 'Target Calculated Realtime Value [mln&#124;min]', <br> {name} can be 'NH3_high', 'NH3_low' or the name of the reagent| reaction_conditions.reagent[n].name and <br> reaction_conditions.reagent[n].flow_rate|
+| {name} + 'Target Setpoint [mln&#124;min]'| reaction_conditions.set_total_flow_rate|
 | ['W&#124;F [gs&#124;ml]']| reaction_conditions.contact_time|
 | ['NH3 Conversion [%]']|results[0].reactants_conversions[0].conversion,<br> results[0].reactants_conversions[0].name = 'ammonia',<br> results[0].reactants_conversions[0].conversion_type='reactant-based'
 | ['Space Time Yield [mmolH2 gcat-1 min-1]']| results[0].rates[0].reaction_rate, <br> results[0].rates[0].name='molecular hydrogen'|
 | ['Catalyst Temperature [C°]']| reaction_conditions.set_temperature, results[0].temperature|
-|----|----|
+
 
 
 The following information is currently added by default to entries filled by a hdf5 file from the automated Haber reactor:
