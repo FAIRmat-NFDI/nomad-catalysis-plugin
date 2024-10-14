@@ -718,15 +718,10 @@ class Reagent(ArchiveSection):
         if (
             self.flow_rate
             and self.m_parent
-            and (
-                getattr(self.m_parent, 'total_flow_rate', None)
-                or getattr(self.m_parent, 'set_total_flow_rate', None)
-            )
+            and getattr(self.m_parent, 'set_total_flow_rate', None)
             and self.gas_concentration_in is None
         ):
-            total_flow = getattr(self.m_parent, 'total_flow_rate', None)
-            if total_flow is None:
-                total_flow = getattr(self.m_parent, 'set_total_flow_rate', None)
+            total_flow = getattr(self.m_parent, 'set_total_flow_rate', None)
             self.gas_concentration_in = self.flow_rate / total_flow
 
         if self.name is None:
@@ -742,7 +737,7 @@ class Reagent(ArchiveSection):
             pure_component = self.update_chemical_info()
             self.pure_component = pure_component
 
-            if self.pure_component.iupac_name is not None:
+            if self.pure_component.iupac_name:
                 logger.info(f'found {self.name} in chemical_data, no pubchem call made')
                 return
             else:
@@ -934,15 +929,6 @@ class ReactionConditionsData(PlotSection):
         ),
     )
 
-    total_flow_rate = Quantity(
-        type=np.float64,
-        shape=['*'],
-        unit='m**3/s',
-        a_eln=ELNAnnotation(
-            component='NumberEditQuantity', defaultDisplayUnit='mL/minute'
-        ),
-    )
-
     weight_hourly_space_velocity = Quantity(
         description=""" A measure for how often the atmosphere in the reactor is
         replaced over the catalyst. Calculated as the total flow rate divided by the
@@ -1070,15 +1056,6 @@ class ReactionConditionsData(PlotSection):
             reagent.normalize(archive, logger)
 
         if (
-            self.total_flow_rate is not None
-            and self.m_root().data.reactor_filling is not None
-            and self.m_root().data.reactor_filling.catalyst_mass is not None
-            and self.weight_hourly_space_velocity is None
-        ):
-            self.weight_hourly_space_velocity = (
-                self.total_flow_rate / self.m_root().data.reactor_filling.catalyst_mass
-            )
-        elif (
             self.set_total_flow_rate is not None
             and self.m_root().data.reactor_filling is not None
             and self.m_root().data.reactor_filling.catalyst_mass is not None
@@ -1190,7 +1167,16 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
         type=np.float64,
         shape=['*'],
         unit='Pa',
-        a_eln=ELNAnnotation(component='NumberEditQuantity'),
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='bar'),
+    )
+
+    total_flow_rate = Quantity(
+        type=np.float64,
+        shape=['*'],
+        unit='m**3/s',
+        a_eln=ELNAnnotation(
+            component='NumberEditQuantity', defaultDisplayUnit='mL/minute'
+        ),
     )
 
     runs = Quantity(
@@ -1650,7 +1636,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 total_flow_rate = np.zeros(len(reagents[0].flow_rate))
                 for reagent in reagents:
                     total_flow_rate += reagent.flow_rate
-                feed.total_flow_rate = total_flow_rate
+                cat_data.total_flow_rate = total_flow_rate
 
                 feed.set_total_flow_rate = set_total_flow
                 feed.contact_time = (
@@ -1762,6 +1748,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'reaction_conditions.time_on_stream': 'reaction_conditions.time_on_stream',
             'results.temperature': 'reaction_conditions.temperature',
             'results.pressure': 'reaction_conditions.pressure',
+            'results.total_flow_rate': 'reaction_conditions.flow_rate',
             'results.time_on_stream': 'reaction_conditions.time_on_stream',
             'reaction_name': 'name',
             'reaction_type': 'type',
@@ -2093,7 +2080,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             data_dict = {
                 'Temp': self.reaction_conditions.set_temperature,
                 'Whsv': self.reaction_conditions.weight_hourly_space_velocity,
-                'Flow': self.reaction_conditions.total_flow_rate,
+                'Flow': self.results[0].total_flow_rate,
                 'Conv': self.results[0].reactants_conversions[0].conversion,
                 'NH3conc': self.reaction_conditions.reagents[0].gas_concentration_in,
                 'Rate': self.results[0].rates[0].reaction_rate,
