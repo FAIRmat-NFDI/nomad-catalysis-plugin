@@ -475,6 +475,19 @@ chemical_data = {
         'molar_mass': 98.06,
         'inchi': 'InChI=1S/C4H2O3/c5-3-1-2-4(6)7-3/h1-2H',
     },
+    '2,5-dihydrofuran': {
+        'pub_chem_id': 15570,
+        'iupac_name': '2,5-dihydrofuran',
+        'molecular_formula': 'C4H6O',
+        'molecular_mass': 70.041864811,
+        'molar_mass': 70.09,
+        'monoisotopic_mass': 70.041864811,
+        'inchi': 'InChI=1S/C4H6O/c1-2-4-5-3-1/h1-2H,3-4H2',
+        'inchi_key': 'ARGCQEVBJHPOGB-UHFFFAOYSA-N',
+        'smile': 'C1C=CCO1',
+        'canonical_smile': 'C1C=CCO1',
+    },
+    '25-dihydrofuran': '2,5-dihydrofuran',  # Reference to '2,5-dihydrofuran'
     'maleic anhydride': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
     'MAN': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
     'p>=5c': {
