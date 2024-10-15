@@ -20,19 +20,10 @@ This plugin aims at facilitating the catalysis researchers life by providing a f
 tool to manage, vizualize, analyze and share catalyst and reactivity data. Currently it is still in
 development and feedback about the plugin and documentation is welcome.
 
-<div markdown="block" class="home-grid">
-<div markdown="block">
-
 ## Included Entry Types
 This plugin includes two new NOMAD entry types: `CatalystSample` and `CatalyticReaction`. More information can be found in the [References](reference/references.md) and the [How-to guides](How_to/use_this_plugin.md).
 
-### Tutorial
-
-TODO
-
-- [Tutorial](tutorial/tutorial.md)
-
-</div>
+<div markdown="block" class="home-grid">
 <div markdown="block">
 
 ### How-to guides
@@ -41,8 +32,6 @@ How-to guides provide step-by-step instructions for a wide range of tasks, with 
 
 - [Install this plugin](how_to/install_this_plugin.md)
 - [Use this plugin](how_to/use_this_plugin.md)
-- [Contribute to this plugin](how_to/contribute_to_this_plugin.md)
-- [Contribute to the documentation](how_to/contribute_to_the_documentation.md)
 
 </div>
 
@@ -55,4 +44,5 @@ The reference [section](reference/references.md) includes all sections and their
 as well as the necessary format for the possible datafiles of the catalytic reaction.
 
 </div>
+<div markdown="block">
 </div>
