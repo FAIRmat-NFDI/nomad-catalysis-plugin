@@ -18,7 +18,7 @@ Below you see a fresh instance of a **Catalyst Sample** entry, which can be fill
 
 ## The **Catalytic Reaction** schema
 Here you see a screenshot of an empty **Catalytic Reaction** measurement entry.
-![image of measurement instance for a catalytic reaction](ScreenshotReactionMeasurement.png)
+![image of measurement instance for a catalytic reaction](ScreenshotReactionMeasurementEntry.png)
 
 ### Populate the CatalyticReaction schema from a data file
 
