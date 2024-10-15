@@ -119,6 +119,7 @@ The following information is currently added by default to entries filled by a h
 Another way to generate entries in NOMAD is to place *.archive.json files directly in one upload. The file needs to contain the path to a schema and then NOMAD automatically creates the corresponding entry. The archive.json file does not contain unit information, this is only defined and stored in the schema definition and does not need to correspond to the display unit in the GUI. But usually this is the SI unit of a respective quantity.
 
 ```json
+
 {
     "data": {
         "m_def": "nomad_catalysis.schema_packages.catalysis.CatalyticReaction",
@@ -141,9 +142,7 @@ Another way to generate entries in NOMAD is to place *.archive.json files direct
             "set_pressure": [
                 101325.0
             ],
-            "set_temperature": [
-
-            ],
+            "set_temperature": [ ],
             "set_total_flow_rate": [ ],
             "contact_time": [],
             "weight_hourly_space_velocity": [],
