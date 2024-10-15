@@ -13,10 +13,12 @@ When creating single entries, it may be easiest to manually fill the schemas in 
 ![image with screenshot of the NOMAD GUI](ScreenshotCreateBuiltInSchema.png)
 
 ## The **Catalyst Sample** schema
-TODO
+Below you see a fresh instance of a **Catalyst Sample** entry, which can be filled directly in the GUI.
+![image of sample instance in the NOMAD GUI](ScreenshotSampleEntry.png)
 
 ## The **Catalytic Reaction** schema
-
+Here you see a screenshot of an empty **Catalytic Reaction** measurement entry.
+![image of measurement instance for a catalytic reaction](ScreenshotReactionMeasurement.png)
 
 ### Populate the CatalyticReaction schema from a data file
 
@@ -36,6 +38,7 @@ For excel files with multiple sheets, only the first sheet is read. If a column 
 it will be ignored.
 
 The following column headers will be recognized and mapped into the NOMAD schema:
+
 |excel column header | description | schema quantity|
 |---|---|---|
 | `catalyst` | name of the catalyst| reactor_filling.catalyst_name
