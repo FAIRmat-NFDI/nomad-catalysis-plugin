@@ -6,6 +6,7 @@
 
 
 !!! List of quantities and subsections in `Catalyst Sample`:
+
 - name (string quantity)
 - datetime (string quantity)
 - lab_id (string quantity)
@@ -86,7 +87,6 @@
     - set_temperature
     - set_pressure
     - set_total_flow_rate
-    - total_flow_rate
     - contact_time (label W|F)
     - sampling_frequency
     - time_on_stream
@@ -105,6 +105,7 @@
     - name
     - temperature
     - pressure
+    - total_flow_rate
     - runs
     - time_on_stream
     - c_balance
