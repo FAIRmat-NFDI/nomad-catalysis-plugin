@@ -202,7 +202,7 @@ heterogeneous_catalysis_app = yaml.safe_load(
               type: terms
           - type: menu
             title: User Defined Quantities
-            size: l
+            size: xl
             items:
             - type: custom_quantities
           - type: menu
