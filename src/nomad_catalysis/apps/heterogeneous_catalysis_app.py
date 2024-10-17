@@ -11,14 +11,6 @@ heterogeneous_catalysis_app = yaml.safe_load(
           default columns are specifically designed for Heterogeneous Catalyst
           exploration. The dashboard directly shows useful
           interactive statistics about the data.'
-        # filters:
-        #   exclude:
-        #   - mainfile
-        #   - entry_name
-        #   - combine
-        # search_quantities:
-        #   include:
-        #     - '*#nomad_catalysis.schema_packages.catalysis.*'
         filters_locked:
           quantities: results.properties.catalytic
         search_syntaxes:
@@ -130,7 +122,6 @@ heterogeneous_catalysis_app = yaml.safe_load(
               type: terms
           - type: menu
             title: Reactants
-              #path: results.properties.catalytic.reaction.reactants
             indentation: 2
             size: md
             items:
@@ -147,7 +138,6 @@ heterogeneous_catalysis_app = yaml.safe_load(
                   search_quantity: results.properties.catalytic.reaction.reactants.gas_concentration_out
           - type: menu
             title: Products
-            # path: results.properties.catalytic.reaction.products
             indentation: 2
             size: md
             items:
@@ -202,7 +192,7 @@ heterogeneous_catalysis_app = yaml.safe_load(
               type: terms
           - type: menu
             title: User Defined Quantities
-            size: l
+            size: xl
             items:
             - type: custom_quantities
           - type: menu
