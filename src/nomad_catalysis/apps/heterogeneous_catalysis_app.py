@@ -36,7 +36,7 @@ heterogeneous_catalysis_app = yaml.safe_load(
               unit: 'm^2/g'
               label: Surface area
             results.properties.catalytic.reaction.name: {label: Reaction name}
-            results.properties.catalytic.reaction.type: {label: Reaction class}
+            results.properties.catalytic.reaction.type: {label: Reaction type}
             results.properties.catalytic.reaction.reactants.name: {label: Reactants}
             results.properties.catalytic.reaction.products.name: {label: Products}
             references: {}
@@ -116,7 +116,7 @@ heterogeneous_catalysis_app = yaml.safe_load(
             size: md
             indentation: 1
             items:
-            - search_quantity: data.reaction_type#nomad_catalysis.schema_packages.catalysis.CatalyticReaction
+            - search_quantity: results.properties.catalytic.reaction.type
               type: terms
             - search_quantity: results.properties.catalytic.reaction.name
               type: terms
