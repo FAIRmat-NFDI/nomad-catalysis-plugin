@@ -10,17 +10,17 @@ heterogeneous_catalysis_app = yaml.safe_load(
           within NOMAD. The filter menu on the left and the shown
           default columns are specifically designed for Heterogeneous Catalyst
           exploration. The dashboard directly shows useful
-          interactive statistics about the data.
+          interactive statistics about the data.\n
 
-          In order to generate a custom scatterplot, click on the " + Scatterplott" button.
+          In order to generate a custom scatterplot, click on the "+ Scatterplot" button.
           You can then select the x and y quantities by starting to type the property name
           and selecting the appropriate line from the dropdown menus. If the property belongs to
           a repeated quantity, such as e.g. the reactants in a reaction, you can select the
           either select a specific index, or use the wildcard "*" to select all indices, or
-          indicate the specific name of the reactant. If you e.g. want to generate a S-X plot
+          indicate the specific name of the reactant. If you e.g. want to generate an S-X plot
           for the conversion of the reactant A vs. selectivity to the product B, you can
-          select the x-quantity as "results.properties.catalytic.reaction.reactants[? name=="A"].conversion"
-          and the y-quantity as "results.properties.catalytic.reaction.products[? name=="B"].selectivity".
+          select the x-quantity as `results.properties.catalytic.reaction.reactants[? name=="A"].conversion`
+          and the y-quantity as `results.properties.catalytic.reaction.products[? name=="B"].selectivity`.
           Be aware that the IUPAC names have to be used for the reactants and products (except for water and
           ammonia).'
         filters_locked:
@@ -67,6 +67,8 @@ heterogeneous_catalysis_app = yaml.safe_load(
             comment: {}
             datasets: {}
             published: {label: Access}
+            data.datetime#nomad_catalysis.schema_packages.catalysis.CatalyticReaction: {label: Measurement time}
+            data.datetime#nomad_catalysis.schema_packages.catalysis.CatalystSample: {label: Sample preparation time}
         search_quantities:
           include:
             - '*#nomad_catalysis.schema_packages.catalysis.Cat*'
