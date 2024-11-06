@@ -196,6 +196,9 @@ heterogeneous_catalysis_app = yaml.safe_load(
               type: terms
             - search_quantity: results.eln.methods
               type: terms
+            - type: histogram
+              x:
+                search_quantity: data.datetime#nomad_catalysis.schema_packages.catalysis.CatalyticReaction
             - search_quantity: results.eln.tags
               type: terms
             - search_quantity: results.eln.instruments
