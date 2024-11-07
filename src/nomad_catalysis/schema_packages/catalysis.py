@@ -1513,7 +1513,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         This function reads the h5 data from the data file and assigns the data to the
         corresponding attributes of the class.
         """
-        if self.data_file.endswith('.h5'):
+        if self.data_file.endswith('NH3_Decomposition.h5'):
             with archive.m_context.raw_file(self.data_file, 'rb') as f:
                 import h5py
 
@@ -1723,7 +1723,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.data_file.endswith('.csv') or self.data_file.endswith('.xlsx'):
             self.read_clean_data(archive, logger)
         elif self.data_file.endswith('.h5'):
-            self.read_haber_data(archive, logger)
+            if self.data_file.endswith('NH3_Decomposition.h5'):
+                self.read_haber_data(archive, logger)
+            else:
+                logger.info("""This h5 file format currently not supported. Please
+                contact the plugin developers if you want to add support for this.""")
         else:
             logger.error(
                 """Data file format not supported. Please provide a
@@ -1988,6 +1992,17 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             fig = self.single_plot(x, x_text, y.to(unit_dict[var]), y_text, title)
             self.figures.append(PlotlyFigure(label=title, figure=fig.to_plotly_json()))
 
+        fig1 = self.conversion_plot(x, x_text, logger)
+        if fig1 is not None:
+            self.figures.append(
+                PlotlyFigure(label='Conversion', figure=fig1.to_plotly_json())
+            )
+
+        if self.results[0].rates:
+            self.make_rates_plot(x, x_text)
+
+        if not self.results[0].products:
+            return
         if (
             self.results[0].products is not None
             and self.results[0].products != []
@@ -2008,14 +2023,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             self.figures.append(
                 PlotlyFigure(label='Selectivity', figure=fig0.to_plotly_json())
             )
-        fig1 = self.conversion_plot(x, x_text, logger)
-        if fig1 is not None:
-            self.figures.append(
-                PlotlyFigure(label='Conversion', figure=fig1.to_plotly_json())
-            )
-
-        if self.results[0].rates:
-            self.make_rates_plot(x, x_text)
 
         if not self.results[0].reactants_conversions:
             return
@@ -2165,7 +2172,14 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 name='molecular hydrogen',
                 reaction_rate=Rates * ureg.mmol / ureg.g / ureg.hour,
             )
-            archive.results.properties.catalytic.reaction.rate = [h2_rate]
+            rates = []
+            rates.append(h2_rate)
+            set_nested_attr(
+                archive.results.properties.catalytic.reaction,
+                'rates',
+                rates,
+            )
+            # archive.results.properties.catalytic.reaction.rate = [h2_rate]
 
         react = Reactant(
             name='ammonia', conversion=Convs, gas_concentration_in=NH3concs
