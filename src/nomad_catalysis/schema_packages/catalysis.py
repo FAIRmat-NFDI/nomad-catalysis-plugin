@@ -2309,16 +2309,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             return
         product_results = []
         for i in self.results[0].products:
-            if (
-                i.pure_component is not None
-                and i.pure_component.iupac_name is not None
-                and i.pure_component.iupac_name != 'azane'
-            ):
+            if i.pure_component is not None and i.pure_component.iupac_name is not None:
                 i.name = i.pure_component.iupac_name
-            elif (
-                i.pure_component is not None and i.pure_component.iupac_name == 'azane'
-            ):
-                i.name = 'ammonia'
             prod = Product(
                 name=i.name,
                 selectivity=i.selectivity,
