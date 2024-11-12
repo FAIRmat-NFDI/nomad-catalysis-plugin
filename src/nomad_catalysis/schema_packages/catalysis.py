@@ -152,7 +152,7 @@ def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
                         the archive results."""
                     )
                     if threshold_datapoints < len(value) < threshold2_datapoints:
-                        value = value[::10]
+                        value = value[20::10]
                     else:
                         value = value[50::100]
             except TypeError:
@@ -2230,7 +2230,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                             if len(getattr(react, key1)) > threshold2_datapoints:
                                 setattr(react, key, getattr(react, key)[50::100])
                             else:
-                                setattr(react, key, getattr(react, key)[50::10])
+                                setattr(react, key, getattr(react, key)[20::10])
 
                 break
         return react
@@ -2326,7 +2326,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 space_time_yield=i.space_time_yield,
             )
             if i.selectivity is not None and len(i.selectivity) > threshold_datapoints:
-                prod.selectivity = i.selectivity[50::100]
+                if threshold2_datapoints > len(i.selectivity):
+                    prod.selectivity = i.selectivity[20::10]
+                else:
+                    prod.selectivity = i.selectivity[50::100]
                 logger.info(
                     f"""Large arrays in product {i.name}, reducing to store
                     in the archive."""
@@ -2335,12 +2338,18 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 i.gas_concentration_out is not None
                 and len(i.gas_concentration_out) > threshold_datapoints
             ):
-                prod.gas_concentration_out = i.gas_concentration_out[50::100]
+                if threshold2_datapoints > len(i.gas_concentration_out):
+                    prod.gas_concentration_out = i.gas_concentration_out[20::10]
+                else:
+                    prod.gas_concentration_out = i.gas_concentration_out[50::100]
             if (
                 i.space_time_yield is not None
                 and len(i.space_time_yield) > threshold_datapoints
             ):
-                prod.space_time_yield = i.space_time_yield[50::100]
+                if threshold2_datapoints > len(i.space_time_yield):
+                    prod.space_time_yield = i.space_time_yield[20::10]
+                else:
+                    prod.space_time_yield = i.space_time_yield[50::100]
 
             product_results.append(prod)
 
