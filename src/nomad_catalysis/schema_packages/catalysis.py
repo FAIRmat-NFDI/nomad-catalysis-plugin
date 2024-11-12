@@ -62,6 +62,7 @@ class CatalysisElnCategory(EntryDataCategory):
 
 
 threshold_datapoints = 300
+threshold2_datapoints = 3000
 
 
 def add_catalyst(archive: 'EntryArchive') -> None:
@@ -150,7 +151,10 @@ def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
                         f"""The quantity '{ref_attr}' is large and will be reduced for
                         the archive results."""
                     )
-                    value = value[50::100]
+                    if threshold_datapoints < len(value) < threshold2_datapoints:
+                        value = value[::10]
+                    else:
+                        value = value[50::100]
             except TypeError:
                 pass
             try:
@@ -986,6 +990,7 @@ class ReactionConditionsData(PlotSection):
     reagents = SubSection(section_def=Reagent, repeats=True)
 
     def plot_figures(self):
+        self.figures = []
         if self.time_on_stream is not None:
             x = self.time_on_stream.to('hour')
             x_text = 'time (h)'
@@ -1567,7 +1572,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     header['Particle size (Dp) [mm]'] * ureg.millimeter
                 )
 
-                self.experimenter = header['User'][0].decode()
+                if not self.experimenter:
+                    self.experimenter = header['User'][0].decode()
 
                 pre = data['Sorted Data'][methodname]['H2 Reduction']
                 pretreatment.set_temperature = (
@@ -2221,7 +2227,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         if key == 'name':
                             continue
                         if getattr(react, key) is not None:
-                            setattr(react, key, getattr(react, key)[50::100])
+                            if len(getattr(react, key1)) > threshold2_datapoints:
+                                setattr(react, key, getattr(react, key)[50::100])
+                            else:
+                                setattr(react, key, getattr(react, key)[50::10])
+
                 break
         return react
 
