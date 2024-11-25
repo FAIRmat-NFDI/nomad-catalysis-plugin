@@ -348,6 +348,28 @@ class CatalystSample(CompositeSystem, Schema):
         links=['https://w3id.org/nfdi4cat/voc4cat_0007014'],
     )
 
+    active_phase = Quantity(
+        type=str,
+        shape=[],
+        description="""
+          The part of the catalyst that is thought to contain the active site for the
+          target reaction.
+          """,
+        a_eln=ELNAnnotation(component='StringEditQuantity'),
+    )
+
+    support = Quantity(
+        type=str,
+        shape=[],
+        description="""
+          The material that the active phase is supported on.
+          """,
+        a_eln=dict(
+            component='StringEditQuantity',
+        ),
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007034'],
+    )
+
     form = Quantity(
         type=str,
         shape=[],
