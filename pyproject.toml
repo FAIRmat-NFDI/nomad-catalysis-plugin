@@ -19,8 +19,9 @@ version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    { name = "Julia Schumann", email = "jschumann@physik.hu-berlin.de" },
+    { name = "Julia Schumann"},
     { name = "Hampus Näsström"},
+    { name = "Michael Götte"},
     { email = "fairmat@physik.hu-berlin.de"},
 ]
 maintainers = [
