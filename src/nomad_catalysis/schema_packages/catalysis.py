@@ -2101,9 +2101,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 'Time': self.results[0].time_on_stream,
             }
             data_dict_no_ramps = {}
-            for key in data_dict:
+            for key, value in data_dict.items():
                 data_dict_no_ramps[key] = self.remove_ramps_from_data(
-                    data_dict['Temp'], data_dict[key]
+                    data_dict['Temp'], value
                 )
 
             # getting the temperature values of each step
