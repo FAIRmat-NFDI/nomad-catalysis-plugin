@@ -1,7 +1,7 @@
 ![nomad plugin logo](docs/assets/nomad-plugin-logo.png)
 # nomad-catalysis
 
-This is a NOMAD plugin for heterogeneous catalysis data. You can find the full documentation [here](https://fairmat-nfdi.github.io/nomad-catalysis-plugin/). For some default information for NOMAD plugins see below.
+This is a NOMAD plugin for heterogeneous catalysis data. You can find the full documentation [here](https://fairmat-nfdi.github.io/nomad-catalysis-plugin/). For some default information about NOMAD plugins see below.
 
 
 ----

@@ -46,7 +46,6 @@ The reference [section](reference/references.md) includes a list of all sections
 as well as the necessary format for the possible datafiles of the catalytic reaction.
 
 </div>
-<div markdown="block">
 </div>
 
 ## About NOMAD
