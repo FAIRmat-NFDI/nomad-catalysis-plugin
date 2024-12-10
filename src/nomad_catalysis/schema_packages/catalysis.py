@@ -348,16 +348,6 @@ class CatalystSample(CompositeSystem, Schema):
         links=['https://w3id.org/nfdi4cat/voc4cat_0007014'],
     )
 
-    active_phase = Quantity(
-        type=str,
-        shape=[],
-        description="""
-          The part of the catalyst that is thought to contain the active site for the
-          target reaction.
-          """,
-        a_eln=ELNAnnotation(component='StringEditQuantity'),
-    )
-
     support = Quantity(
         type=str,
         shape=[],
@@ -394,6 +384,7 @@ class CatalystSample(CompositeSystem, Schema):
         quantities_results_mapping = {
             'name': 'catalyst_name',
             'catalyst_type': 'catalyst_type',
+            'support': 'support',
             'preparation_details.preparation_method': 'preparation_method',
             'surface.surface_area': 'surface_area',
             'surface.method_surface_area_determination': 'characterization_methods',
@@ -674,7 +665,7 @@ class Reagent(ArchiveSection):
         a_eln=ELNAnnotation(label='reagent name', component='StringEditQuantity'),
         description='reagent name',
     )
-    gas_concentration_in = Quantity(
+    fraction_in = Quantity(
         type=np.float64,
         shape=['*'],
         description="""Volumetric fraction of reactant in feed. The value must be
@@ -689,6 +680,13 @@ class Reagent(ArchiveSection):
         a_eln=ELNAnnotation(
             component='NumberEditQuantity', defaultDisplayUnit='mL/minute'
         ),
+    )
+    partial_pressure_in = Quantity(
+        type=np.float64,
+        shape=['*'],
+        unit='Pa',
+        description='Partial pressure of reactant in initial reaction mixture.',
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='bar'),
     )
 
     pure_component = SubSection(section_def=PubChemPureSubstanceSection)
@@ -739,16 +737,16 @@ class Reagent(ArchiveSection):
         """
         # super().normalize(archive, logger)
 
-        check_if_concentration_in_percentage(self, self.gas_concentration_in, logger)
+        check_if_concentration_in_percentage(self, self.fraction_in, logger)
         try:
             if (
-                not self.gas_concentration_in
+                not self.fraction_in
                 and self.flow_rate
                 and self.m_parent
                 and getattr(self.m_parent, 'set_total_flow_rate', None)
             ):
                 total_flow = getattr(self.m_parent, 'set_total_flow_rate', None)
-                self.gas_concentration_in = self.flow_rate / total_flow
+                self.fraction_in = self.flow_rate / total_flow
         except (TypeError, ValueError):  # because truth value of array is ambiguous
             pass
         if self.name is None:
@@ -784,7 +782,7 @@ class ReactantData(Reagent):
         description='A reagent that has a conversion in a reaction that is not null',
     )
 
-    gas_concentration_out = Quantity(
+    fraction_out = Quantity(
         type=np.float64,
         shape=['*'],
         description="""Volumetric fraction of reactant in outlet. The value must be
@@ -798,6 +796,7 @@ class ReactantData(Reagent):
         shape=['*'],
         description="""The conversion of the reactant in the reaction mixture.
         The value is in %""",
+        a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
     conversion_type = Quantity(
         type=str,
@@ -876,7 +875,7 @@ class ProductData(Reagent):
         A chemical substance formed in the reaction mixture during a reaction.""",
     )
 
-    gas_concentration_out = Quantity(
+    fraction_out = Quantity(
         type=np.float64,
         shape=['*'],
         description="""Volumetric fraction of reactant in outlet.
@@ -1046,7 +1045,7 @@ class ReactionConditionsData(PlotSection):
 
         if self.reagents is not None and self.reagents != []:
             if self.reagents[0].flow_rate is not None or (
-                self.reagents[0].gas_concentration_in is not None
+                self.reagents[0].fraction_in is not None
             ):
                 fig5 = go.Figure()
                 for i, r in enumerate(self.reagents):
@@ -1062,11 +1061,11 @@ class ReactionConditionsData(PlotSection):
                                     name='Total Flow Rates',
                                 )
                             )
-                    elif self.reagents[0].gas_concentration_in is not None:
+                    elif self.reagents[0].fraction_in is not None:
                         fig5.add_trace(
                             go.Scatter(
                                 x=x,
-                                y=self.reagents[i].gas_concentration_in,
+                                y=self.reagents[i].fraction_in,
                                 name=self.reagents[i].name,
                             )
                         )
@@ -1094,6 +1093,68 @@ class ReactionConditionsData(PlotSection):
                 / self.m_root().data.reactor_filling.catalyst_mass
             )
 
+        self.plot_figures()
+
+
+class ReagentBatch(Reagent):
+    m_def = Section(
+        label_quantity='name',
+        description='A reagent in a batch reaction.',
+        a_eln={'hide': ['fraction_in', 'flow_rate']},
+    )
+
+    amount = Quantity(
+        description='The amount n of the reagent in the reaction mixture in mole.',
+        type=np.float64,
+        shape=[],
+        unit='mol',
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='mmol'),
+        links=['https://goldbook.iupac.org/terms/view/A00297'],
+    )
+
+    mass = Quantity(
+        type=np.float64,
+        shape=[],
+        unit='kg',
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='mg'),
+    )
+
+    volume = Quantity(
+        type=np.float64,
+        shape=[],
+        unit='m**3',
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='mL'),
+    )
+
+
+class ReactionConditionsBatchData(ReactionConditionsData):
+    m_def = Section(
+        description="""
+        A class containing reaction conditions for a batch reaction.""",
+        a_eln={
+            'hide': [
+                'set_total_flow_rate',
+                'weight_hourly_space_velocity',
+                'contact_time',
+                'gas_hourly_space_velocity',
+                'time_on_stream',
+            ]
+        },
+    )
+
+    reaction_time = Quantity(
+        type=np.float64,
+        shape=['*'],
+        unit='s',
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='hour'),
+    )
+
+    reagents = SubSection(section_def=ReagentBatch, repeats=True)
+
+    def normalize(self, archive, logger):
+        super().normalize(archive, logger)
+        if self.reaction_time is not None:
+            self.time_on_stream = self.reaction_time
         self.plot_figures()
 
 
@@ -1340,7 +1401,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     gas_in = data[col] / 100
                 else:
                     gas_in = data[col]
-                reagent = Reagent(name=col_split[1], gas_concentration_in=gas_in)
+                reagent = Reagent(name=col_split[1], fraction_in=gas_in)
                 reagent_names.append(col_split[1])
                 reagents.append(reagent)
 
@@ -1432,7 +1493,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         conversion=np.nan_to_num(data[col]),
                         conversion_type='reactant-based conversion',
                         conversion_reactant_based=np.nan_to_num(data[col]),
-                        gas_concentration_in=(
+                        fraction_in=(
                             np.nan_to_num(data['x ' + col_split[1] + ' (%)']) / 100
                         ),
                     )
@@ -1442,7 +1503,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         conversion=np.nan_to_num(data[col]),
                         conversion_type='reactant-based conversion',
                         conversion_reactant_based=np.nan_to_num(data[col]),
-                        gas_concentration_in=np.nan_to_num(data['x ' + col_split[1]]),
+                        fraction_in=np.nan_to_num(data['x ' + col_split[1]]),
                     )
 
                 for i, p in enumerate(conversions):
@@ -1455,11 +1516,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 if col_split[1] in reagent_names:
                     conversion = ReactantData(
                         name=col_split[1],
-                        gas_concentration_in=np.nan_to_num(
-                            data['x ' + col_split[1] + ' (%)']
-                        )
+                        fraction_in=np.nan_to_num(data['x ' + col_split[1] + ' (%)'])
                         / 100,
-                        gas_concentration_out=np.nan_to_num(data[col]) / 100,
+                        fraction_out=np.nan_to_num(data[col]) / 100,
                         conversion=np.nan_to_num(
                             (1 - (data[col] / data['x ' + col_split[1] + ' (%)'])) * 100
                         ),
@@ -1468,7 +1527,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 else:
                     product = ProductData(
                         name=col_split[1],
-                        gas_concentration_out=np.nan_to_num(data[col]) / 100,
+                        fraction_out=np.nan_to_num(data[col]) / 100,
                     )
                     products.append(product)
                     product_names.append(col_split[1])
@@ -1540,7 +1599,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         This function reads the h5 data from the data file and assigns the data to the
         corresponding attributes of the class.
         """
-        if self.data_file.endswith('NH3_Decomposition.h5'):
+        if self.data_file.endswith('.h5'):
             with archive.m_context.raw_file(self.data_file, 'rb') as f:
                 import h5py
 
@@ -1647,7 +1706,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                             reagent = Reagent(
                                 name='ammonia',
                                 flow_rate=analysed[col] * ureg.milliliter / ureg.minute,
-                                gas_concentration_in=[1.0] * len(analysed[col]),
+                                fraction_in=[1.0] * len(analysed[col]),
                             )
                             if reagent.flow_rate.any() > 0.0:
                                 reagents.append(reagent)
@@ -1675,7 +1734,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     name='ammonia',
                     conversion=np.nan_to_num(analysed['NH3 Conversion [%]']),
                     conversion_type='reactant-based conversion',
-                    gas_concentration_in=[1] * len(analysed['NH3 Conversion [%]']),
+                    fraction_in=[1] * len(analysed['NH3 Conversion [%]']),
                 )
                 conversions.append(conversion)
 
@@ -1754,8 +1813,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if self.data_file.endswith('NH3_Decomposition.h5'):
                 self.read_haber_data(archive, logger)
             else:
-                logger.info("""This h5 file format currently not supported. Please
-                contact the plugin developers if you want to add support for this.""")
+                logger.info("""This h5 file format might currently not be supported.
+                Pleasecontact the plugin developers if you want to add support for this.
+                            """)
+                self.read_haber_data(archive, logger)
         else:
             logger.error(
                 """Data file format not supported. Please provide a
@@ -1808,6 +1869,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         quantities_results_mapping = {
             'name': 'catalyst_name',
             'catalyst_type': 'catalyst_type',
+            'support': 'support',
             'preparation_details.preparation_method': 'preparation_method',
             'surface.surface_area': 'surface_area',
         }
@@ -1897,7 +1959,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if not self.results[0].reactants_conversions:
             logger.warning('no conversion data found, so no plot is created')
             return
-        if not self.results[0].reactants_conversions[0].conversion.any():
+        if self.results[0].reactants_conversions[0].conversion is None:
             logger.warning('no conversion data found, so no plot is created')
             return
         fig1 = go.Figure()
@@ -2118,7 +2180,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 'Whsv': self.reaction_conditions.weight_hourly_space_velocity,
                 'Flow': self.results[0].total_flow_rate,
                 'Conv': self.results[0].reactants_conversions[0].conversion,
-                'NH3conc': self.reaction_conditions.reagents[0].gas_concentration_in,
+                'NH3conc': self.reaction_conditions.reagents[0].fraction_in,
                 'Rate': self.results[0].rates[0].reaction_rate,
                 'Time': self.results[0].time_on_stream,
             }
@@ -2209,9 +2271,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
             # archive.results.properties.catalytic.reaction.rate = [h2_rate]
 
-        react = Reactant(
-            name='ammonia', conversion=Convs, gas_concentration_in=NH3concs
-        )
+        react = Reactant(name='ammonia', conversion=Convs, fraction_in=NH3concs)
 
         return react
 
@@ -2284,17 +2344,17 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 else:
                     iupac_name = j.name
 
-                if i.gas_concentration_in is None:
-                    i.gas_concentration_in = j.gas_concentration_in
-                elif not np.allclose(i.gas_concentration_in, j.gas_concentration_in):
+                if i.fraction_in is None:
+                    i.fraction_in = j.fraction_in
+                elif not np.allclose(i.fraction_in, j.fraction_in):
                     logger.warning(f"""Gas concentration of '{i.name}' is not
                                 the same in reaction_conditions and
                                 results.reactants_conversions.""")
                 react = Reactant(
                     name=iupac_name,
                     conversion=i.conversion,
-                    gas_concentration_in=i.gas_concentration_in,
-                    gas_concentration_out=i.gas_concentration_out,
+                    mole_fraction_in=i.fraction_in,
+                    mole_fraction_out=i.fraction_out,
                 )
                 react = self.check_react(react, threshold_datapoints, archive, logger)
 
@@ -2336,7 +2396,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             prod = Product(
                 name=i.name,
                 selectivity=i.selectivity,
-                gas_concentration_out=i.gas_concentration_out,
+                mole_fraction_out=i.fraction_out,
                 space_time_yield=i.space_time_yield,
             )
             if i.selectivity is not None and len(i.selectivity) > threshold_datapoints:
@@ -2349,13 +2409,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     in the archive."""
                 )
             if (
-                i.gas_concentration_out is not None
-                and len(i.gas_concentration_out) > threshold_datapoints
+                i.fraction_out is not None
+                and len(i.fraction_out) > threshold_datapoints
             ):
-                if threshold2_datapoints > len(i.gas_concentration_out):
-                    prod.gas_concentration_out = i.gas_concentration_out[20::10]
+                if threshold2_datapoints > len(i.fraction_out):
+                    prod.mole_fraction_out = i.fraction_out[20::10]
                 else:
-                    prod.gas_concentration_out = i.gas_concentration_out[50::100]
+                    prod.mole_fraction_out = i.fraction_out[50::100]
             if (
                 i.space_time_yield is not None
                 and len(i.space_time_yield) > threshold_datapoints

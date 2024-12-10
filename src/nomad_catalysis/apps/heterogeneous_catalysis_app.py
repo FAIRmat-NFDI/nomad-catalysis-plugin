@@ -112,6 +112,8 @@ heterogeneous_catalysis_app = yaml.safe_load(
             items:
             - search_quantity: results.properties.catalytic.catalyst.catalyst_type
               type: terms
+            - search_quantity: results.properties.catalytic.catalyst.support
+              type: terms
             - search_quantity: results.properties.catalytic.catalyst.preparation_method
               type: terms
             - search_quantity: results.properties.catalytic.catalyst.catalyst_name
@@ -146,10 +148,10 @@ heterogeneous_catalysis_app = yaml.safe_load(
                   search_quantity: results.properties.catalytic.reaction.reactants.conversion
               - type: histogram
                 x:
-                  search_quantity: results.properties.catalytic.reaction.reactants.gas_concentration_in
+                  search_quantity: results.properties.catalytic.reaction.reactants.mole_fraction_in
               - type: histogram
                 x:
-                  search_quantity: results.properties.catalytic.reaction.reactants.gas_concentration_out
+                  search_quantity: results.properties.catalytic.reaction.reactants.mole_fraction_out
           - type: menu
             title: Products
             indentation: 2
@@ -162,7 +164,7 @@ heterogeneous_catalysis_app = yaml.safe_load(
                 search_quantity: results.properties.catalytic.reaction.products.selectivity
             - type: histogram
               x:
-                search_quantity: results.properties.catalytic.reaction.products.gas_concentration_out
+                search_quantity: results.properties.catalytic.reaction.products.mole_fraction_out
           - type: menu
             title: Reaction Conditions
             indentation: 2
@@ -274,7 +276,7 @@ heterogeneous_catalysis_app = yaml.safe_load(
                 quantity: results.properties.catalytic.reaction.reactants[*].name
             size: 1000
             x:
-              quantity: results.properties.catalytic.reaction.reactants[*].gas_concentration_in
+              quantity: results.properties.catalytic.reaction.reactants[*].mole_fraction_in
               title: 'Feed composition'
             y:
               quantity: results.properties.catalytic.reaction.reaction_conditions.temperature
