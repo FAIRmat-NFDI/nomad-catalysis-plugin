@@ -373,6 +373,15 @@ class CatalystSample(CompositeSystem, Schema):
         links=['https://w3id.org/nfdi4cat/voc4cat_0000016'],
     )
 
+    description = Quantity(
+        type=str,
+        shape=[],
+        description="""
+          A description of the catalyst sample.
+          """,
+        a_eln=dict(component='RichTextEditQuantity', props=dict(height=200)),
+    )
+
     def populate_results(self, archive: 'EntryArchive', logger) -> None:
         """
         This function copies the catalyst sample information specified in the dictionary
@@ -559,6 +568,14 @@ class ReactorFilling(ArchiveSection):
             props=dict(suggestions=['SiC', 'SiO2', 'unknown']),
         ),
     )
+
+    diluent_mass = Quantity(
+        type=np.float64,
+        shape=[],
+        unit='kg',
+        a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='mg'),
+    )
+
     diluent_sievefraction_upper_limit = Quantity(
         type=np.float64,
         shape=[],
@@ -1142,6 +1159,15 @@ class ReactionConditionsBatchData(ReactionConditionsData):
         },
     )
 
+    stirring_rate = Quantity(
+        type=np.float64,
+        shape=[],
+        unit='1/s',
+        description="""The rate at which the reaction mixture is stirred. The value is
+        in 1/s""",
+        a_eln=ELNAnnotation(component='NumberEditQuantity'),
+    )
+
     reaction_time = Quantity(
         type=np.float64,
         shape=['*'],
@@ -1241,6 +1267,15 @@ class CatalyticReactionCore(Measurement):
         The person that performed or started the measurement.
         """,
         a_eln=dict(component='EnumEditQuantity'),
+    )
+
+    description = Quantity(
+        type=str,
+        shape=[],
+        description="""
+          A description of the catalyst sample.
+          """,
+        a_eln=dict(component='RichTextEditQuantity', props=dict(height=200)),
     )
 
 
