@@ -1159,6 +1159,15 @@ class ReactionConditionsBatchData(ReactionConditionsData):
         },
     )
 
+    stirring_rate = Quantity(
+        type=np.float64,
+        shape=[],
+        unit='1/s',
+        description="""The rate at which the reaction mixture is stirred. The value is
+        in 1/s""",
+        a_eln=ELNAnnotation(component='NumberEditQuantity'),
+    )
+
     reaction_time = Quantity(
         type=np.float64,
         shape=['*'],
