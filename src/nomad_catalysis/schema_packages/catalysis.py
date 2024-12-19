@@ -373,15 +373,6 @@ class CatalystSample(CompositeSystem, Schema):
         links=['https://w3id.org/nfdi4cat/voc4cat_0000016'],
     )
 
-    description = Quantity(
-        type=str,
-        shape=[],
-        description="""
-          A description of the catalyst sample.
-          """,
-        a_eln=dict(component='RichTextEditQuantity', props=dict(height=200)),
-    )
-
     def populate_results(self, archive: 'EntryArchive', logger) -> None:
         """
         This function copies the catalyst sample information specified in the dictionary
@@ -1267,15 +1258,6 @@ class CatalyticReactionCore(Measurement):
         The person that performed or started the measurement.
         """,
         a_eln=dict(component='EnumEditQuantity'),
-    )
-
-    description = Quantity(
-        type=str,
-        shape=[],
-        description="""
-          A description of the catalyst sample.
-          """,
-        a_eln=dict(component='RichTextEditQuantity', props=dict(height=200)),
     )
 
 
@@ -2306,7 +2288,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
             # archive.results.properties.catalytic.reaction.rate = [h2_rate]
 
-        react = Reactant(name='ammonia', conversion=Convs, fraction_in=NH3concs)
+        react = Reactant(name='ammonia', conversion=Convs, mole_fraction_in=NH3concs)
 
         return react
 
