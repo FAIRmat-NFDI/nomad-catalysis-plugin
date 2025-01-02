@@ -173,7 +173,7 @@ def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
 
 
 def check_if_concentration_in_percentage(self, conc_array, logger) -> None:
-    if conc_array is not None and any(y > 1.0 for y in conc_array):
+    if conc_array is not None and any(y > 1.1 for y in conc_array):
         logger.error(
             f'Gas concentration for reagent "{self.name}" is above 1, '
             f'but should be given as fraction.'
@@ -748,15 +748,21 @@ class Reagent(ArchiveSection):
         check_if_concentration_in_percentage(self, self.fraction_in, logger)
         try:
             if (
-                not self.fraction_in
-                and self.flow_rate
-                and self.m_parent
-                and getattr(self.m_parent, 'set_total_flow_rate', None)
+                self.fraction_in is None
+                and self.flow_rate is not None
+                and self.m_parent is not None
+                and getattr(self.m_parent, 'set_total_flow_rate', None) is not None
             ):
                 total_flow = getattr(self.m_parent, 'set_total_flow_rate', None)
                 self.fraction_in = self.flow_rate / total_flow
-        except (TypeError, ValueError):  # because truth value of array is ambiguous
-            pass
+        except (
+            TypeError,
+            ValueError,
+        ) as e:  # because truth value of array is ambiguous
+            logger.info(
+                f'Could not calculate fraction_in for reagent {self.name} '
+                f'from flow rate and total flow rate. Error: {e}'
+            )
         if self.name is None:
             return
         if self.name in ['C5-1', 'C6-1', 'nC5', 'nC6', 'Unknown', 'inert', 'P>=5C']:
@@ -1108,7 +1114,7 @@ class ReagentBatch(Reagent):
     m_def = Section(
         label_quantity='name',
         description='A reagent in a batch reaction.',
-        a_eln={'hide': ['fraction_in', 'flow_rate']},
+        a_eln={'hide': ['flow_rate']},
     )
 
     amount = Quantity(
@@ -1817,7 +1823,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
     def check_and_read_data_file(self, archive, logger):
         """This functions checks the format of the data file and assigns the right
-        reader function to read the data file or logs an error if the format is not
+        reader function to read the data file or logs a warning if the format is not
         supported.
         """
         if self.data_file is None:
@@ -1834,8 +1840,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     self.read_haber_data(archive, logger)
                 except KeyError:
                     logger.warning(
-                        """No data is extracted from this h5 data file as the format is
-                        not (yet) supported. This file contains a different data
+                        """No data is extracted from this h5 data file as the file is
+                        either missing or the format is not (yet) supported.
+                        This file contains a different data
                         structure or object names from currently supported h5 files for
                         catalysis. Please check if you can modify the structure or
                         contact the plugin developers if you want to add support for
@@ -2478,7 +2485,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         if self.data_file is not None:
             self.check_and_read_data_file(archive, logger)
-            logger.info('Data file read successfully.')
+            logger.info('Data file processed.')
 
         self.normalize_reaction_conditions(archive, logger)
         if self.pretreatment is not None:
