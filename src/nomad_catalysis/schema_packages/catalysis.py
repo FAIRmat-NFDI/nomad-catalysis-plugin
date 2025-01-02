@@ -1830,14 +1830,22 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if self.data_file.endswith('NH3_Decomposition.h5'):
                 self.read_haber_data(archive, logger)
             else:
-                logger.info("""This h5 file format might currently not be supported.
-                Pleasecontact the plugin developers if you want to add support for this.
-                            """)
-                self.read_haber_data(archive, logger)
+                try:
+                    self.read_haber_data(archive, logger)
+                except KeyError:
+                    logger.warning(
+                        """No data is extracted from this h5 data file as the format is
+                        not (yet) supported. This file contains a different data
+                        structure or object names from currently supported h5 files for
+                        catalysis. Please check if you can modify the structure or
+                        contact the plugin developers if you want to add support for
+                        this."""
+                    )
         else:
-            logger.error(
-                """Data file format not supported. Please provide a
-                .csv, .xlsx or .h5 file."""
+            logger.warning(
+                """Data file format not supported. No data is extracted from the
+                provided file. Please provide a standadized .csv, .xlsx or .h5 file,
+                if you want direct data extraction into the schema."""
             )
             return
 
