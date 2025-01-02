@@ -172,8 +172,11 @@ def map_and_assign_attributes(self, logger, mapping, target, obj=None) -> None:
                 )
 
 
+threshold_conc = 1.1
+
+
 def check_if_concentration_in_percentage(self, conc_array, logger) -> None:
-    if conc_array is not None and any(y > 1.1 for y in conc_array):
+    if conc_array is not None and any(y > threshold_conc for y in conc_array):
         logger.error(
             f'Gas concentration for reagent "{self.name}" is above 1, '
             f'but should be given as fraction.'
