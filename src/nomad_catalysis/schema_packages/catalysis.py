@@ -2511,3 +2511,179 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         self.write_products_results(archive, logger)
 
         self.plot_figures(archive, logger)
+
+
+class ElectrochemicalReactorSetup(ReactorSetup):
+    m_def = Section(
+        label='Electrochemical Reactor Setup',
+        description="""A section containing information about the setup of an
+        electrochemical reactor.""",
+        links=['https://w3id.org/nfdi4cat/voc4cat_0000193'],
+    )
+
+    electrode_material = Quantity(
+        type='string',
+        shape=[],
+        description='The material of the electrode.',
+    )
+
+    electrode_surface_area = Quantity(
+        type='float',
+        shape=[],
+        description='The surface area of the electrode.',
+        units='cm^2',
+    )
+
+    electrode_configuration = Quantity(
+        type='string',
+        shape=[],
+        description='The configuration of the electrode.',
+    )
+
+    electrode_surface_preparation = Quantity(
+        type='string',
+        shape=[],
+        description='The preparation of the electrode surface.',
+    )
+
+    electrode_surface_treatment = Quantity(
+        type='string',
+        shape=[],
+        description='The treatment of the electrode surface.',
+    )
+
+    electrode_surface_modification = Quantity(
+        type='string',
+        shape=[],
+        description='The modification of the electrode surface.',
+    )
+
+
+class ElectrochemReactionConditionsData(ReactionConditionsData):
+    m_def = Section(
+        label='Electrochemical Reaction Conditions',
+        description="""A section containing information about the reaction conditions
+        for an electrochemical reaction.""",
+    )
+
+    set_current_density = Quantity(
+        type='float',
+        shape=['*'],
+        description='The set current density of the electrochemical reaction.',
+        units='mA/cm^2',  # double check unit!
+    )
+
+    set_potential = Quantity(
+        type='float',
+        shape=['*'],
+        description='The set potential of the electrochemical reaction.',
+        units='V',
+    )
+
+    potential_scan_rate = Quantity(
+        type='float',
+        shape=[],
+        description='The scan rate of the potential.',
+        units='V/s',
+    )
+
+    electrolyte = Quantity(
+        type='string',
+        shape=[],
+        description='The electrolyte used in the reaction.',
+    )
+
+    electrolyte_concentration = Quantity(
+        type='float',
+        shape=[],
+        description='The concentration of the electrolyte.',
+        units='mol/l',
+    )
+
+    electrolyte_flow_rate = Quantity(
+        type='float',
+        shape=[None],
+        description='The flow rate of the electrolyte.',
+        units='ml/min',
+    )
+
+    electrolyte_pH = Quantity(
+        type='float',
+        shape=[None],
+        description='The pH of the electrolyte.',
+    )
+
+
+class ElectrochemicalProductData(ProductData):
+    faradaic_efficiency = Quantity(
+        type='float',
+        shape=['*'],
+        description='The faradaic efficiency of the electrochemical reaction.',
+        link='https://w3id.org/nfdi4cat/voc4cat_0007229',
+    )
+
+
+class ElectroCatalyticReactionData(CatalyticReactionData):
+    m_def = Section(
+        label='Electrocatalytic Reaction Data',
+        description="""A section containing information about the results of an
+        electrocatalytic reaction.""",
+    )
+
+    current_density = Quantity(
+        type='float',
+        shape=['*'],
+        description='The current density of the electrochemical reaction.',
+        units='mA/cm^2',
+    )
+
+    potential = Quantity(
+        type='float',
+        shape=['*'],
+        description='The potential of the electrochemical reaction.',
+        units='V',
+    )
+
+    products = SubSection(section_def=ElectrochemicalProductData)
+
+
+class ElectroCatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
+    m_def = Section(
+        label='Electrocatalytic Reaction',
+        description="""An activity entry containing information about a catalytic
+        reaction driven by a electronic potential.""",
+        # links=['https://w3id.org/nfdi4cat/voc4cat_000'],
+        a_eln=ELNAnnotation(
+            properties=dict(
+                order=[
+                    'name',
+                    'data_file',
+                    'reaction_name',
+                    'reaction_type',
+                    'experimenter',
+                    'location',
+                    'experiment_handbook',
+                ]
+            )
+        ),
+        categories=[CatalysisElnCategory],
+    )
+
+    instruments = SubSection(
+        section_def=ElectrochemicalReactorSetup,
+        a_eln=ELNAnnotation(label='reactor setup'),
+    )
+    reactor_filling = SubSection(section_def=ReactorFilling)
+
+    # pretreatment = SubSection(
+    #     section_def=ReactionConditionsData, a_eln=ELNAnnotation(label='pretreatment')
+    # )
+    reaction_conditions = SubSection(
+        section_def=ElectrochemReactionConditionsData,
+        a_eln=ELNAnnotation(label='electrochemical reaction conditions'),
+    )
+
+    results = SubSection(
+        section_def=ElectroCatalyticReactionData,
+        a_eln=ELNAnnotation(label='reaction results'),
+    )
