@@ -2675,9 +2675,10 @@ class ElectroCatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     )
     reactor_filling = SubSection(section_def=ReactorFilling)
 
-    # pretreatment = SubSection(
-    #     section_def=ReactionConditionsData, a_eln=ELNAnnotation(label='pretreatment')
-    # )
+    pretreatment = SubSection(
+        section_def=ElectrochemReactionConditionsData, a_eln=ELNAnnotation(label='pretreatment')
+    )
+
     reaction_conditions = SubSection(
         section_def=ElectrochemReactionConditionsData,
         a_eln=ELNAnnotation(label='electrochemical reaction conditions'),
@@ -2687,3 +2688,43 @@ class ElectroCatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         section_def=ElectroCatalyticReactionData,
         a_eln=ELNAnnotation(label='reaction results'),
     )
+
+    def populate_echem_reactivity_info(
+        self, archive: 'EntryArchive', logger: 'BoundLogger'
+    ) -> None:
+        """
+        Maps and copies the reaction data from data to the results archive
+        of the measurement.
+        """
+        add_activity(archive)
+
+        quantities_results_mapping = {
+            'reaction_conditions.set_temperature': 'reaction_conditions.temperature',
+            'reaction_conditions.set_pressure': 'reaction_conditions.pressure',
+            'reaction_conditions.weight_hourly_space_velocity': 'reaction_conditions.weight_hourly_space_velocity',  # noqa: E501
+            'reaction_conditions.gas_hourly_space_velocity': 'reaction_conditions.gas_hourly_space_velocity',  # noqa: E501
+            'reaction_conditions.set_total_flow_rate': 'reaction_conditions.flow_rate',
+            'reaction_conditions.time_on_stream': 'reaction_conditions.time_on_stream',
+            'results.temperature': 'reaction_conditions.temperature',
+            'results.pressure': 'reaction_conditions.pressure',
+            'results.total_flow_rate': 'reaction_conditions.flow_rate',
+            'results.time_on_stream': 'reaction_conditions.time_on_stream',
+            'reaction_name': 'name',
+            'reaction_type': 'type',
+            'reaction_conditions.set_current_density': 'reaction_conditions.set_current_density', # noqa: E501
+            'reaction_conditions.set_potential': 'reaction_conditions.set_potential',
+        }
+
+        map_and_assign_attributes(
+            self,
+            logger,
+            mapping=quantities_results_mapping,
+            target=archive.results.properties.catalytic.reaction,
+        )
+
+    def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+        super().normalize(archive, logger)
+
+        if self.reaction_conditions is not None or self.results is not None:
+            self.populate_echem_reactivity_info(archive, logger)
+
