@@ -417,8 +417,9 @@ class CatalystSample(CompositeSystem, Schema):
     ) -> None:
         """
         This function looks for other entries that reference the sample and checks the
-        entry type and if it finds a ELNXRayDiffration entry it adds 'XRD' to the
-        characterization_methods in result.
+        results.eln.method of the entry and if it finds a methods other than 
+        ELNMeasurement or Root, it adds this method to characterization_methods in 
+        the results section of the sample entry.
 
         Args:
             archive (EntryArchive): The archive containing the section that is being
@@ -451,8 +452,12 @@ class CatalystSample(CompositeSystem, Schema):
             methods = []
             for entry in search_result.data:
                 if entry['results']['eln']['methods'] != ['ELNMeasurement']:
-                    method = entry['results']['eln']['methods'][0]
-                    methods.append(method)
+                    if entry['results']['eln']['methods'][0] == 'Root' and (
+                        len(entry['results']['eln']['methods']) > 1): 
+                        method = entry['results']['eln']['methods'][1]
+                    else:
+                        method = entry['results']['eln']['methods'][0]
+                        methods.append(method)
                 else:
                     method = entry['entry_type']
                     methods.append(method)
