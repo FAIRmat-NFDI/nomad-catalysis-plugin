@@ -457,10 +457,9 @@ class CatalystSample(CompositeSystem, Schema):
                         method = entry['results']['eln']['methods'][1]
                     else:
                         method = entry['results']['eln']['methods'][0]
-                        methods.append(method)
                 else:
                     method = entry['entry_type']
-                    methods.append(method)
+                methods.append(method)
 
             if search_result.pagination.total > number:
                 logger.warning(
