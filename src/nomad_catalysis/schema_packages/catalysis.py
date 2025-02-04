@@ -1169,7 +1169,7 @@ class ReactionConditionsBatchData(ReactionConditionsData):
         unit='1/s',
         description="""The rate at which the reaction mixture is stirred. The value is
         in 1/s""",
-        a_eln=ELNAnnotation(component='NumberEditQuantity'),
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='1/s'),
     )
 
     reaction_time = Quantity(
