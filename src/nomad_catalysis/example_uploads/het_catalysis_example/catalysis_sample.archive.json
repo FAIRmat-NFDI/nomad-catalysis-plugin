@@ -1,0 +1,32 @@
+{
+    "data": {
+        "m_def": "nomad_catalysis.schema_packages.catalysis.CatalystSample",
+        "lab_id": "FHI_S15018",
+        "storing_institution": "Fritz-Haber-Institut Berlin / Abteilung AC",
+        "name": "CuZnAl methanol synthesis catalyst",
+        "catalyst_type":[ "bulk catalyst", "oxide"],
+        "description": "Cu-SA measured by N2O-RFC: 37 m^2/g",
+        "elemental_composition": [
+            {
+                "element": "Cu",
+                "atomic_fraction": 0.699
+            },
+            {
+                "element": "Zn",
+                "atomic_fraction": 0.286
+            },
+            {
+                "element": "Al",
+                "atomic_fraction": 0.015
+            },
+            {
+                "element": "O"
+            }
+        ],
+        "preparation_details":{
+            "preparation_method": "precipitation",
+            "preparator": "Julia Schumann",
+            "preparing_institution":"Fritz-Haber-Institut Berlin / Abteilung AC"
+        }
+    }
+}
