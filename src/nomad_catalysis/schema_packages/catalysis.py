@@ -116,7 +116,11 @@ def get_nested_attr(obj, attr_path):
         if isinstance(obj, list):  # needed for repeating subsection, e.g. results
             if obj == []:
                 return None
-            obj = obj[0]
+            from nomad.metainfo.metainfo import MSection
+            if isinstance(obj[0], MSection):
+                obj = obj[0]  ## only first element is considered for subsections
+            else: # but whole list for list quantities
+                return obj
     return obj
 
 
@@ -398,11 +402,6 @@ class CatalystSample(CompositeSystem, Schema):
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.catalyst,
         )
-        if self.catalyst_type is list and len(self.catalyst_type) > 1:
-            for n in range(1, len(self.catalyst_type)):
-                archive.results.properties.catalytic.catalyst.catalyst_type.append(
-                    self.catalyst_type[n]
-                )
 
         name_material_mapping = {'name': 'material_name'}
         map_and_assign_attributes(
