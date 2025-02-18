@@ -116,7 +116,11 @@ def get_nested_attr(obj, attr_path):
         if isinstance(obj, list):  # needed for repeating subsection, e.g. results
             if obj == []:
                 return None
-            obj = obj[0]
+            from nomad.metainfo.metainfo import MSection
+            if isinstance(obj[0], MSection):
+                obj = obj[0]  ## only first element is considered for subsections
+            else: # but whole list for list quantities
+                return obj
     return obj
 
 
@@ -398,11 +402,6 @@ class CatalystSample(CompositeSystem, Schema):
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.catalyst,
         )
-        if self.catalyst_type is list and len(self.catalyst_type) > 1:
-            for n in range(1, len(self.catalyst_type)):
-                archive.results.properties.catalytic.catalyst.catalyst_type.append(
-                    self.catalyst_type[n]
-                )
 
         name_material_mapping = {'name': 'material_name'}
         map_and_assign_attributes(
@@ -1581,6 +1580,14 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if 'catalyst' in data.columns:  # is not None:
             sample.name = str(data['catalyst'][0])
             reactor_filling.catalyst_name = str(data['catalyst'][0])
+        if 'reaction_name' in data.columns:
+            self.reaction_name = str(data['reaction_name'][0])
+        if 'reaction_type' in data.columns:
+            self.reaction_type = str(data['reaction_type'][0])
+        if 'experimenter' in data.columns:
+            self.experimenter = str(data['experimenter'][0])
+        if 'location' in data.columns:
+            self.location = str(data['location'][0])
 
         if (
             (self.samples is None or self.samples == [])

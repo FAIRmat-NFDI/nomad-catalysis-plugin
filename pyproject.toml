@@ -114,7 +114,7 @@ where = ["src"]
 [project.entry-points.'nomad.plugin']
 
 catalysis = "nomad_catalysis.schema_packages:catalysis"
-myapp = "nomad_catalysis.apps:myapp"
+catalysis_app = "nomad_catalysis.apps:catalysis"
 
 [tool.cruft]
 # Avoid updating workflow files, this leads to permissions issues

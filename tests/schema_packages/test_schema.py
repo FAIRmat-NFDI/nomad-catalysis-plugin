@@ -17,7 +17,7 @@ def test_schema():
         == 'spray-drying'
     )
     assert entry_archive.results.properties.catalytic.catalyst.catalyst_type == [
-        'bulk catalyst'
+        'bulk catalyst', 'oxide'
     ]
     assert (
         entry_archive.results.properties.catalytic.catalyst.characterization_methods
