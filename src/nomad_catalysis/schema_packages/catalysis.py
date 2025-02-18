@@ -1580,6 +1580,14 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if 'catalyst' in data.columns:  # is not None:
             sample.name = str(data['catalyst'][0])
             reactor_filling.catalyst_name = str(data['catalyst'][0])
+        if 'reaction_name' in data.columns:
+            self.reaction_name = str(data['reaction_name'][0])
+        if 'reaction_type' in data.columns:
+            self.reaction_type = str(data['reaction_type'][0])
+        if 'experimenter' in data.columns:
+            self.experimenter = str(data['experimenter'][0])
+        if 'location' in data.columns:
+            self.location = str(data['location'][0])
 
         if (
             (self.samples is None or self.samples == [])
