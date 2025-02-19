@@ -38,7 +38,7 @@
                 523
             ],
             "set_total_flow_rate": [
-                1e-06
+                1.6667e-06
             ]
         },
         "instruments":[{
