@@ -2093,7 +2093,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         go.Scatter(
                             x=x,
                             y=y,
-                            name=self.results[0].rates[i].name + ' ' + rate_str,
+                            name=self.results[0].rates[i].name,
                         )
                     )
         fig.update_layout(title_text='Rates', showlegend=True)
