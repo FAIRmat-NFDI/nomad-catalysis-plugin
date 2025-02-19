@@ -41,6 +41,19 @@
                 1e-06
             ]
         },
+        "instruments":[{
+            "name": "Chinchen High Pressure Methanol Synthesis Reactor",
+            "reactor_type": "plug flow reactor",
+            "reactor_diameter": 0.006,
+            "reactor_volume":0.0000017
+        }],
+        "reactor_filling":{
+            "catalyst_mass": 0.00005,
+            "catalyst_sievefraction_upper_limit": 0.0002,
+            "catalyst_sievefraction_lower_limit": 0.0001,
+            "diluent":"SiO2",
+            "diluent_mass":0.0007
+        },
         "reaction_type": "hydrogenation",
         "reaction_name": "methanol synthesis",
         "data_file": "methanol_synthesis_CuZnAl.xlsx"
