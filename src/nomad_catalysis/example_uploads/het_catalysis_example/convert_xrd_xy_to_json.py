@@ -1,13 +1,14 @@
-import os
 import json
+import os
 from datetime import datetime
+
 
 def parse_file(file_name):
     data = {}
     intensity = []
     two_theta = []
 
-    with open(file_name, 'r') as file:
+    with open(file_name) as file:
         lines = file.readlines()
 
     for line in lines:

@@ -5,7 +5,7 @@
         "storing_institution": "Fritz-Haber-Institut Berlin / Abteilung AC",
         "name": "CuZnAl methanol synthesis catalyst",
         "catalyst_type":[ "bulk catalyst", "oxide"],
-        "description": "Cu-SA measured by N2O-RFC: 37 m^2/g",
+        "description": "Cu-SA measured by N2O-RFC after reduction: 37 m^2/g",
         "elemental_composition": [
             {
                 "element": "Cu",
