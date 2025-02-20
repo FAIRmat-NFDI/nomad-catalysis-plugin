@@ -1415,17 +1415,24 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         for col in data.columns:
             if len(data[col]) < 2:  # noqa: PLR2004
                 continue
-            if col == 'step':
+            if col.casefold() == 'step':
                 feed.runs = data['step']
                 cat_data.runs = data['step']
 
             col_split = col.split(' ')
+            
+            if col.casefold() == 'c-balance':
+                cat_data.c_balance = np.nan_to_num(data[col])
+            
             if len(col_split) < 2:  # noqa: PLR2004
                 continue
 
             number_of_runs = max(number_of_runs, len(data[col]))
 
-            if col_split[0] == 'x':
+            if col_split[0].casefold() == 'c-balance' and ('%' in col_split[1]):
+                cat_data.c_balance = np.nan_to_num(data[col]) / 100
+
+            if col_split[0].casefold() == 'x':
                 if len(col_split) == 3 and ('%' in col_split[2]):  # noqa: PLR2004
                     gas_in = data[col] / 100
                 else:
@@ -1434,7 +1441,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 reagent_names.append(col_split[1])
                 reagents.append(reagent)
 
-            if col_split[0] == 'mass':
+            if col_split[0].casefold() == 'mass':
                 catalyst_mass_vector = data[col]
                 if '(g)' in col_split[1]:
                     reactor_filling.catalyst_mass = catalyst_mass_vector[0] * ureg.gram
@@ -1442,18 +1449,18 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     reactor_filling.catalyst_mass = (
                         catalyst_mass_vector[0] * ureg.milligram
                     )
-            if col_split[0] == 'set_temperature':
+            if col_split[0].casefold() == 'set_temperature':
                 if 'K' in col_split[1]:
                     feed.set_temperature = np.nan_to_num(data[col])
                 else:
                     feed.set_temperature = np.nan_to_num(data[col]) * ureg.celsius
-            if col_split[0] == 'temperature':
+            if col_split[0].casefold() == 'temperature':
                 if 'K' in col_split[1]:
                     cat_data.temperature = np.nan_to_num(data[col])
                 else:
                     cat_data.temperature = np.nan_to_num(data[col]) * ureg.celsius
 
-            if col_split[0] == 'TOS':
+            if col_split[0].casefold() == 'tos' or col_split[0].casefold() == 'time':
                 if 's' in col_split[1]:
                     cat_data.time_on_stream = np.nan_to_num(data[col]) * ureg.second
                     feed.time_on_stream = np.nan_to_num(data[col]) * ureg.second
@@ -1465,9 +1472,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     feed.time_on_stream = np.nan_to_num(data[col]) * ureg.hour
                 else:
                     logger.warning('Time on stream unit not recognized.')
-
-            if col_split[0] == 'C-balance':
-                cat_data.c_balance = np.nan_to_num(data[col])
 
             if col_split[0] == 'GHSV':
                 if '1/h' in col_split[1] or 'h^-1' in col_split[1]:
@@ -1485,7 +1489,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
             if col_split[0] == 'set_pressure':
                 feed.set_pressure = np.nan_to_num(data[col]) * ureg.bar
-            if col_split[0] == 'pressure':
+            if col_split[0].casefold() == 'pressure':
                 cat_data.pressure = np.nan_to_num(data[col]) * ureg.bar
 
             if col_split[0] == 'r':  # reaction rate
@@ -1541,7 +1545,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         conversion.conversion_reactant_based = np.nan_to_num(data[col])
                 conversions.append(conversion)
 
-            if col_split[0] == 'y':  # concentration out
+            if col_split[0].casefold() == 'y':  # concentration out
                 if col_split[1] in reagent_names:
                     conversion = ReactantData(
                         name=col_split[1],
