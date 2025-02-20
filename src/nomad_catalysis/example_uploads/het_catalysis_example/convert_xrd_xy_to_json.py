@@ -19,7 +19,8 @@ def parse_file(file_name):
         
         # Check if the line contains data for intensity and two_theta
         values = line.strip().split()
-        if len(values) == 2:
+        two=2
+        if len(values) == two:
             two_theta.append(float(values[0]))
             intensity.append(float(values[1]))
         else:
