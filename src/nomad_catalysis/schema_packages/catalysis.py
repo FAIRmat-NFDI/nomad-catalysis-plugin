@@ -1421,13 +1421,16 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
             col_split = col.split(' ')
             
-            if col_split[0].casefold() == 'c-balance':
+            if col.casefold() == 'c-balance':
                 cat_data.c_balance = np.nan_to_num(data[col])
             
             if len(col_split) < 2:  # noqa: PLR2004
                 continue
 
             number_of_runs = max(number_of_runs, len(data[col]))
+
+            if col_split[0].casefold() == 'c-balance' and ('%' in col_split[1]):
+                cat_data.c_balance = np.nan_to_num(data[col]) / 100
 
             if col_split[0].casefold() == 'x':
                 if len(col_split) == 3 and ('%' in col_split[2]):  # noqa: PLR2004
