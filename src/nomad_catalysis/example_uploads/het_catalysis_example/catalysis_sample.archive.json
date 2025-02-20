@@ -1,7 +1,7 @@
 {
     "data": {
         "m_def": "nomad_catalysis.schema_packages.catalysis.CatalystSample",
-        "lab_id": "FHI_S15018",
+        "lab_id": "FHI-S15018",
         "storing_institution": "Fritz-Haber-Institut Berlin / Abteilung AC",
         "name": "CuZnAl methanol synthesis catalyst",
         "catalyst_type":[ "bulk catalyst", "oxide"],

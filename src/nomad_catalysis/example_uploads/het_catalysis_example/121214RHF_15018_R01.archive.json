@@ -7,7 +7,7 @@
         "data_file": "121214RHF_15018_R01.xyd",
         "samples": [
             {
-                "lab_id": "FHI_S15018"
+                "lab_id": "FHI-S15018"
             }
         ],
         "xrd_settings": {

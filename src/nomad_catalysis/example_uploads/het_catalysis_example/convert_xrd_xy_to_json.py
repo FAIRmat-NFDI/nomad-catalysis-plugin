@@ -30,7 +30,7 @@ def parse_file(file_name):
         data['datafile'] = file_name
         split_filename = file_name.split('_')
         data['datemeasured'] = split_filename[0].split('R')[0]
-        data['sample'] = 'FHI_S'+ str(split_filename[1])
+        data['sample'] = 'FHI-S'+ str(split_filename[1])
 
     return data, intensity, two_theta
 
