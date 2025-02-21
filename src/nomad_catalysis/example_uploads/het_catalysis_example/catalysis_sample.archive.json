@@ -9,19 +9,19 @@
         "elemental_composition": [
             {
                 "element": "Cu",
-                "weight_fraction": 0.55
+                "mass_fraction": 0.55
             },
             {
                 "element": "Zn",
-                "weight_fraction": 0.225
+                "mass_fraction": 0.225
             },
             {
                 "element": "Al",
-                "weight_fraction": 0.018
+                "mass_fraction": 0.018
             },
             {
                 "element": "O",
-                "weight_fraction": 0.209
+                "mass_fraction": 0.209
             }
         ],
         "preparation_details":{
