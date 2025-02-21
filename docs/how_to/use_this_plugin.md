@@ -45,18 +45,18 @@ The following column headers will be recognized and mapped into the NOMAD schema
 | `sample_id` or `FHI-ID`| (unique) identification number of catalyst sample |sample[0].lab_id|
 | `mass (mg)` or `mass (g)` | catalyst mass in the reactor| reactor_filling.catalyst_mass|
 | `step` | number of reported measurement point| |
-| `TOS (*unit*)` | time on stream, *unit* can be s or min or h| |
+| `TOS (*unit*)` or `time (*unit*)` | time on stream, *unit* can be s or min or h| |
 | `x {reagent_name}` or `x {reagent_name} (%)` |concentration of reagents at the inlet of the reactor| |
 | `temperature (*unit*)` | reactor temperature, if *unit* is not K or Kelvin, degree Celsius is assumed| |
 | `set_temperature (*unit*)` | desired or set reactor temperature| |
 | `C-balance` | carbon-balance| |
 | `GHSV *unit*`| Gas Hourly Space Velocity, unit can be 1/h or h^-1| |
-| `Vflow (ml/min)` | set total gas flow rate| |
+| `Vflow (mL/min)` or `flow_rate (mln)` | set total gas flow rate| |
 | `pressure` or `set_pressure` | reactor pressure | |
 | `r {name}` | reaction rate of reactant or product with {name}| |
 | `x_p {name} (%)` |product based conversion of reactant {name}| |
 | `x_r {name} (%)` |reactant based conversion of reactant {name}| |
-| `y {name} (%)` |concentration out| |
+| `y {name} (%)` |concentration/fraction out| |
 | `S_p {name} (%)` |selectivity of product {name}| |
 
 ### Structure of the hf5 data file:
@@ -204,3 +204,4 @@ Another way to generate entries in NOMAD is to place *.archive.json files direct
         ]
     }
 }
+```
