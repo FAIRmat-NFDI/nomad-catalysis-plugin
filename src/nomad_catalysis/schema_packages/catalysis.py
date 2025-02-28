@@ -1510,7 +1510,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     )
                 elif col_split[2] == '(mol/g/s)':
                     rate = RatesData(
-                        name=col_split[1], reaction_rate=np.nan_to_num(data[col]*3600*1000)
+                        name=col_split[1], reaction_rate=np.nan_to_num(data[col]*3600000)  # noqa: E501
                     )
                 else:
                     logger.warning('Reaction rate unit not recognized.')
@@ -2503,7 +2503,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             product_results,
         )
     
-    def write_rates_results(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+    def write_rates_results(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:  # noqa: E501
         '''This function writes the rates results to the archive.'''
 
         if self.results[0].rates is None:
