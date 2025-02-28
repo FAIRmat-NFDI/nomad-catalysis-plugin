@@ -1494,13 +1494,31 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if col_split[0].casefold() == 'pressure':
                 cat_data.pressure = np.nan_to_num(data[col]) * ureg.bar
 
+            if len(col_split) < 3:  # noqa: PLR2004
+                continue
+
             if col_split[0] == 'r':  # reaction rate
-                rate = RatesData(
-                    name=col_split[1], reaction_rate=np.nan_to_num(data[col])
-                )
+                if col_split[2] == '(mmol/g/h)':
+                    rate = RatesData(
+                        name=col_split[1], reaction_rate=np.nan_to_num(data[col])
+                    )
+                elif col_split[2] == '(µmol/g/min)':
+                    rate = RatesData(
+                        name=col_split[1], reaction_rate=np.nan_to_num(data[col]*0.06)
+                    )
+                elif col_split[2] == '(mol/g/h)':
+                    rate = RatesData(
+                        name=col_split[1], reaction_rate=np.nan_to_num(data[col]*1000)
+                    )
+                elif col_split[2] == '(mol/g/s)':
+                    rate = RatesData(
+                        name=col_split[1], reaction_rate=np.nan_to_num(data[col]*3600000)  # noqa: E501
+                    )
+                else:
+                    logger.warning('Reaction rate unit not recognized.')
                 rates.append(rate)
 
-            if len(col_split) < 3 or col_split[2] != '(%)':  # noqa: PLR2004
+            if col_split[2] != '(%)':
                 continue
 
             if col_split[0] == 'x_p':  # conversion, based on product detection
@@ -2486,6 +2504,25 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'products',
             product_results,
         )
+    
+    def write_rates_results(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:  # noqa: E501
+        '''This function writes the rates results to the archive.'''
+
+        if self.results[0].rates is None:
+            return
+        rates = []
+        for i in self.results[0].rates:    
+            rate = Rate(
+                name=i.name,
+                reaction_rate=i.reaction_rate,
+            )
+            rates.append(rate)
+            set_nested_attr(
+                archive.results.properties.catalytic.reaction,
+                'rates',
+                rates,
+            )
+
 
     def check_sample(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         if not self.samples:
@@ -2526,5 +2563,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
         self.write_conversion_results(archive, logger)
         self.write_products_results(archive, logger)
+        self.write_rates_results(archive, logger)
 
         self.plot_figures(archive, logger)
