@@ -47,6 +47,7 @@ The following column headers will be recognized and mapped into the NOMAD schema
 | `step` | number of reported measurement point| |
 | `TOS (*unit*)` or `time (*unit*)` | time on stream, *unit* can be s or min or h| |
 | `x {reagent_name}` or `x {reagent_name} (%)` |concentration of reagents at the inlet of the reactor| |
+| `x_out {reagent_name} (%)` | concentration of reagents or products at the outlet of the reactor | |
 | `temperature (*unit*)` | reactor temperature, if *unit* is not K or Kelvin, degree Celsius is assumed| |
 | `set_temperature (*unit*)` | desired or set reactor temperature| |
 | `C-balance` | carbon-balance| |
@@ -56,7 +57,7 @@ The following column headers will be recognized and mapped into the NOMAD schema
 | `r {name}` *unit* | reaction rate of reactant or product with *name* and unit mol/g/h or equivalent (mmol,µmol, min or s also accepted)| |
 | `x_p {name} (%)` |product based conversion of reactant *name*| |
 | `x_r {name} (%)` |reactant based conversion of reactant *name*| |
-| `y {name} (%)` |concentration/fraction out| |
+| `y {name} (%)` |product yield of product *name*| |
 | `S_p {name} (%)` |selectivity of product *name*| |
 
 ### Structure of the hf5 data file:

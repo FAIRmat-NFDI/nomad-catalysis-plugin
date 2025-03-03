@@ -1332,7 +1332,13 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
                     product.normalize(archive, logger)
         if self.runs is None and self.temperature is not None:
             self.runs = np.arange(1, len(self.temperature) + 1)
-
+        
+        if self.reactants_conversions is not None:
+            for reactant in self.reactants_conversions:
+                if (reactant.conversion is None and reactant.fraction_in is not None 
+                and reactant.fraction_out is not None):
+                    reactant.conversion=np.nan_to_num(
+                        1 - (reactant.fraction_out / reactant.fraction_in) * 100)
 
 class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     m_def = Section(
@@ -1498,7 +1504,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 continue
 
             if col_split[0] == 'r':  # reaction rate
-                if col_split[2] == '(mmol/g/h)':
+                if col_split[2] == '(mmol/g/h)' or col_split[2] == '(mmolg^-1h^-1)':
                     rate = RatesData(
                         name=col_split[1], reaction_rate=np.nan_to_num(data[col])
                     )
@@ -1565,16 +1571,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         conversion.conversion_reactant_based = np.nan_to_num(data[col])
                 conversions.append(conversion)
 
-            if col_split[0].casefold() == 'y':  # concentration out
+            if col_split[0].casefold() == 'x_out':  # concentration out
                 if col_split[1] in reagent_names:
                     conversion = ReactantData(
                         name=col_split[1],
                         fraction_in=np.nan_to_num(data['x ' + col_split[1] + ' (%)'])
                         / 100,
                         fraction_out=np.nan_to_num(data[col]) / 100,
-                        conversion=np.nan_to_num(
-                            (1 - (data[col] / data['x ' + col_split[1] + ' (%)'])) * 100
-                        ),
                     )
                     conversions.append(conversion)
                 else:
@@ -1593,6 +1596,18 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     if p.name == col_split[1]:
                         product = products.pop(i)
                         product.selectivity = np.nan_to_num(data[col])
+                        break
+                products.append(product)
+                product_names.append(col_split[1])
+            
+            if col_split[0].casefold() == 'y':  # product yield
+                product = ProductData(
+                    name=col_split[1], product_yield=np.nan_to_num(data[col])
+                )
+                for i, p in enumerate(products):
+                    if p.name == col_split[1]:
+                        product = products.pop(i)
+                        product.product_yield = np.nan_to_num(data[col])
                         break
                 products.append(product)
                 product_names.append(col_split[1])
