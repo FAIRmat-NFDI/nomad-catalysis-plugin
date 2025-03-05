@@ -3,4 +3,3 @@ def test_importing_app():
     from nomad_catalysis.apps import catalysis
 
     assert catalysis.app.label == 'Heterogeneous Catalysis'
-
