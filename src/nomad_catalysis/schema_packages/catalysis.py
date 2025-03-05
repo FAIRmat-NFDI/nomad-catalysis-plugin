@@ -273,7 +273,7 @@ class SurfaceArea(ArchiveSection):
                     'BET',
                     'H2-TPD',
                     'N2O-RFC',
-                    'Fourier Transform Infrared Spectroscopy (FTIR)' ' of adsorbates',
+                    'Fourier Transform Infrared Spectroscopy (FTIR) of adsorbates',
                     'unknown',
                 ]
             ),
