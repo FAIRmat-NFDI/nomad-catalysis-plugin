@@ -116,7 +116,11 @@ def get_nested_attr(obj, attr_path):
         if isinstance(obj, list):  # needed for repeating subsection, e.g. results
             if obj == []:
                 return None
-            obj = obj[0]
+            from nomad.metainfo.metainfo import MSection
+            if isinstance(obj[0], MSection):
+                obj = obj[0]  ## only first element is considered for subsections
+            else: # but whole list for list quantities
+                return obj
     return obj
 
 
@@ -398,11 +402,6 @@ class CatalystSample(CompositeSystem, Schema):
             mapping=quantities_results_mapping,
             target=archive.results.properties.catalytic.catalyst,
         )
-        if self.catalyst_type is list and len(self.catalyst_type) > 1:
-            for n in range(1, len(self.catalyst_type)):
-                archive.results.properties.catalytic.catalyst.catalyst_type.append(
-                    self.catalyst_type[n]
-                )
 
         name_material_mapping = {'name': 'material_name'}
         map_and_assign_attributes(
@@ -417,8 +416,9 @@ class CatalystSample(CompositeSystem, Schema):
     ) -> None:
         """
         This function looks for other entries that reference the sample and checks the
-        entry type and if it finds a ELNXRayDiffration entry it adds 'XRD' to the
-        characterization_methods in result.
+        results.eln.method of the entry and if it finds a methods other than 
+        ELNMeasurement or Root, it adds this method to characterization_methods in 
+        the results section of the sample entry.
 
         Args:
             archive (EntryArchive): The archive containing the section that is being
@@ -451,11 +451,14 @@ class CatalystSample(CompositeSystem, Schema):
             methods = []
             for entry in search_result.data:
                 if entry['results']['eln']['methods'] != ['ELNMeasurement']:
-                    method = entry['results']['eln']['methods'][0]
-                    methods.append(method)
+                    if entry['results']['eln']['methods'][0] == 'Root' and (
+                        len(entry['results']['eln']['methods']) > 1): 
+                        method = entry['results']['eln']['methods'][1]
+                    else:
+                        method = entry['results']['eln']['methods'][0]
                 else:
                     method = entry['entry_type']
-                    methods.append(method)
+                methods.append(method)
 
             if search_result.pagination.total > number:
                 logger.warning(
@@ -1165,7 +1168,7 @@ class ReactionConditionsBatchData(ReactionConditionsData):
         unit='1/s',
         description="""The rate at which the reaction mixture is stirred. The value is
         in 1/s""",
-        a_eln=ELNAnnotation(component='NumberEditQuantity'),
+        a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='1/s'),
     )
 
     reaction_time = Quantity(
@@ -1412,17 +1415,24 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         for col in data.columns:
             if len(data[col]) < 2:  # noqa: PLR2004
                 continue
-            if col == 'step':
+            if col.casefold() == 'step':
                 feed.runs = data['step']
                 cat_data.runs = data['step']
 
             col_split = col.split(' ')
+            
+            if col.casefold() == 'c-balance':
+                cat_data.c_balance = np.nan_to_num(data[col])
+            
             if len(col_split) < 2:  # noqa: PLR2004
                 continue
 
             number_of_runs = max(number_of_runs, len(data[col]))
 
-            if col_split[0] == 'x':
+            if col_split[0].casefold() == 'c-balance' and ('%' in col_split[1]):
+                cat_data.c_balance = np.nan_to_num(data[col]) / 100
+
+            if col_split[0].casefold() == 'x':
                 if len(col_split) == 3 and ('%' in col_split[2]):  # noqa: PLR2004
                     gas_in = data[col] / 100
                 else:
@@ -1431,7 +1441,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 reagent_names.append(col_split[1])
                 reagents.append(reagent)
 
-            if col_split[0] == 'mass':
+            if col_split[0].casefold() == 'mass':
                 catalyst_mass_vector = data[col]
                 if '(g)' in col_split[1]:
                     reactor_filling.catalyst_mass = catalyst_mass_vector[0] * ureg.gram
@@ -1439,18 +1449,18 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     reactor_filling.catalyst_mass = (
                         catalyst_mass_vector[0] * ureg.milligram
                     )
-            if col_split[0] == 'set_temperature':
+            if col_split[0].casefold() == 'set_temperature':
                 if 'K' in col_split[1]:
                     feed.set_temperature = np.nan_to_num(data[col])
                 else:
                     feed.set_temperature = np.nan_to_num(data[col]) * ureg.celsius
-            if col_split[0] == 'temperature':
+            if col_split[0].casefold() == 'temperature':
                 if 'K' in col_split[1]:
                     cat_data.temperature = np.nan_to_num(data[col])
                 else:
                     cat_data.temperature = np.nan_to_num(data[col]) * ureg.celsius
 
-            if col_split[0] == 'TOS':
+            if col_split[0].casefold() == 'tos' or col_split[0].casefold() == 'time':
                 if 's' in col_split[1]:
                     cat_data.time_on_stream = np.nan_to_num(data[col]) * ureg.second
                     feed.time_on_stream = np.nan_to_num(data[col]) * ureg.second
@@ -1462,9 +1472,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     feed.time_on_stream = np.nan_to_num(data[col]) * ureg.hour
                 else:
                     logger.warning('Time on stream unit not recognized.')
-
-            if col_split[0] == 'C-balance':
-                cat_data.c_balance = np.nan_to_num(data[col])
 
             if col_split[0] == 'GHSV':
                 if '1/h' in col_split[1] or 'h^-1' in col_split[1]:
@@ -1482,7 +1489,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
             if col_split[0] == 'set_pressure':
                 feed.set_pressure = np.nan_to_num(data[col]) * ureg.bar
-            if col_split[0] == 'pressure':
+            if col_split[0].casefold() == 'pressure':
                 cat_data.pressure = np.nan_to_num(data[col]) * ureg.bar
 
             if col_split[0] == 'r':  # reaction rate
@@ -1538,7 +1545,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         conversion.conversion_reactant_based = np.nan_to_num(data[col])
                 conversions.append(conversion)
 
-            if col_split[0] == 'y':  # concentration out
+            if col_split[0].casefold() == 'y':  # concentration out
                 if col_split[1] in reagent_names:
                     conversion = ReactantData(
                         name=col_split[1],
@@ -1577,6 +1584,14 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if 'catalyst' in data.columns:  # is not None:
             sample.name = str(data['catalyst'][0])
             reactor_filling.catalyst_name = str(data['catalyst'][0])
+        if 'reaction_name' in data.columns:
+            self.reaction_name = str(data['reaction_name'][0])
+        if 'reaction_type' in data.columns:
+            self.reaction_type = str(data['reaction_type'][0])
+        if 'experimenter' in data.columns:
+            self.experimenter = str(data['experimenter'][0])
+        if 'location' in data.columns:
+            self.location = str(data['location'][0])
 
         if (
             (self.samples is None or self.samples == [])
