@@ -71,7 +71,6 @@ heterogeneous_catalysis_app = App(
         ),
         Column(quantity='results.material.elements'),
         Column(quantity='results.properties.catalytic.catalyst.catalyst_name'),
-        Column(quantity='results.properties.catalytic.reaction.type'),
         Column(
             quantity='results.properties.catalytic.reaction.reactants.name',
             label='Reactants',
@@ -81,7 +80,7 @@ heterogeneous_catalysis_app = App(
             label='Products',
         ),
         Column(
-            quantity='results.properties.catalytic.reaction.reaction.type',
+            quantity='results.properties.catalytic.reaction.type',
             label='Reaction type',
         ),
         Column(quantity='references'),
