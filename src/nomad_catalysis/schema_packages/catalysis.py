@@ -117,9 +117,10 @@ def get_nested_attr(obj, attr_path):
             if obj == []:
                 return None
             from nomad.metainfo.metainfo import MSection
+
             if isinstance(obj[0], MSection):
                 obj = obj[0]  ## only first element is considered for subsections
-            else: # but whole list for list quantities
+            else:  # but whole list for list quantities
                 return obj
     return obj
 
@@ -416,8 +417,8 @@ class CatalystSample(CompositeSystem, Schema):
     ) -> None:
         """
         This function looks for other entries that reference the sample and checks the
-        results.eln.method of the entry and if it finds a methods other than 
-        ELNMeasurement or Root, it adds this method to characterization_methods in 
+        results.eln.method of the entry and if it finds a methods other than
+        ELNMeasurement or Root, it adds this method to characterization_methods in
         the results section of the sample entry.
 
         Args:
@@ -452,7 +453,8 @@ class CatalystSample(CompositeSystem, Schema):
             for entry in search_result.data:
                 if entry['results']['eln']['methods'] != ['ELNMeasurement']:
                     if entry['results']['eln']['methods'][0] == 'Root' and (
-                        len(entry['results']['eln']['methods']) > 1): 
+                        len(entry['results']['eln']['methods']) > 1
+                    ):
                         method = entry['results']['eln']['methods'][1]
                     else:
                         method = entry['results']['eln']['methods'][0]
@@ -1420,10 +1422,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 cat_data.runs = data['step']
 
             col_split = col.split(' ')
-            
+
             if col.casefold() == 'c-balance':
                 cat_data.c_balance = np.nan_to_num(data[col])
-            
+
             if len(col_split) < 2:  # noqa: PLR2004
                 continue
 
