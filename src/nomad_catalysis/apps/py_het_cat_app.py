@@ -43,7 +43,7 @@ heterogeneous_catalysis_app = App(
         `results.properties.catalytic.reaction.products[? name=="B"].selectivity`.
         Be aware that the IUPAC names have to be used for the reactants and products 
         (except for water and ammonia).""",
-    filters_locked={'quantities': 'results.properties.catalytic'},
+    filters_locked={'quantities': ['results.properties.catalytic']},
     # search_syntaxes= {
     #     "exclude": ["free_text"]
     # },
@@ -318,9 +318,9 @@ heterogeneous_catalysis_app = App(
         widgets=[
             WidgetPeriodicTable(
                 layout={
-                    'lg': {'h': 8, 'minH': 8, 'minW': 12, 'w': 12, 'x': 0, 'y': 0},
-                    'md': {'h': 8, 'minH': 6, 'minW': 8, 'w': 10, 'x': 0, 'y': 0},
-                    'sm': {'h': 8, 'minH': 8, 'minW': 12, 'w': 12, 'x': 0, 'y': 0},
+                    'lg': Layout(h= 8, minH= 8, minW= 12, w= 12, x= 0, y= 0),
+                    'md': Layout(h= 8, minH= 6, minW= 8, w= 10, x= 0, y= 0),
+                    'sm': Layout(h= 8, minH= 8, minW= 12, w= 12, x= 0, y= 0),
                     'xl': {'h': 10, 'minH': 8, 'minW': 12, 'w': 12, 'x': 0, 'y': 0},
                     'xxl': {'h': 10, 'minH': 8, 'minW': 12, 'w': 16, 'x': 0, 'y': 0},
                 },
