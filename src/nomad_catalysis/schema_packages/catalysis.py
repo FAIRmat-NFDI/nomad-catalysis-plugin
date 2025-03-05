@@ -1338,7 +1338,7 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
                 if (reactant.conversion is None and reactant.fraction_in is not None 
                 and reactant.fraction_out is not None):
                     reactant.conversion=np.nan_to_num(
-                        1 - (reactant.fraction_out / reactant.fraction_in) * 100)
+                        100 - (reactant.fraction_out / reactant.fraction_in) * 100)
 
 class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     m_def = Section(
