@@ -1504,24 +1504,22 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 continue
 
             if col_split[0] == 'r':  # reaction rate
-                if col_split[2] == '(mmol/g/h)' or col_split[2] == '(mmolg^-1h^-1)':
+                unit = col_split[2].strip('()')
+                unit_conversion={
+                    'mmol/g/h': 'mmol / (g * hour)',
+                    'mmol/g/min': 'mmol / (g * minute)',
+                    'µmol/g/min': 'µmol / (g * minute)',
+                    'mmolg^-1h^-1': 'mmol / (g * hour)',
+                }
+                try:
                     rate = RatesData(
-                        name=col_split[1], reaction_rate=np.nan_to_num(data[col])
+                        name=col_split[1], 
+                        reaction_rate=ureg.Quantity(np.nan_to_num(data[col]),
+                                                    unit_conversion.get(unit,unit))
                     )
-                elif col_split[2] == '(µmol/g/min)':
-                    rate = RatesData(
-                        name=col_split[1], reaction_rate=np.nan_to_num(data[col]*0.06)
-                    )
-                elif col_split[2] == '(mol/g/h)':
-                    rate = RatesData(
-                        name=col_split[1], reaction_rate=np.nan_to_num(data[col]*1000)
-                    )
-                elif col_split[2] == '(mol/g/s)':
-                    rate = RatesData(
-                        name=col_split[1], reaction_rate=np.nan_to_num(data[col]*3600000)  # noqa: E501
-                    )
-                else:
-                    logger.warning('Reaction rate unit not recognized.')
+                except Exception as e:
+                    logger.warning(f'''Reaction rate unit {unit} not recognized. 
+                                   Error: {e}''')
                 rates.append(rate)
 
             if col_split[2] != '(%)':

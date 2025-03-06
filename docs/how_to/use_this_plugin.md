@@ -53,8 +53,8 @@ The following column headers will be recognized and mapped into the NOMAD schema
 | `C-balance` | carbon-balance| |
 | `GHSV *unit*`| Gas Hourly Space Velocity, unit can be 1/h or h^-1| |
 | `Vflow (mL/min)` or `flow_rate (mln)` | set total gas flow rate| |
-| `pressure` or `set_pressure` | reactor pressure | |
-| `r {name}` *unit* | reaction rate of reactant or product with *name* and unit mol/g/h or equivalent (mmol,µmol, min or s also accepted)| |
+| `pressure` or `set_pressure` | reactor pressure in bar| |
+| `r {name}` *unit* | reaction rate of reactant or product with *name* and unit mol/(g*h) or equivalent (mmol,µmol, minute or s also accepted)| |
 | `x_p {name} (%)` |product based conversion of reactant *name*| |
 | `x_r {name} (%)` |reactant based conversion of reactant *name*| |
 | `y {name} (%)` |product yield of product *name*| |
