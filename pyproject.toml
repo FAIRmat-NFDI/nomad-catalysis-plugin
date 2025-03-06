@@ -115,6 +115,7 @@ where = ["src"]
 
 catalysis = "nomad_catalysis.schema_packages:catalysis"
 catalysis_app = "nomad_catalysis.apps:catalysis"
+example_catalysis = "nomad_catalysis.example_uploads:catalysis"
 
 [tool.cruft]
 # Avoid updating workflow files, this leads to permissions issues

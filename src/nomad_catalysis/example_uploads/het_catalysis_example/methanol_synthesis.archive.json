@@ -1,0 +1,61 @@
+{
+    "data": {
+        "m_def": "nomad_catalysis.schema_packages.catalysis.CatalyticReaction",
+        "location": "Fritz-Haber-Institut Berlin / Abteilung AC ",
+        "name": "CuZnAl methanol synthesis",
+        "pretreatment": {
+            "time_on_stream": [
+                0,
+                600,
+                6600,
+                12600,
+                13500,
+                18900
+            ],
+            "reagents": [
+                {
+                    "fraction_in": [
+                        0.80
+                    ],
+                    "name": "argon"
+                },
+                {
+                    "fraction_in": [
+                        0.20
+                    ],
+                    "name": "hydrogen"
+                }
+            ],
+            "set_pressure": [
+                100000
+            ],
+            "set_temperature": [
+                298,
+                308,
+                408,
+                508,
+                523,
+                523
+            ],
+            "set_total_flow_rate": [
+                1.6667e-06
+            ]
+        },
+        "instruments":[{
+            "name": "Chinchen High Pressure Methanol Synthesis Reactor",
+            "reactor_type": "plug flow reactor",
+            "reactor_diameter": 0.006,
+            "reactor_volume":0.0000017
+        }],
+        "reactor_filling":{
+            "catalyst_mass": 0.00005,
+            "catalyst_sievefraction_upper_limit": 0.0002,
+            "catalyst_sievefraction_lower_limit": 0.0001,
+            "diluent":"SiO2",
+            "diluent_mass":0.0007
+        },
+        "reaction_type": "hydrogenation",
+        "reaction_name": "methanol synthesis",
+        "data_file": "methanol_synthesis_CuZnAl.xlsx"
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "data": {
+        "m_def": "nomad_catalysis.schema_packages.catalysis.CatalystSample",
+        "lab_id": "FHI-S15018",
+        "storing_institution": "Fritz-Haber-Institut Berlin / Abteilung AC",
+        "name": "CuZnAl methanol synthesis catalyst",
+        "catalyst_type":[ "bulk catalyst", "oxide"],
+        "description": "Calcined sample prepared from a zincian malachite precursor.\nCu-SA measured by N2O-RFC after reduction: 37 m^2/g. Cu-SA as measured by H2-TPD after reduction 15.6 m^2/g.\nCu domain size as determined by XRD: 4.5 nm. Cu particle size as determined by TEM: 8.1 +/- 2.6 nm.",
+        "elemental_composition": [
+            {
+                "element": "Cu",
+                "mass_fraction": 0.55
+            },
+            {
+                "element": "Zn",
+                "mass_fraction": 0.225
+            },
+            {
+                "element": "Al",
+                "mass_fraction": 0.018
+            },
+            {
+                "element": "O",
+                "mass_fraction": 0.209
+            }
+        ],
+        "preparation_details":{
+            "preparation_method": "precipitation",
+            "preparator": "Julia Schumann",
+            "preparing_institution":"Fritz-Haber-Institut Berlin / Abteilung AC"
+        },
+        "surface":{
+            "surface_area": 117.8,
+            "method_surface_area_determination": "BET"}
+
+    }
+}

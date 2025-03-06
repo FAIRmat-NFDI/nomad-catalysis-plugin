@@ -1332,7 +1332,13 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
                     product.normalize(archive, logger)
         if self.runs is None and self.temperature is not None:
             self.runs = np.arange(1, len(self.temperature) + 1)
-
+        
+        if self.reactants_conversions is not None:
+            for reactant in self.reactants_conversions:
+                if (reactant.conversion is None and reactant.fraction_in is not None 
+                and reactant.fraction_out is not None):
+                    reactant.conversion=np.nan_to_num(
+                        100 - (reactant.fraction_out / reactant.fraction_in) * 100)
 
 class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     m_def = Section(
@@ -1494,13 +1500,29 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if col_split[0].casefold() == 'pressure':
                 cat_data.pressure = np.nan_to_num(data[col]) * ureg.bar
 
+            if len(col_split) < 3:  # noqa: PLR2004
+                continue
+
             if col_split[0] == 'r':  # reaction rate
-                rate = RatesData(
-                    name=col_split[1], reaction_rate=np.nan_to_num(data[col])
-                )
+                unit = col_split[2].strip('()')
+                unit_conversion={
+                    'mmol/g/h': 'mmol / (g * hour)',
+                    'mmol/g/min': 'mmol / (g * minute)',
+                    'µmol/g/min': 'µmol / (g * minute)',
+                    'mmolg^-1h^-1': 'mmol / (g * hour)',
+                }
+                try:
+                    rate = RatesData(
+                        name=col_split[1], 
+                        reaction_rate=ureg.Quantity(np.nan_to_num(data[col]),
+                                                    unit_conversion.get(unit,unit))
+                    )
+                except Exception as e:
+                    logger.warning(f'''Reaction rate unit {unit} not recognized. 
+                                   Error: {e}''')
                 rates.append(rate)
 
-            if len(col_split) < 3 or col_split[2] != '(%)':  # noqa: PLR2004
+            if col_split[2] != '(%)':
                 continue
 
             if col_split[0] == 'x_p':  # conversion, based on product detection
@@ -1547,16 +1569,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         conversion.conversion_reactant_based = np.nan_to_num(data[col])
                 conversions.append(conversion)
 
-            if col_split[0].casefold() == 'y':  # concentration out
+            if col_split[0].casefold() == 'x_out':  # concentration out
                 if col_split[1] in reagent_names:
                     conversion = ReactantData(
                         name=col_split[1],
                         fraction_in=np.nan_to_num(data['x ' + col_split[1] + ' (%)'])
                         / 100,
                         fraction_out=np.nan_to_num(data[col]) / 100,
-                        conversion=np.nan_to_num(
-                            (1 - (data[col] / data['x ' + col_split[1] + ' (%)'])) * 100
-                        ),
                     )
                     conversions.append(conversion)
                 else:
@@ -1575,6 +1594,18 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     if p.name == col_split[1]:
                         product = products.pop(i)
                         product.selectivity = np.nan_to_num(data[col])
+                        break
+                products.append(product)
+                product_names.append(col_split[1])
+            
+            if col_split[0].casefold() == 'y':  # product yield
+                product = ProductData(
+                    name=col_split[1], product_yield=np.nan_to_num(data[col])
+                )
+                for i, p in enumerate(products):
+                    if p.name == col_split[1]:
+                        product = products.pop(i)
+                        product.product_yield = np.nan_to_num(data[col])
                         break
                 products.append(product)
                 product_names.append(col_split[1])
@@ -2093,7 +2124,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         go.Scatter(
                             x=x,
                             y=y,
-                            name=self.results[0].rates[i].name + ' ' + rate_str,
+                            name=self.results[0].rates[i].name,
                         )
                     )
         fig.update_layout(title_text='Rates', showlegend=True)
@@ -2486,6 +2517,25 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'products',
             product_results,
         )
+    
+    def write_rates_results(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:  # noqa: E501
+        '''This function writes the rates results to the archive.'''
+
+        if self.results[0].rates is None:
+            return
+        rates = []
+        for i in self.results[0].rates:    
+            rate = Rate(
+                name=i.name,
+                reaction_rate=i.reaction_rate,
+            )
+            rates.append(rate)
+            set_nested_attr(
+                archive.results.properties.catalytic.reaction,
+                'rates',
+                rates,
+            )
+
 
     def check_sample(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         if not self.samples:
@@ -2526,5 +2576,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
         self.write_conversion_results(archive, logger)
         self.write_products_results(archive, logger)
+        self.write_rates_results(archive, logger)
 
         self.plot_figures(archive, logger)
