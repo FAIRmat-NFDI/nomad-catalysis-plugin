@@ -4,8 +4,9 @@ catalysis = ExampleUploadEntryPoint(
     title='Heterogeneous Catalysis Example',
     category='FAIRmat examples',
     description=(
-        'Examples files for catalyst sample and catalytic reaction to demonstrate '
-        'the new classes from the nomad-catalysis plugin.'
+        'This example contains data entries for a catalyst sample and a catalytic '
+        'reaction to demonstrate the new schemas from the '
+        '[nomad-catalysis plugin](https://fairmat-nfdi.github.io/nomad-catalysis-plugin/index.html).'
     ),
     resources=['example_uploads/het_catalysis_example/*'],
 )
