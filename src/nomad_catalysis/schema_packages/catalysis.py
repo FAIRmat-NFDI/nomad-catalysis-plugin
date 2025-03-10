@@ -919,7 +919,7 @@ class ProductData(Reagent):
         shape=['*'],
         description="""
         The yield of the product in the reaction mixture, calculated as
-        conversion times selectivity.""",
+        conversion * selectivity.""",
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
 
@@ -2203,6 +2203,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             self.results[0].products[0].selectivity is not None
         ):
             for i, c in enumerate(self.results[0].reactants_conversions):
+                if self.results[0].reactants_conversions[i].conversion[0] < 0:
+                    continue
                 name = self.results[0].reactants_conversions[i].name
                 fig = go.Figure()
                 for j, p in enumerate(self.results[0].products):
@@ -2433,12 +2435,27 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     logger.warning(f"""Gas concentration of '{i.name}' is not
                                 the same in reaction_conditions and
                                 results.reactants_conversions.""")
-                react = Reactant(
-                    name=iupac_name,
-                    conversion=i.conversion,
-                    mole_fraction_in=i.fraction_in,
-                    mole_fraction_out=i.fraction_out,
-                )
+                try:
+                    if i.conversion[0]<0:
+                        react = Reactant(
+                            name=iupac_name,
+                            mole_fraction_in=i.fraction_in,
+                            mole_fraction_out=i.fraction_out,
+                        )
+                    else:
+                        react = Reactant(
+                            name=iupac_name,
+                            conversion=i.conversion,
+                            mole_fraction_in=i.fraction_in,
+                            mole_fraction_out=i.fraction_out,
+                        )
+                except TypeError:
+                    react = Reactant(
+                        name=iupac_name,
+                        conversion=i.conversion,
+                        mole_fraction_in=i.fraction_in,
+                        mole_fraction_out=i.fraction_out,
+                    )
                 react = self.check_react(react, threshold_datapoints, archive, logger)
 
                 conversions_results.append(react)
