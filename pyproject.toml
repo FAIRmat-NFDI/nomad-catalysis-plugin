@@ -15,7 +15,7 @@ classifiers = [
 ]
 name = "nomad-catalysis"
 description = "A NOMAD plugin for heterogeneous catalysis data."
-version = "0.1.0"
+dynamic = ["version"]
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
@@ -120,3 +120,5 @@ example_catalysis = "nomad_catalysis.example_uploads:catalysis"
 [tool.cruft]
 # Avoid updating workflow files, this leads to permissions issues
 skip = [".github/*"]
+
+[tool.setuptools_scm]
