@@ -2,7 +2,7 @@ site_name: nomad-catalysis
 site_description: a NOMAD plugin for heterogeneous catalysis data
 site_author: Julia Schumann
 
-repo_url: https://github.com/schumannj/nomad-catalysis
+repo_url: https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin
 edit_uri: ""
 
 nav:
