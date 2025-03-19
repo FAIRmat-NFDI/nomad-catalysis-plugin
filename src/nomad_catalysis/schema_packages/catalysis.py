@@ -31,7 +31,6 @@ from nomad.datamodel.results import (
     Results,
 )
 from nomad.datamodel.results import ElementalComposition as ResultsElementalComposition
-
 from nomad.metainfo import (
     Quantity,
     SchemaPackage,
@@ -1987,7 +1986,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     element=self.samples[0].reference.elemental_composition.element,
                     atomic_fraction=self.samples[0].reference.elemental_composition.atomic_fraction,
                     mass_fraction=self.samples[0].reference.elemental_composition.mass_fraction,
-                    mass=atomic_masses[atomic_numbers[self.samples[0].reference.elemental_composition.element]] * ureg.amu
+                    mass=atomic_masses[
+                        atomic_numbers[self.samples[0].reference.elemental_composition.element]
+                    ] * ureg.amu
                 )
             existing_elements = [comp.element for comp in comp_result_section]
             if self.element in existing_elements:
