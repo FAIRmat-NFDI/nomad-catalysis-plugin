@@ -5,7 +5,7 @@ from typing import (
 import numpy as np
 import plotly.express as px
 import plotly.graph_objs as go
-from ase.data import chemical_symbols
+from ase.data import atomic_masses, atomic_numbers, chemical_symbols
 from nomad.config import config
 from nomad.datamodel.data import ArchiveSection, EntryDataCategory, Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
@@ -30,6 +30,8 @@ from nomad.datamodel.results import (
     ReactionConditions,
     Results,
 )
+from nomad.datamodel.results import ElementalComposition as ResultsElementalComposition
+
 from nomad.metainfo import (
     Quantity,
     SchemaPackage,
@@ -1979,10 +1981,25 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.samples[0].reference.elemental_composition is not None:
             if not archive.results.material:
                 archive.results.material = Material()
+            
+            comp_result_section = archive.results.material.elemental_composition
+            result_composition = ResultsElementalComposition(
+                    element=self.samples[0].reference.elemental_composition.element,
+                    atomic_fraction=self.samples[0].reference.elemental_composition.atomic_fraction,
+                    mass_fraction=self.samples[0].reference.elemental_composition.mass_fraction,
+                    mass=atomic_masses[atomic_numbers[self.samples[0].reference.elemental_composition.element]] * ureg.amu
+                )
+            existing_elements = [comp.element for comp in comp_result_section]
+            if self.element in existing_elements:
+                index = existing_elements.index(self.element)
+                comp_result_section[index].atomic_fraction = self.atomic_fraction
+                comp_result_section[index].mass_fraction = self.mass_fraction
+                comp_result_section[index].mass = (
+                    atomic_masses[atomic_numbers[self.element]] * ureg.amu
+                )
+            else:
+                comp_result_section.append(result_composition)
 
-            archive.results.material.elemental_composition = self.samples[
-                0
-            ].reference.elemental_composition
 
         for i in self.samples[0].reference.elemental_composition:
             if i.element not in chemical_symbols:
