@@ -732,6 +732,7 @@ class Reagent(ArchiveSection):
             pure_component.iupac_name = chemical_key.get('iupac_name')
             pure_component.molecular_formula = chemical_key.get('molecular_formula')
             pure_component.molecular_mass = chemical_key.get('molecular_mass')
+            pure_component.molar_mass = chemical_key.get('molar_mass')
             pure_component.inchi = chemical_key.get('inchi', None)  # Optional
             pure_component.inchi_key = chemical_key.get('inchi_key', None)  # Optional
             pure_component.cas_number = chemical_key.get('cas_number', None)  # Optional
