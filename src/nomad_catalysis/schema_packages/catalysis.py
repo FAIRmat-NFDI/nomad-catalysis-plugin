@@ -1983,24 +1983,23 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 archive.results.material = Material()
             
             comp_result_section = archive.results.material.elemental_composition
-            result_composition = ResultsElementalComposition(
-                    element=self.samples[0].reference.elemental_composition.element,
-                    atomic_fraction=self.samples[0].reference.elemental_composition.atomic_fraction,
-                    mass_fraction=self.samples[0].reference.elemental_composition.mass_fraction,
-                    mass=atomic_masses[
-                        atomic_numbers[self.samples[0].reference.elemental_composition.element]
-                    ] * ureg.amu
+            for el in self.samples[0].reference.elemental_composition:
+                result_composition = ResultsElementalComposition(
+                    element=el.element,
+                    atomic_fraction=el.atomic_fraction,
+                    mass_fraction=el.mass_fraction,
+                    mass=atomic_masses[atomic_numbers[el.element]] * ureg.amu
                 )
-            existing_elements = [comp.element for comp in comp_result_section]
-            if self.element in existing_elements:
-                index = existing_elements.index(self.element)
-                comp_result_section[index].atomic_fraction = self.atomic_fraction
-                comp_result_section[index].mass_fraction = self.mass_fraction
-                comp_result_section[index].mass = (
-                    atomic_masses[atomic_numbers[self.element]] * ureg.amu
-                )
-            else:
-                comp_result_section.append(result_composition)
+                existing_elements = [comp.element for comp in comp_result_section]
+                if el.element in existing_elements:
+                    index = existing_elements.index(self.element)
+                    comp_result_section[index].atomic_fraction = self.atomic_fraction
+                    comp_result_section[index].mass_fraction = self.mass_fraction
+                    comp_result_section[index].mass = (
+                        atomic_masses[atomic_numbers[self.element]] * ureg.amu
+                    )
+                else:
+                    comp_result_section.append(result_composition)
 
 
         for i in self.samples[0].reference.elemental_composition:
