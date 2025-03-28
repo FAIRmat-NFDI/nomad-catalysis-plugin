@@ -438,7 +438,7 @@ class CatalystSample(CompositeSystem, Schema):
 
         query = {
             'section_defs.definition_qualified_name:all': [
-                'nomad.datamodel.metainfo.basesections.Activity'
+                'nomad.datamodel.metainfo.basesections.v1.Activity'
             ],
             'entry_references.target_entry_id': archive.metadata.entry_id,
         }
