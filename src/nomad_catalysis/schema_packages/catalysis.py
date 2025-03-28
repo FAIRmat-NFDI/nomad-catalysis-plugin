@@ -2056,30 +2056,33 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         name_comb += '/ '
                     name_comb += str(i.reference.name)
             
-                if i.reference.elemental_composition is not None:
-                    comp_result_section = archive.results.material.elemental_composition
-                    for el in i.reference.elemental_composition:
-                        if el.element not in chemical_symbols:
-                            logger.warning(
-                                f"'{el.element}' is not a valid element symbol and this"
-                                ' elemental_composition section will be ignored.'
-                            )
-                            continue
-                        elif el.element not in archive.results.material.elements:
-                            archive.results.material.elements += [el.element]
-
-                        result_composition = ResultsElementalComposition(
-                            element=el.element,
-                            atomic_fraction=el.atomic_fraction,
-                            mass_fraction=el.mass_fraction,
-                            mass=atomic_masses[atomic_numbers[el.element]] * ureg.amu
+                if i.reference.elemental_composition is None or (
+                    i.reference.elemental_composition == []):
+                    continue
+                comp_result_section = archive.results.material.elemental_composition
+                for el in i.reference.elemental_composition:
+                    if el.element not in chemical_symbols:
+                        logger.warning(
+                            f"'{el.element}' is not a valid element symbol and this"
+                            ' elemental_composition section will be ignored.'
                         )
-                        existing_elements = [comp.element for comp in comp_result_section]
-                        duplicate = self.check_duplicate_elements(el, existing_elements, logger)
-                        if duplicate:
-                            continue
-                        else:
-                            comp_result_section.append(result_composition)
+                        continue
+                    elif el.element not in archive.results.material.elements:
+                        archive.results.material.elements += [el.element]
+
+                    result_composition = ResultsElementalComposition(
+                        element=el.element,
+                        atomic_fraction=el.atomic_fraction,
+                        mass_fraction=el.mass_fraction,
+                        mass=atomic_masses[atomic_numbers[el.element]] * ureg.amu
+                    )
+                    existing_elements = [comp.element for comp in comp_result_section]
+                    duplicate = self.check_duplicate_elements(
+                        el, existing_elements, logger)
+                    if duplicate:
+                        continue
+                    else:
+                        comp_result_section.append(result_composition)
 
             archive.results.material.material_name = name_comb
 
@@ -2591,7 +2594,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 space_time_yield=i.space_time_yield,
             )
             attrs_result = ['selectivity', 'mole_fraction_out', 'space_time_yield']
-            for n,attr in enumerate(['selectivity', 'fraction_out', 'space_time_yield']):
+            for n,attr in enumerate(
+                ['selectivity', 'fraction_out', 'space_time_yield']):
                 attr_value = getattr(i, attr, None)
                 if attr_value is not None and len(attr_value) > threshold_datapoints:
                     if threshold2_datapoints > len(attr_value):
@@ -2639,7 +2643,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
 
             # Dynamically iterate over all attributes of Rate and apply data reduction
-            for attr in ['reaction_rate', 'specific_mass_rate', 'specific_surface_area_rate', 'rate', 'turnover_frequency']:
+            for attr in ['reaction_rate', 'specific_mass_rate', 
+                         'specific_surface_area_rate', 'rate', 'turnover_frequency']:
                 attr_value = getattr(i, attr, None)
                 if attr_value is not None and len(attr_value) > threshold_datapoints:
                     if threshold2_datapoints > len(attr_value):
@@ -2647,8 +2652,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     else:
                         setattr(rate, attr, attr_value[50::100])
                     logger.info(
-                        f"""Large arrays in rate attribute '{attr}' for {i.name}, reducing to store
-                        in the archive."""
+                        f"Large arrays in rate attribute '{attr}' for {i.name}, "
+                        "reducing to store in the archive."
                     )
 
             rates.append(rate)
