@@ -438,7 +438,7 @@ class CatalystSample(CompositeSystem, Schema):
 
         query = {
             'section_defs.definition_qualified_name:all': [
-                'nomad.datamodel.metainfo.basesections.Activity'
+                'nomad.datamodel.metainfo.basesections.v1.Activity'
             ],
             'entry_references.target_entry_id': archive.metadata.entry_id,
         }
@@ -880,7 +880,7 @@ class RatesData(ArchiveSection):
         a_eln=ELNAnnotation(defaultDisplayUnit='g/g/hour'),
     )
 
-    turn_over_frequency = Quantity(
+    turnover_frequency = Quantity(
         type=np.float64,
         shape=['*'],
         unit='1/hour',
@@ -891,6 +891,64 @@ class RatesData(ArchiveSection):
         a_eln=ELNAnnotation(defaultDisplayUnit='1/hour'),
     )
 
+    pure_component = SubSection(section_def=PubChemPureSubstanceSection)
+
+    def update_chemical_info(self):
+        """
+        This function mapps the chemical information of the reagent from a local
+        dictionary chemical data and returns a pure_component object.
+        """
+
+        # Resolve aliases to primary keys if necessary
+        chemical_key = chemical_data.get(self.name)
+        # If the value is a string, it refers to another key, so resolve it
+        if isinstance(chemical_key, str):
+            chemical_key = chemical_data[chemical_key]
+        # If the value is not a string or a dictionary, it is not in the database, try
+        # to resolve it by removing capital letters
+        elif not isinstance(chemical_key, dict):
+            chemical_key = chemical_data.get(self.name.lower())
+            if isinstance(chemical_key, str):
+                chemical_key = chemical_data[chemical_key]
+        pure_component = PubChemPureSubstanceSection()
+        pure_component.name = self.name
+        if chemical_key:
+            pure_component.pub_chem_cid = chemical_key.get('pub_chem_id')
+            pure_component.iupac_name = chemical_key.get('iupac_name')
+            pure_component.molecular_formula = chemical_key.get('molecular_formula')
+            pure_component.molecular_mass = chemical_key.get('molecular_mass')
+            pure_component.molar_mass = chemical_key.get('molar_mass')
+            pure_component.inchi = chemical_key.get('inchi', None)  # Optional
+            pure_component.inchi_key = chemical_key.get('inchi_key', None)  # Optional
+            pure_component.cas_number = chemical_key.get('cas_number', None)  # Optional
+
+        return pure_component
+    
+    def normalize(self,archive,logger):
+
+        if self.name in ['C5-1', 'C6-1', 'nC5', 'nC6', 'Unknown', 'inert', 'P>=5C']:
+            return
+        elif '_' in self.name:
+            self.name = self.name.replace('_', ' ')
+
+        if self.name and (
+            self.pure_component is None or self.pure_component.iupac_name is None
+        ):
+            pure_component = self.update_chemical_info()
+            self.pure_component = pure_component
+
+            if self.pure_component.iupac_name:
+                logger.info(f'found {self.name} in chemical_data, no pubchem call made')
+                return
+            else:
+                import random
+                import time
+
+                time.sleep(random.uniform(0.5, 5))
+                self.pure_component.normalize(archive, logger)
+
+        if self.name is None and self.pure_component is not None:
+            self.name = self.pure_component.iupac_name
 
 class ProductData(Reagent):
     m_def = Section(
@@ -1332,6 +1390,10 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
             for product in self.products:
                 if product.pure_component is None or product.pure_component == []:
                     product.normalize(archive, logger)
+        if self.rates is not None:
+            for rate in self.rates:
+                if rate.pure_component is None or rate.pure_component == []:
+                    rate.normalize(archive, logger)
         if self.runs is None and self.temperature is not None:
             self.runs = np.arange(1, len(self.temperature) + 1)
         
@@ -1940,6 +2002,24 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             target=archive.results.properties.catalytic.reaction,
         )
 
+
+    def check_duplicate_elements(
+        self, el, existing_elements, logger: 'BoundLogger'
+    ) -> bool:
+        """
+        Checks if the element is already in the list of existing elements.
+        If it is, a warning is logged.
+        """
+        if el.element in existing_elements:
+            logger.warning(
+                f"'{el.element}' is already in the list of existing elements and will "
+                'be ignored.'
+            )
+            return True
+        else:
+            return False
+
+
     def populate_catalyst_sample_info(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> None:
@@ -1975,41 +2055,38 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     if len(name_comb) != 0:
                         name_comb += '/ '
                     name_comb += str(i.reference.name)
-            archive.results.material.material_name = name_comb
-            # archive.results.material.material_name = self.samples[0].reference.name
-
-        if self.samples[0].reference.elemental_composition is not None:
-            if not archive.results.material:
-                archive.results.material = Material()
             
-            comp_result_section = archive.results.material.elemental_composition
-            for el in self.samples[0].reference.elemental_composition:
-                result_composition = ResultsElementalComposition(
-                    element=el.element,
-                    atomic_fraction=el.atomic_fraction,
-                    mass_fraction=el.mass_fraction,
-                    mass=atomic_masses[atomic_numbers[el.element]] * ureg.amu
-                )
-                existing_elements = [comp.element for comp in comp_result_section]
-                if el.element in existing_elements:
-                    index = existing_elements.index(self.element)
-                    comp_result_section[index].atomic_fraction = self.atomic_fraction
-                    comp_result_section[index].mass_fraction = self.mass_fraction
-                    comp_result_section[index].mass = (
-                        atomic_masses[atomic_numbers[self.element]] * ureg.amu
+                if i.reference.elemental_composition is None or (
+                    i.reference.elemental_composition == []):
+                    continue
+                comp_result_section = archive.results.material.elemental_composition
+                for el in i.reference.elemental_composition:
+                    if el.element not in chemical_symbols:
+                        logger.warning(
+                            f"'{el.element}' is not a valid element symbol and this"
+                            ' elemental_composition section will be ignored.'
+                        )
+                        continue
+                    elif el.element not in archive.results.material.elements:
+                        archive.results.material.elements += [el.element]
+
+                    result_composition = ResultsElementalComposition(
+                        element=el.element,
+                        atomic_fraction=el.atomic_fraction,
+                        mass_fraction=el.mass_fraction,
+                        mass=atomic_masses[atomic_numbers[el.element]] * ureg.amu
                     )
-                else:
-                    comp_result_section.append(result_composition)
+                    existing_elements = [comp.element for comp in comp_result_section]
+                    duplicate = self.check_duplicate_elements(
+                        el, existing_elements, logger)
+                    if duplicate:
+                        continue
+                    else:
+                        comp_result_section.append(result_composition)
 
+            archive.results.material.material_name = name_comb
 
-        for i in self.samples[0].reference.elemental_composition:
-            if i.element not in chemical_symbols:
-                logger.warning(
-                    f"'{i.element}' is not a valid element symbol and this "
-                    'elemental_composition section will be ignored.'
-                )
-            elif i.element not in archive.results.material.elements:
-                archive.results.material.elements += [i.element]
+            
 
     def determine_x_axis(self):
         """Helper function to determine the x-axis data for the plots."""
@@ -2372,7 +2449,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 'rates',
                 rates,
             )
-            # archive.results.properties.catalytic.reaction.rate = [h2_rate]
 
         react = Reactant(name='ammonia', conversion=Convs, mole_fraction_in=NH3concs)
 
@@ -2517,31 +2593,19 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 mole_fraction_out=i.fraction_out,
                 space_time_yield=i.space_time_yield,
             )
-            if i.selectivity is not None and len(i.selectivity) > threshold_datapoints:
-                if threshold2_datapoints > len(i.selectivity):
-                    prod.selectivity = i.selectivity[20::10]
-                else:
-                    prod.selectivity = i.selectivity[50::100]
-                logger.info(
-                    f"""Large arrays in product {i.name}, reducing to store
-                    in the archive."""
-                )
-            if (
-                i.fraction_out is not None
-                and len(i.fraction_out) > threshold_datapoints
-            ):
-                if threshold2_datapoints > len(i.fraction_out):
-                    prod.mole_fraction_out = i.fraction_out[20::10]
-                else:
-                    prod.mole_fraction_out = i.fraction_out[50::100]
-            if (
-                i.space_time_yield is not None
-                and len(i.space_time_yield) > threshold_datapoints
-            ):
-                if threshold2_datapoints > len(i.space_time_yield):
-                    prod.space_time_yield = i.space_time_yield[20::10]
-                else:
-                    prod.space_time_yield = i.space_time_yield[50::100]
+            attrs_result = ['selectivity', 'mole_fraction_out', 'space_time_yield']
+            for n,attr in enumerate(
+                ['selectivity', 'fraction_out', 'space_time_yield']):
+                attr_value = getattr(i, attr, None)
+                if attr_value is not None and len(attr_value) > threshold_datapoints:
+                    if threshold2_datapoints > len(attr_value):
+                        setattr(prod, attrs_result[n], attr_value[20::10])
+                    else:
+                        setattr(prod, attrs_result[n], attr_value[50::100])
+                    logger.info(
+                        f"""Large arrays in product attribute '{attr}' for {i.name}, 
+                        reducing to store in the archive."""
+                    )
 
             product_results.append(prod)
 
@@ -2558,18 +2622,46 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
         if self.results[0].rates is None:
             return
+        obj = getattr(archive.results.properties.catalytic.reaction, 'rates', None)
+        if obj:
+            logger.warning(
+                """Rates already exist in the archive. The rates from the
+                results section will not be used to overwrite the archive."""
+            )
+            return
         rates = []
-        for i in self.results[0].rates:    
+        for i in self.results[0].rates: 
+            if i.pure_component is not None and i.pure_component.iupac_name is not None:
+                i.name = i.pure_component.iupac_name   
             rate = Rate(
                 name=i.name,
                 reaction_rate=i.reaction_rate,
+                specific_mass_rate=i.specific_mass_rate,
+                specific_surface_area_rate=i.specific_surface_area_rate,
+                rate=i.rate,
+                turnover_frequency=i.turnover_frequency,
             )
+
+            # Dynamically iterate over all attributes of Rate and apply data reduction
+            for attr in ['reaction_rate', 'specific_mass_rate', 
+                         'specific_surface_area_rate', 'rate', 'turnover_frequency']:
+                attr_value = getattr(i, attr, None)
+                if attr_value is not None and len(attr_value) > threshold_datapoints:
+                    if threshold2_datapoints > len(attr_value):
+                        setattr(rate, attr, attr_value[20::10])
+                    else:
+                        setattr(rate, attr, attr_value[50::100])
+                    logger.info(
+                        f"Large arrays in rate attribute '{attr}' for {i.name}, "
+                        "reducing to store in the archive."
+                    )
+
             rates.append(rate)
-            set_nested_attr(
-                archive.results.properties.catalytic.reaction,
-                'rates',
-                rates,
-            )
+        set_nested_attr(
+            archive.results.properties.catalytic.reaction,
+            'rates',
+            rates,
+        )
 
 
     def check_sample(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
@@ -2614,3 +2706,5 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         self.write_rates_results(archive, logger)
 
         self.plot_figures(archive, logger)
+
+m_package.__init_metainfo__()
