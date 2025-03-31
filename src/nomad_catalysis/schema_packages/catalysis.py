@@ -1177,6 +1177,15 @@ class ReactionConditionsData(PlotSection):
 
         self.plot_figures()
 
+        if self.set_pressure is None:
+            if self.set_temperature is not None:
+                self.set_pressure = np.full_like(self.set_temperature, 1 * ureg.bar)
+                logger.warning(
+                    'No set pressure given, setting it to 1 bar for all set temperature'
+                    ' points.'
+                )
+    
+
 
 class ReagentBatch(Reagent):
     m_def = Section(
