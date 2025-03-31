@@ -225,6 +225,7 @@ class Preparation(ArchiveSection):
         The person or persons preparing the sample in the lab.
         """,
         a_eln=dict(component='EnumEditQuantity'),
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007042'],
     )
 
     preparing_institution = Quantity(
@@ -294,6 +295,7 @@ class SurfaceArea(ArchiveSection):
         for the accessibility of the atoms.
         """,
         a_eln=dict(component='NumberEditQuantity'),
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007044'],
     )
 
 
@@ -366,7 +368,7 @@ class CatalystSample(CompositeSystem, Schema):
         a_eln=dict(
             component='StringEditQuantity',
         ),
-        links=['https://w3id.org/nfdi4cat/voc4cat_0007034'],
+        # links=['https://w3id.org/nfdi4cat/voc4cat_0007825'],
     )
 
     form = Quantity(
@@ -521,7 +523,9 @@ class ReactorFilling(ArchiveSection):
         type=np.float64,
         shape=[],
         unit='kg',
+        description='The mass of the catalyst placed in the reactor.',
         a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='mg'),
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007038'],
     )
 
     catalyst_density = Quantity(
@@ -625,6 +629,7 @@ class ReactorSetup(InstrumentReference):
     m_def = Section(
         description='Specification about the type of reactor used in the measurement.',
         label_quantity='name',
+        links=['https://w3id.org/nfdi4cat/voc4cat_0000152']
     )
 
     name = Quantity(type=str, shape=[], a_eln=dict(component='EnumEditQuantity'))
@@ -641,6 +646,8 @@ class ReactorSetup(InstrumentReference):
                 'fluidized bed',
             ]
         ),
+        description='Type of reactor model used in the measurement.',
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007101']
     )
 
     bed_length = Quantity(
@@ -669,6 +676,7 @@ class ReactorSetup(InstrumentReference):
         shape=[],
         unit='m**3',
         a_eln=dict(component='NumberEditQuantity', defaultDisplayUnit='ml'),
+        links=['https://w3id.org/nfdi4cat/voc4cat_0000153'],
     )
 
 
@@ -824,9 +832,11 @@ class ReactantData(Reagent):
     )
     conversion_type = Quantity(
         type=str,
+        description="""Specifies the way the conversion was calculated in this reaction.
+          The value is either product based, reactant based or unknown""",
         a_eln=dict(
             component='StringEditQuantity',
-            props=dict(suggestions=['product_based', 'reactant_based', 'unknown']),
+            props=dict(suggestions=['product based', 'reactant based', 'unknown']),
         ),
     )
     conversion_product_based = Quantity(type=np.float64, shape=['*'])
@@ -1011,7 +1021,8 @@ class ProductData(Reagent):
 class ReactionConditionsData(PlotSection):
     m_def = Section(
         description="""
-                    A class containing reaction conditions for a generic reaction."""
+                    A class containing reaction conditions for a generic reaction.""",
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007039'],
     )
 
     set_temperature = Quantity(
@@ -1332,6 +1343,7 @@ class CatalyticReactionCore(Measurement):
                 ]
             ),
         ),
+        # links=['https://w3id.org/nfdi4cat/voc4cat_0007842'],
     )
 
     experimenter = Quantity(
@@ -1340,7 +1352,8 @@ class CatalyticReactionCore(Measurement):
         description="""
         The person that performed or started the measurement.
         """,
-        a_eln=dict(component='EnumEditQuantity'),
+        a_eln=dict(component='StringEditQuantity'),
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007043'],
     )
 
 
