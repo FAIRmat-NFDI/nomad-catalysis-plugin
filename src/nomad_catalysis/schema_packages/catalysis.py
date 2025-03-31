@@ -1381,7 +1381,7 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
     )
 
     c_balance = Quantity(
-        definition="""Carbon balance is the ratio of detected carbon in the products
+        description="""Carbon balance is the ratio of detected carbon in the products
         to the carbon in the feed. It is a measure of the quality of the gas analysis or
         could indicate the amount of coke formation""",
         type=np.dtype(np.float64),
