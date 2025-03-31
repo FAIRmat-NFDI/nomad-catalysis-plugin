@@ -1178,13 +1178,17 @@ class ReactionConditionsData(PlotSection):
         if (
             self.set_total_flow_rate is not None
             and self.m_root().data.reactor_filling is not None
-            and self.m_root().data.reactor_filling.catalyst_mass is not None
-            and self.weight_hourly_space_velocity is None
-        ):
-            self.weight_hourly_space_velocity = (
-                self.set_total_flow_rate
-                / self.m_root().data.reactor_filling.catalyst_mass
-            )
+            and self.m_root().data.reactor_filling.catalyst_mass is not None):
+            if self.weight_hourly_space_velocity is None:
+                self.weight_hourly_space_velocity = (
+                    self.set_total_flow_rate
+                    / self.m_root().data.reactor_filling.catalyst_mass
+                )
+            if self.contact_time is None:
+                self.contact_time = (
+                    self.m_root().data.reactor_filling.catalyst_mass
+                    /self.set_total_flow_rate 
+                )
 
         self.plot_figures()
 
@@ -1195,7 +1199,15 @@ class ReactionConditionsData(PlotSection):
                     'No set pressure given, setting it to 1 bar for all set temperature'
                     ' points.'
                 )
-    
+            elif (self.m_root().data.results[0].temperature is not None 
+                and self.m_root().data.results[0].pressure is None):
+                self.set_pressure = np.full_like(
+                    self.m_root().data.results[0].temperature, 1 * ureg.bar
+                )
+                logger.warning(
+                    'No pressure given, setting it to 1 bar for all temperature'
+                    ' points.'
+                )
 
 
 class ReagentBatch(Reagent):
@@ -2461,7 +2473,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 Temps * ureg.kelvin
             )
             archive.results.properties.catalytic.reaction.reaction_conditions.pressure = (  # noqa: E501
-                Press * ureg.bar
+                Press * ureg.pascal
             )
             archive.results.properties.catalytic.reaction.reaction_conditions.time_on_stream = (  # noqa: E501
                 Times * ureg.second
