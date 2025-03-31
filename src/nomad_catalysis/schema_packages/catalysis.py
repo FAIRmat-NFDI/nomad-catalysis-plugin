@@ -833,10 +833,10 @@ class ReactantData(Reagent):
     conversion_type = Quantity(
         type=str,
         description="""Specifies the way the conversion was calculated in this reaction.
-          The value is either product based, reactant based or unknown""",
+          The value is either product-based, reactant-based or unknown""",
         a_eln=dict(
             component='StringEditQuantity',
-            props=dict(suggestions=['product based', 'reactant based', 'unknown']),
+            props=dict(suggestions=['product-based', 'reactant-based', 'unknown']),
         ),
     )
     conversion_product_based = Quantity(type=np.float64, shape=['*'])
