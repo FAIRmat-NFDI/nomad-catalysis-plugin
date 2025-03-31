@@ -2379,6 +2379,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.instruments[0].name == 'Haber':
             data_dict = {
                 'Temp': self.reaction_conditions.set_temperature,
+                'Pres': self.reaction_conditions.set_pressure,
                 'Whsv': self.reaction_conditions.weight_hourly_space_velocity,
                 'Flow': self.results[0].total_flow_rate,
                 'Conv': self.results[0].reactants_conversions[0].conversion,
@@ -2400,6 +2401,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             Temp_ = data_dict_no_ramps['Temp']
 
             Temps = []
+            Press = []
             flows = []
             WHSVs = []
             NH3concs = []
@@ -2441,6 +2443,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         continue
 
                 Temps.append(np.mean(data_dict_single_step['Temp']))
+                Press.append(np.mean(data_dict_single_step['Pres']))
                 flows.append(np.mean(data_dict_single_step['Flow']))
                 WHSVs.append(np.mean(data_dict_single_step['Whsv']))
                 Convs.append(np.mean(data_dict_single_step['Conv']))
@@ -2456,6 +2459,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
             archive.results.properties.catalytic.reaction.reaction_conditions.temperature = (  # noqa: E501
                 Temps * ureg.kelvin
+            )
+            archive.results.properties.catalytic.reaction.reaction_conditions.pressure = (  # noqa: E501
+                Press * ureg.bar
             )
             archive.results.properties.catalytic.reaction.reaction_conditions.time_on_stream = (  # noqa: E501
                 Times * ureg.second
