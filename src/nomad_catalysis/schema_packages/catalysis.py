@@ -2332,7 +2332,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             self.results[0].products[0].selectivity is not None
         ):
             for i, c in enumerate(self.results[0].reactants_conversions):
-                if self.results[0].reactants_conversions[i].conversion[0] < 0:
+                if self.results[0].reactants_conversions[i].conversion is None:
+                    continue
+                elif self.results[0].reactants_conversions[i].conversion[0] < 0:
                     continue
                 name = self.results[0].reactants_conversions[i].name
                 fig = go.Figure()
