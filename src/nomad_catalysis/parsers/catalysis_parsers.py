@@ -42,8 +42,6 @@ class CatalystCollectionParser(MatchingParser):
     ) -> None:
         logger.info('Catalyst Collection Parser called')
 
-        self.creates_children = True
-
         data_frame =pd.read_excel(mainfile)
 
         for col in data_frame.columns:
@@ -55,42 +53,43 @@ class CatalystCollectionParser(MatchingParser):
                 data_frame.rename(columns={col: 'datetime'}, inplace=True)
             if col in ['lab_id', 'sample_id']:
                 data_frame.rename(columns={col: 'lab_id'}, inplace=True)
+            if col in ['surface_area_method']:
+                data_frame.rename(columns={col: 'method_surface_area_determination'}, inplace=True)
         for n,row in data_frame.iterrows():
-            catalyst_sample = CatalystSample(
-                name=row['name'],
-                storing_institution=row['storing_institution'],
-                datetime = row['datetime'],
-                lab_id=row['lab_id'],
-                form = row['form'],
-                catalyst_type=[],
-                support = row['support'],
-            )
-            catalyst_sample.catalyst_type.append(row['catalyst_type'])
-
-            elements = row['Elements'].split(',')
-            mass_fractions = row['mass_fractions'].split(',')
-            for n, element in enumerate(elements):
-                elemental_composition = ElementalComposition(
-                    element=element,
-                    # atom_fraction=row['atom_fraction'],
-                    mass_fraction=float(mass_fractions[n]),
-                )
-                catalyst_sample.elemental_composition.append(elemental_composition)
-        
-
-            preparation_details = Preparation(
-                preparation_method=row['preparation_method'],
-                preparator=row['preparator'],
-                preparing_institution=row['preparing_institution'],
-            )
-
-            surface = SurfaceArea(
-                surface_area=row['surface_area'],
-                method_surface_area_determination=row['surface_area_method'],
-                # dispersion=row['dispersion'],
-            )
-            catalyst_sample.preparation_details = preparation_details
-            catalyst_sample.surface = surface
+            row.dropna(inplace=True)
+            catalyst_sample = CatalystSample()
+            surface = SurfaceArea()
+            preparation_details = Preparation()
+            for key in row.keys():
+                if key in ['name', 'storing_institution', 'datetime', 'lab_id', 'form', 'support']:
+                    setattr(catalyst_sample, key, row[key])
+                if key in ['catalyst_type']:
+                    setattr(catalyst_sample, key, [row[key]])
+                if key in ['Elements']:
+                    elements = row['Elements'].split(',')   
+                    for m, element in enumerate(elements):
+                        elemental_composition = ElementalComposition(
+                            element=element,
+                        )
+                        try:
+                            mass_fractions = row['mass_fractions'].split(',')
+                            elemental_composition.mass_fraction=float(mass_fractions[m])
+                        except KeyError:
+                            pass
+                        try:
+                            atom_fractions = row['atom_fractions'].split(',')
+                            elemental_composition.atom_fraction=float(atom_fractions[m])
+                        except KeyError:
+                            pass
+                        catalyst_sample.elemental_composition.append(elemental_composition)
+                if key in ['preparation_method', 'preparator', 'preparing_institution']:
+                    setattr(preparation_details, key, row[key])
+                if key in ['surface_area', 'method_surface_area_determination', 'dispersion']:
+                    setattr(surface, key, row[key])
+            if preparation_details != []:
+                catalyst_sample.preparation_details = preparation_details
+            if surface != SurfaceArea():
+                catalyst_sample.surface = surface
 
             # archive.data = catalyst_sample
             create_archive(catalyst_sample, archive, f'{row["name"]}_catalyst_sample.archive.json')
