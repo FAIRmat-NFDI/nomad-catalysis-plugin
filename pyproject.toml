@@ -115,6 +115,8 @@ where = ["src"]
 
 catalysis = "nomad_catalysis.schema_packages:catalysis"
 catalysis_app = "nomad_catalysis.apps:catalysis"
+catalysis_parser = "nomad_catalysis.parsers:catalysis"
+catalyst_samples = "nomad_catalysis.parsers:catalyst_sample_collection"
 example_catalysis = "nomad_catalysis.example_uploads:catalysis"
 
 [tool.cruft]
