@@ -10,6 +10,7 @@ from nomad_catalysis.schema_packages.catalysis import (
     CatalystSample,
     CatalyticReaction,
     Preparation,
+    RawFileData,
     SurfaceArea,
 )
 
@@ -25,12 +26,15 @@ class CatalysisParser(MatchingParser):
         
         filename = mainfile.split('/')[-1]
         logger.info(f'MyParser called {filename}')
+
         catalytic_reaction = CatalyticReaction(
             data_file=filename,
         )
 
-        #archive.data = catalytic_reaction
-        create_archive(catalytic_reaction, archive, f'{filename}.archive.json')
+        archive.data = RawFileData(
+            measurement=create_archive(catalytic_reaction, archive, f'{filename}.archive.json')
+        )
+        archive.metadata.entry_name = f'{filename} data file'
 
 class CatalystCollectionParser(MatchingParser):
     def parse(
@@ -86,9 +90,10 @@ class CatalystCollectionParser(MatchingParser):
                     setattr(preparation_details, key, row[key])
                 if key in ['surface_area', 'method_surface_area_determination', 'dispersion']:
                     setattr(surface, key, row[key])
-            if preparation_details != []:
+                    
+            if preparation_details.m_to_dict():
                 catalyst_sample.preparation_details = preparation_details
-            if surface != SurfaceArea():
+            if surface.m_to_dict():
                 catalyst_sample.surface = surface
 
             # archive.data = catalyst_sample

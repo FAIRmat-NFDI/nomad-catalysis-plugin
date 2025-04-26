@@ -188,6 +188,18 @@ def check_if_concentration_in_percentage(self, conc_array, logger) -> None:
             f'but should be given as fraction.'
         )
 
+class RawFileData(Schema):
+    """
+    Section for storing a directly parsed raw data file.
+    """
+    measurement = Quantity(
+        type=Measurement,
+        a_eln=ELNAnnotation(
+            component='ReferenceEditQuantity',
+            description='A reference to the measurement entry that was generated from '
+            'this data.',
+        ),
+    )
 
 class Preparation(ArchiveSection):
     m_def = Section(
