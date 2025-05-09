@@ -399,10 +399,10 @@ heterogeneous_catalysis_app = App(
                     search_quantity='results.properties.catalytic.reaction.reaction_conditions.temperature'
                 ),
                 y=Axis(
-                    search_quantity='results.properties.catalytic.reaction.reactants[*].conversion',
+                    search_quantity='map(&conversion, results.properties.catalytic.reaction.reactants[*])',
                     title='Conversion (%)',
                 ),
-                color='results.properties.catalytic.reaction.reactants[*].name',
+                color='map(&name, results.properties.catalytic.reaction.reactants[*])',
                 size=1000,
             ),
         ]
