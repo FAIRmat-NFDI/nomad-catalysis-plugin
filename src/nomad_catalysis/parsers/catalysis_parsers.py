@@ -24,7 +24,6 @@ class CatalysisParser(MatchingParser):
         logger=None,
         child_archives: Dict[str, EntryArchive] = None,
     ) -> None:
-        
         filename = mainfile.split('/')[-1]
         name = filename.split('.')[0]
         logger.info(f' Catalysis Parser called {filename}')
@@ -34,9 +33,12 @@ class CatalysisParser(MatchingParser):
         )
 
         archive.data = RawFileData(
-            measurement=create_archive(catalytic_reaction, archive, f'{name}.archive.json')
+            measurement=create_archive(
+                catalytic_reaction, archive, f'{name}.archive.json'
+            )
         )
         archive.metadata.entry_name = f'{name} data file'
+
 
 class CatalystCollectionParser(MatchingParser):
     def parse(
@@ -56,7 +58,7 @@ class CatalystCollectionParser(MatchingParser):
         archive.metadata.entry_name = f'{name} data file'
         samples = []
 
-        data_frame =pd.read_excel(mainfile)
+        data_frame = pd.read_excel(mainfile)
 
         for col in data_frame.columns:
             if col in ['Name', 'name', 'catalyst']:
@@ -68,41 +70,61 @@ class CatalystCollectionParser(MatchingParser):
             if col in ['lab_id', 'sample_id']:
                 data_frame.rename(columns={col: 'lab_id'}, inplace=True)
             if col in ['surface_area_method']:
-                data_frame.rename(columns={col: 'method_surface_area_determination'}, inplace=True)
+                data_frame.rename(
+                    columns={col: 'method_surface_area_determination'}, inplace=True
+                )
             if col in ['comment', 'comments']:
                 data_frame.rename(columns={col: 'description'}, inplace=True)
-        for n,row in data_frame.iterrows():
+        for n, row in data_frame.iterrows():
             row.dropna(inplace=True)
             catalyst_sample = CatalystSample()
             surface = SurfaceArea()
             preparation_details = Preparation()
             for key in row.keys():
-                if key in ['name', 'storing_institution', 'datetime', 'lab_id', 'form', 'support', 'description']:
+                if key in [
+                    'name',
+                    'storing_institution',
+                    'datetime',
+                    'lab_id',
+                    'form',
+                    'support',
+                    'description',
+                ]:
                     setattr(catalyst_sample, key, row[key])
                 if key in ['catalyst_type']:
                     setattr(catalyst_sample, key, [row[key]])
                 if key in ['Elements']:
-                    elements = row['Elements'].split(',')   
+                    elements = row['Elements'].split(',')
                     for m, element in enumerate(elements):
                         elemental_composition = ElementalComposition(
                             element=element,
                         )
                         try:
                             mass_fractions = row['mass_fractions'].split(',')
-                            elemental_composition.mass_fraction=float(mass_fractions[m])
+                            elemental_composition.mass_fraction = float(
+                                mass_fractions[m]
+                            )
                         except KeyError:
                             pass
                         try:
                             atom_fractions = row['atom_fractions'].split(',')
-                            elemental_composition.atom_fraction=float(atom_fractions[m])
+                            elemental_composition.atom_fraction = float(
+                                atom_fractions[m]
+                            )
                         except KeyError:
                             pass
-                        catalyst_sample.elemental_composition.append(elemental_composition)
+                        catalyst_sample.elemental_composition.append(
+                            elemental_composition
+                        )
                 if key in ['preparation_method', 'preparator', 'preparing_institution']:
                     setattr(preparation_details, key, row[key])
-                if key in ['surface_area', 'method_surface_area_determination', 'dispersion']:
+                if key in [
+                    'surface_area',
+                    'method_surface_area_determination',
+                    'dispersion',
+                ]:
                     setattr(surface, key, row[key])
-                    
+
             if preparation_details.m_to_dict():
                 catalyst_sample.preparation_details = preparation_details
             if surface.m_to_dict():
@@ -111,9 +133,13 @@ class CatalystCollectionParser(MatchingParser):
             # archive.data = catalyst_sample
             # create_archive(catalyst_sample, archive, f'{row["name"]}_catalyst_sample.archive.json')
 
-
-            #archive.data=CatalystSampleCollectionParser(
-            samples.append(create_archive(catalyst_sample, archive, f'{row["name"]}_catalyst_sample.archive.json')
+            # archive.data=CatalystSampleCollectionParser(
+            samples.append(
+                create_archive(
+                    catalyst_sample,
+                    archive,
+                    f'{row["name"]}_catalyst_sample.archive.json',
+                )
             )
-            #)
+            # )
         archive.data.samples = samples

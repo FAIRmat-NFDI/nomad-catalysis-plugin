@@ -188,10 +188,12 @@ def check_if_concentration_in_percentage(self, conc_array, logger) -> None:
             f'but should be given as fraction.'
         )
 
+
 class RawFileData(Schema):
     """
     Section for storing a directly parsed raw data file.
     """
+
     measurement = Quantity(
         type=Measurement,
         a_eln=ELNAnnotation(
@@ -201,10 +203,12 @@ class RawFileData(Schema):
         ),
     )
 
+
 class CatalystSampleCollectionParserEntry(Schema):
     """
     Section for storing a directly parsed raw data file.
     """
+
     samples = Quantity(
         type=CompositeSystem,
         shape=['*'],
@@ -220,6 +224,7 @@ class CatalystSampleCollectionParserEntry(Schema):
         description='The name of the data file that was parsed.',
         a_browser=dict(adaptor='RawFileAdaptor'),
     )
+
 
 class Preparation(ArchiveSection):
     m_def = Section(
@@ -661,7 +666,7 @@ class ReactorSetup(InstrumentReference):
     m_def = Section(
         description='Specification about the type of reactor used in the measurement.',
         label_quantity='name',
-        links=['https://w3id.org/nfdi4cat/voc4cat_0000152']
+        links=['https://w3id.org/nfdi4cat/voc4cat_0000152'],
     )
 
     name = Quantity(type=str, shape=[], a_eln=dict(component='EnumEditQuantity'))
@@ -679,7 +684,7 @@ class ReactorSetup(InstrumentReference):
             ]
         ),
         description='Type of reactor model used in the measurement.',
-        links=['https://w3id.org/nfdi4cat/voc4cat_0007101']
+        links=['https://w3id.org/nfdi4cat/voc4cat_0007101'],
     )
 
     bed_length = Quantity(
@@ -965,9 +970,8 @@ class RatesData(ArchiveSection):
             pure_component.cas_number = chemical_key.get('cas_number', None)  # Optional
 
         return pure_component
-    
-    def normalize(self,archive,logger):
 
+    def normalize(self, archive, logger):
         if self.name in ['C5-1', 'C6-1', 'nC5', 'nC6', 'Unknown', 'inert', 'P>=5C']:
             return
         elif '_' in self.name:
@@ -991,6 +995,7 @@ class RatesData(ArchiveSection):
 
         if self.name is None and self.pure_component is not None:
             self.name = self.pure_component.iupac_name
+
 
 class ProductData(Reagent):
     m_def = Section(
@@ -1210,7 +1215,8 @@ class ReactionConditionsData(PlotSection):
         if (
             self.set_total_flow_rate is not None
             and self.m_root().data.reactor_filling is not None
-            and self.m_root().data.reactor_filling.catalyst_mass is not None):
+            and self.m_root().data.reactor_filling.catalyst_mass is not None
+        ):
             if self.weight_hourly_space_velocity is None:
                 self.weight_hourly_space_velocity = (
                     self.set_total_flow_rate
@@ -1219,7 +1225,7 @@ class ReactionConditionsData(PlotSection):
             if self.contact_time is None:
                 self.contact_time = (
                     self.m_root().data.reactor_filling.catalyst_mass
-                    /self.set_total_flow_rate 
+                    / self.set_total_flow_rate
                 )
 
         self.plot_figures()
@@ -1231,14 +1237,15 @@ class ReactionConditionsData(PlotSection):
                     'No set pressure given, setting it to 1 bar for all set temperature'
                     ' points.'
                 )
-            elif (self.m_root().data.results[0].temperature is not None 
-                and self.m_root().data.results[0].pressure is None):
+            elif (
+                self.m_root().data.results[0].temperature is not None
+                and self.m_root().data.results[0].pressure is None
+            ):
                 self.set_pressure = np.full_like(
                     self.m_root().data.results[0].temperature, 1 * ureg.bar
                 )
                 logger.warning(
-                    'No pressure given, setting it to 1 bar for all temperature'
-                    ' points.'
+                    'No pressure given, setting it to 1 bar for all temperature points.'
                 )
 
 
@@ -1333,7 +1340,6 @@ class CatalyticReactionCore(Measurement):
                     'thermal catalysis',
                     'electrocatalysis',
                     'photocatalysis',
-
                 ]
             ),
         ),
@@ -1467,13 +1473,18 @@ class CatalyticReactionData(PlotSection, MeasurementResult):
                     rate.normalize(archive, logger)
         if self.runs is None and self.temperature is not None:
             self.runs = np.arange(1, len(self.temperature) + 1)
-        
+
         if self.reactants_conversions is not None:
             for reactant in self.reactants_conversions:
-                if (reactant.conversion is None and reactant.fraction_in is not None 
-                and reactant.fraction_out is not None):
-                    reactant.conversion=np.nan_to_num(
-                        100 - (reactant.fraction_out / reactant.fraction_in) * 100)
+                if (
+                    reactant.conversion is None
+                    and reactant.fraction_in is not None
+                    and reactant.fraction_out is not None
+                ):
+                    reactant.conversion = np.nan_to_num(
+                        100 - (reactant.fraction_out / reactant.fraction_in) * 100
+                    )
+
 
 class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
     m_def = Section(
@@ -1640,7 +1651,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
             if col_split[0] == 'r':  # reaction rate
                 unit = col_split[2].strip('()')
-                unit_conversion={
+                unit_conversion = {
                     'mmol/g/h': 'mmol / (g * hour)',
                     'mmol/g/min': 'mmol / (g * minute)',
                     'µmol/g/min': 'µmol / (g * minute)',
@@ -1648,13 +1659,14 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 }
                 try:
                     rate = RatesData(
-                        name=col_split[1], 
-                        reaction_rate=ureg.Quantity(np.nan_to_num(data[col]),
-                                                    unit_conversion.get(unit,unit))
+                        name=col_split[1],
+                        reaction_rate=ureg.Quantity(
+                            np.nan_to_num(data[col]), unit_conversion.get(unit, unit)
+                        ),
                     )
                 except Exception as e:
-                    logger.warning(f'''Reaction rate unit {unit} not recognized. 
-                                   Error: {e}''')
+                    logger.warning(f"""Reaction rate unit {unit} not recognized. 
+                                   Error: {e}""")
                 rates.append(rate)
 
             if col_split[2] != '(%)':
@@ -1732,7 +1744,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         break
                 products.append(product)
                 product_names.append(col_split[1])
-            
+
             if col_split[0].casefold() == 'y':  # product yield
                 product = ProductData(
                     name=col_split[1], product_yield=np.nan_to_num(data[col])
@@ -2075,7 +2087,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             target=archive.results.properties.catalytic.reaction,
         )
 
-
     def check_duplicate_elements(
         self, el, existing_elements, logger: 'BoundLogger'
     ) -> bool:
@@ -2091,7 +2102,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             return True
         else:
             return False
-
 
     def populate_catalyst_sample_info(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -2128,9 +2138,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     if len(name_comb) != 0:
                         name_comb += '/ '
                     name_comb += str(i.reference.name)
-            
+
                 if i.reference.elemental_composition is None or (
-                    i.reference.elemental_composition == []):
+                    i.reference.elemental_composition == []
+                ):
                     continue
                 comp_result_section = archive.results.material.elemental_composition
                 for el in i.reference.elemental_composition:
@@ -2147,19 +2158,18 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         element=el.element,
                         atomic_fraction=el.atomic_fraction,
                         mass_fraction=el.mass_fraction,
-                        mass=atomic_masses[atomic_numbers[el.element]] * ureg.amu
+                        mass=atomic_masses[atomic_numbers[el.element]] * ureg.amu,
                     )
                     existing_elements = [comp.element for comp in comp_result_section]
                     duplicate = self.check_duplicate_elements(
-                        el, existing_elements, logger)
+                        el, existing_elements, logger
+                    )
                     if duplicate:
                         continue
                     else:
                         comp_result_section.append(result_composition)
 
             archive.results.material.material_name = name_comb
-
-            
 
     def determine_x_axis(self):
         """Helper function to determine the x-axis data for the plots."""
@@ -2371,8 +2381,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             self.results[0].products[0].selectivity is not None
         ):
             for i, c in enumerate(self.results[0].reactants_conversions):
-                if (self.results[0].reactants_conversions[i].conversion is None 
-                    or self.results[0].reactants_conversions[i].conversion[0] < 0):
+                if (
+                    self.results[0].reactants_conversions[i].conversion is None
+                    or self.results[0].reactants_conversions[i].conversion[0] < 0
+                ):
                     continue
                 name = self.results[0].reactants_conversions[i].name
                 fig = go.Figure()
@@ -2610,7 +2622,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                                 the same in reaction_conditions and
                                 results.reactants_conversions.""")
                 try:
-                    if i.conversion[0]<0:
+                    if i.conversion[0] < 0:
                         react = Reactant(
                             name=iupac_name,
                             mole_fraction_in=i.fraction_in,
@@ -2674,8 +2686,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 space_time_yield=i.space_time_yield,
             )
             attrs_result = ['selectivity', 'mole_fraction_out', 'space_time_yield']
-            for n,attr in enumerate(
-                ['selectivity', 'fraction_out', 'space_time_yield']):
+            for n, attr in enumerate(
+                ['selectivity', 'fraction_out', 'space_time_yield']
+            ):
                 attr_value = getattr(i, attr, None)
                 if attr_value is not None and len(attr_value) > threshold_datapoints:
                     if threshold2_datapoints > len(attr_value):
@@ -2696,9 +2709,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'products',
             product_results,
         )
-    
-    def write_rates_results(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:  # noqa: E501
-        '''This function writes the rates results to the archive.'''
+
+    def write_rates_results(
+        self, archive: 'EntryArchive', logger: 'BoundLogger'
+    ) -> None:  # noqa: E501
+        """This function writes the rates results to the archive."""
 
         if self.results[0].rates is None:
             return
@@ -2710,9 +2725,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
             return
         rates = []
-        for i in self.results[0].rates: 
+        for i in self.results[0].rates:
             if i.pure_component is not None and i.pure_component.iupac_name is not None:
-                i.name = i.pure_component.iupac_name   
+                i.name = i.pure_component.iupac_name
             rate = Rate(
                 name=i.name,
                 reaction_rate=i.reaction_rate,
@@ -2723,8 +2738,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             )
 
             # Dynamically iterate over all attributes of Rate and apply data reduction
-            for attr in ['reaction_rate', 'specific_mass_rate', 
-                         'specific_surface_area_rate', 'rate', 'turnover_frequency']:
+            for attr in [
+                'reaction_rate',
+                'specific_mass_rate',
+                'specific_surface_area_rate',
+                'rate',
+                'turnover_frequency',
+            ]:
                 attr_value = getattr(i, attr, None)
                 if attr_value is not None and len(attr_value) > threshold_datapoints:
                     if threshold2_datapoints > len(attr_value):
@@ -2733,7 +2753,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         setattr(rate, attr, attr_value[50::100])
                     logger.info(
                         f"Large arrays in rate attribute '{attr}' for {i.name}, "
-                        "reducing to store in the archive."
+                        'reducing to store in the archive.'
                     )
 
             rates.append(rate)
@@ -2742,7 +2762,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             'rates',
             rates,
         )
-
 
     def check_sample(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         if not self.samples:
@@ -2786,5 +2805,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         self.write_rates_results(archive, logger)
 
         self.plot_figures(archive, logger)
+
 
 m_package.__init_metainfo__()

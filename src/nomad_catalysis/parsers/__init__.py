@@ -3,7 +3,6 @@ from pydantic import Field
 
 
 class CatalysisParserEntryPoint(ParserEntryPoint):
-
     def load(self):
         from nomad_catalysis.parsers.catalysis_parsers import CatalysisParser
 
@@ -11,21 +10,21 @@ class CatalysisParserEntryPoint(ParserEntryPoint):
 
 
 catalysis = CatalysisParserEntryPoint(
-    name = 'CatalysisParser',
-    description = 'A parser for catalysis data.',
-    mainfile_name_re = '.*CatalyticReaction\\.xlsx',
+    name='CatalysisParser',
+    description='A parser for catalysis data.',
+    mainfile_name_re='.*CatalyticReaction\\.xlsx',
 )
 
-class CatalystCollectionParserEntryPoint(ParserEntryPoint):
 
+class CatalystCollectionParserEntryPoint(ParserEntryPoint):
     def load(self):
         from nomad_catalysis.parsers.catalysis_parsers import CatalystCollectionParser
 
         return CatalystCollectionParser(**self.dict())
 
-catalyst_sample_collection = CatalystCollectionParserEntryPoint(
-    name = 'CatalystSampleCollectionParser',
-    description = 'A parser for a collection of catalyst samples.',
-    mainfile_name_re = '.*CatalystSampleCollection\\.xlsx',
-)
 
+catalyst_sample_collection = CatalystCollectionParserEntryPoint(
+    name='CatalystSampleCollectionParser',
+    description='A parser for a collection of catalyst samples.',
+    mainfile_name_re='.*CatalystSampleCollection\\.xlsx',
+)

@@ -173,8 +173,7 @@ heterogeneous_catalysis_app = App(
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.catalyst.surface_area',
+                            'search_quantity': 'results.properties.catalytic.catalyst.surface_area',
                             'unit': 'm^2/g',
                         },
                         autorange=False,
@@ -204,20 +203,17 @@ heterogeneous_catalysis_app = App(
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.reaction.reactants.conversion'
+                            'search_quantity': 'results.properties.catalytic.reaction.reactants.conversion'
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.reaction.reactants.mole_fraction_in'
+                            'search_quantity': 'results.properties.catalytic.reaction.reactants.mole_fraction_in'
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.reaction.reactants.mole_fraction_out'
+                            'search_quantity': 'results.properties.catalytic.reaction.reactants.mole_fraction_out'
                         }
                     ),
                 ],
@@ -232,14 +228,12 @@ heterogeneous_catalysis_app = App(
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.reaction.products.selectivity'
+                            'search_quantity': 'results.properties.catalytic.reaction.products.selectivity'
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.reaction.products.mole_fraction_out'
+                            'search_quantity': 'results.properties.catalytic.reaction.products.mole_fraction_out'
                         }
                     ),
                 ],
@@ -251,21 +245,18 @@ heterogeneous_catalysis_app = App(
                 items=[
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.reaction.reaction_conditions.temperature'
+                            'search_quantity': 'results.properties.catalytic.reaction.reaction_conditions.temperature'
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.reaction.reaction_conditions.pressure',
+                            'search_quantity': 'results.properties.catalytic.reaction.reaction_conditions.pressure',
                             'unit': 'bar',
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity', # noqa: E501
+                            'search_quantity': 'results.properties.catalytic.reaction.reaction_conditions.weight_hourly_space_velocity',  # noqa: E501
                             'unit': 'ml/(g*hr)',
                         }
                     ),
@@ -288,8 +279,7 @@ heterogeneous_catalysis_app = App(
                     MenuItemTerms(search_quantity='results.eln.methods'),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 
-                            'data.datetime#nomad_catalysis.schema_packages.catalysis.CatalyticReaction'
+                            'search_quantity': 'data.datetime#nomad_catalysis.schema_packages.catalysis.CatalyticReaction'
                         },
                         title='Date of the catalytic reaction test',
                     ),
@@ -318,9 +308,9 @@ heterogeneous_catalysis_app = App(
         widgets=[
             WidgetPeriodicTable(
                 layout={
-                    'lg': Layout(h= 8, minH= 8, minW= 12, w= 12, x= 0, y= 0),
-                    'md': Layout(h= 8, minH= 6, minW= 8, w= 10, x= 0, y= 0),
-                    'sm': Layout(h= 8, minH= 8, minW= 12, w= 12, x= 0, y= 0),
+                    'lg': Layout(h=8, minH=8, minW=12, w=12, x=0, y=0),
+                    'md': Layout(h=8, minH=6, minW=8, w=10, x=0, y=0),
+                    'sm': Layout(h=8, minH=8, minW=12, w=12, x=0, y=0),
                     'xl': {'h': 10, 'minH': 8, 'minW': 12, 'w': 12, 'x': 0, 'y': 0},
                     'xxl': {'h': 10, 'minH': 8, 'minW': 12, 'w': 16, 'x': 0, 'y': 0},
                 },
