@@ -1295,6 +1295,7 @@ class ReactionConditionsBatchData(ReactionConditionsData):
 
 class CatalyticReactionCore(Measurement):
     reaction_type = Quantity(
+        shape=['*'],
         type=str,
         description="""
         A highlevel classification of the studied reaction.
@@ -1309,6 +1310,10 @@ class CatalyticReactionCore(Measurement):
                     'cracking',
                     'isomerisation',
                     'coupling',
+                    'thermal catalysis',
+                    'electrocatalysis',
+                    'photocatalysis',
+
                 ]
             ),
         ),
@@ -1730,7 +1735,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if 'reaction_name' in data.columns:
             self.reaction_name = str(data['reaction_name'][0])
         if 'reaction_type' in data.columns:
-            self.reaction_type = str(data['reaction_type'][0])
+            self.reaction_type = []
+            self.reaction_type.extend(data['reaction_type'][0].split(','))
         if 'experimenter' in data.columns:
             self.experimenter = str(data['experimenter'][0])
         if 'location' in data.columns:
@@ -1979,7 +1985,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 self.results[0].products = products_results
 
                 self.reaction_name = 'ammonia decomposition'
-                self.reaction_type = 'cracking'
+                self.reaction_type = []
+                self.reaction_type.extend(['cracking', 'thermal catalysis'])
                 self.location = 'Fritz-Haber-Institut Berlin / Abteilung AC'
 
     def check_and_read_data_file(self, archive, logger):
