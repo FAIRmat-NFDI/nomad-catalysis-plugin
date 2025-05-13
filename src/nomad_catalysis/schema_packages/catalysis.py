@@ -201,6 +201,26 @@ class RawFileData(Schema):
         ),
     )
 
+class CatalystSampleCollectionParserEntry(Schema):
+    """
+    Section for storing a directly parsed raw data file.
+    """
+    samples = Quantity(
+        type=CompositeSystem,
+        shape=['*'],
+        a_eln=ELNAnnotation(
+            component='ReferenceEditQuantity',
+            description='A reference to the sample entries that were generated from '
+            'this data file.',
+        ),
+    )
+    data_file = Quantity(
+        type=str,
+        shape=[],
+        description='The name of the data file that was parsed.',
+        a_browser=dict(adaptor='RawFileAdaptor'),
+    )
+
 class Preparation(ArchiveSection):
     m_def = Section(
         description="""A section for general information about the

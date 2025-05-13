@@ -8,6 +8,7 @@ from nomad.parsing import MatchingParser
 from nomad_catalysis.parsers.utils import create_archive
 from nomad_catalysis.schema_packages.catalysis import (
     CatalystSample,
+    CatalystSampleCollectionParserEntry,
     CatalyticReaction,
     Preparation,
     RawFileData,
@@ -25,16 +26,17 @@ class CatalysisParser(MatchingParser):
     ) -> None:
         
         filename = mainfile.split('/')[-1]
-        logger.info(f'MyParser called {filename}')
+        name = filename.split('.')[0]
+        logger.info(f' Catalysis Parser called {filename}')
 
         catalytic_reaction = CatalyticReaction(
             data_file=filename,
         )
 
         archive.data = RawFileData(
-            measurement=create_archive(catalytic_reaction, archive, f'{filename}.archive.json')
+            measurement=create_archive(catalytic_reaction, archive, f'{name}.archive.json')
         )
-        archive.metadata.entry_name = f'{filename} data file'
+        archive.metadata.entry_name = f'{name} data file'
 
 class CatalystCollectionParser(MatchingParser):
     def parse(
@@ -45,6 +47,14 @@ class CatalystCollectionParser(MatchingParser):
         child_archives: Dict[str, EntryArchive] = None,
     ) -> None:
         logger.info('Catalyst Collection Parser called')
+
+        filename = mainfile.split('/')[-1]
+        name = filename.split('.')[0]
+        archive.data = CatalystSampleCollectionParserEntry(
+            data_file=filename,
+        )
+        archive.metadata.entry_name = f'{name} data file'
+        samples = []
 
         data_frame =pd.read_excel(mainfile)
 
@@ -59,13 +69,15 @@ class CatalystCollectionParser(MatchingParser):
                 data_frame.rename(columns={col: 'lab_id'}, inplace=True)
             if col in ['surface_area_method']:
                 data_frame.rename(columns={col: 'method_surface_area_determination'}, inplace=True)
+            if col in ['comment', 'comments']:
+                data_frame.rename(columns={col: 'description'}, inplace=True)
         for n,row in data_frame.iterrows():
             row.dropna(inplace=True)
             catalyst_sample = CatalystSample()
             surface = SurfaceArea()
             preparation_details = Preparation()
             for key in row.keys():
-                if key in ['name', 'storing_institution', 'datetime', 'lab_id', 'form', 'support']:
+                if key in ['name', 'storing_institution', 'datetime', 'lab_id', 'form', 'support', 'description']:
                     setattr(catalyst_sample, key, row[key])
                 if key in ['catalyst_type']:
                     setattr(catalyst_sample, key, [row[key]])
@@ -97,5 +109,11 @@ class CatalystCollectionParser(MatchingParser):
                 catalyst_sample.surface = surface
 
             # archive.data = catalyst_sample
-            create_archive(catalyst_sample, archive, f'{row["name"]}_catalyst_sample.archive.json')
-        
+            # create_archive(catalyst_sample, archive, f'{row["name"]}_catalyst_sample.archive.json')
+
+
+            #archive.data=CatalystSampleCollectionParser(
+            samples.append(create_archive(catalyst_sample, archive, f'{row["name"]}_catalyst_sample.archive.json')
+            )
+            #)
+        archive.data.samples = samples
