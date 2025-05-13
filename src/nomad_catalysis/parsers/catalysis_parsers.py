@@ -22,7 +22,7 @@ class CatalysisParser(MatchingParser):
         mainfile: str,
         archive: EntryArchive,
         logger=None,
-        child_archives: Dict[str, EntryArchive] = None,
+        child_archives: dict[str, EntryArchive] = None,
     ) -> None:
         filename = mainfile.split('/')[-1]
         name = filename.split('.')[0]
@@ -46,7 +46,7 @@ class CatalystCollectionParser(MatchingParser):
         mainfile: str,
         archive: EntryArchive,
         logger=None,
-        child_archives: Dict[str, EntryArchive] = None,
+        child_archives: dict[str, EntryArchive] = None,
     ) -> None:
         logger.info('Catalyst Collection Parser called')
 
@@ -130,10 +130,6 @@ class CatalystCollectionParser(MatchingParser):
             if surface.m_to_dict():
                 catalyst_sample.surface = surface
 
-            # archive.data = catalyst_sample
-            # create_archive(catalyst_sample, archive, f'{row["name"]}_catalyst_sample.archive.json')
-
-            # archive.data=CatalystSampleCollectionParser(
             samples.append(
                 create_archive(
                     catalyst_sample,
@@ -141,5 +137,5 @@ class CatalystCollectionParser(MatchingParser):
                     f'{row["name"]}_catalyst_sample.archive.json',
                 )
             )
-            # )
+
         archive.data.samples = samples

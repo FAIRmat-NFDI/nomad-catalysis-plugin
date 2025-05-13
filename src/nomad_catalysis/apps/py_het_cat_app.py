@@ -173,7 +173,7 @@ heterogeneous_catalysis_app = App(
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'results.properties.catalytic.catalyst.surface_area',
+                            'search_quantity': 'results.properties.catalytic.catalyst.surface_area', # noqa: E501
                             'unit': 'm^2/g',
                         },
                         autorange=False,
@@ -203,17 +203,17 @@ heterogeneous_catalysis_app = App(
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'results.properties.catalytic.reaction.reactants.conversion'
+                            'search_quantity': 'results.properties.catalytic.reaction.reactants.conversion' # noqa: E501
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'results.properties.catalytic.reaction.reactants.mole_fraction_in'
+                            'search_quantity': 'results.properties.catalytic.reaction.reactants.mole_fraction_in' # noqa: E501
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'results.properties.catalytic.reaction.reactants.mole_fraction_out'
+                            'search_quantity': 'results.properties.catalytic.reaction.reactants.mole_fraction_out' # noqa: E501
                         }
                     ),
                 ],
@@ -228,12 +228,12 @@ heterogeneous_catalysis_app = App(
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'results.properties.catalytic.reaction.products.selectivity'
+                            'search_quantity': 'results.properties.catalytic.reaction.products.selectivity' # noqa: E501
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'results.properties.catalytic.reaction.products.mole_fraction_out'
+                            'search_quantity': 'results.properties.catalytic.reaction.products.mole_fraction_out' # noqa: E501
                         }
                     ),
                 ],
@@ -245,12 +245,12 @@ heterogeneous_catalysis_app = App(
                 items=[
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'results.properties.catalytic.reaction.reaction_conditions.temperature'
+                            'search_quantity': 'results.properties.catalytic.reaction.reaction_conditions.temperature' # noqa: E501
                         }
                     ),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'results.properties.catalytic.reaction.reaction_conditions.pressure',
+                            'search_quantity': 'results.properties.catalytic.reaction.reaction_conditions.pressure', # noqa: E501
                             'unit': 'bar',
                         }
                     ),
@@ -279,7 +279,7 @@ heterogeneous_catalysis_app = App(
                     MenuItemTerms(search_quantity='results.eln.methods'),
                     MenuItemHistogram(
                         x={
-                            'search_quantity': 'data.datetime#nomad_catalysis.schema_packages.catalysis.CatalyticReaction'
+                            'search_quantity': 'data.datetime#nomad_catalysis.schema_packages.catalysis.CatalyticReaction' # noqa: E501
                         },
                         title='Date of the catalytic reaction test',
                     ),
@@ -389,7 +389,7 @@ heterogeneous_catalysis_app = App(
                     search_quantity='results.properties.catalytic.reaction.reaction_conditions.temperature'
                 ),
                 y=Axis(
-                    search_quantity='map(&conversion, results.properties.catalytic.reaction.reactants[*])',
+                    search_quantity='map(&conversion, results.properties.catalytic.reaction.reactants[*])', # noqa: E501
                     title='Conversion (%)',
                 ),
                 color='map(&name, results.properties.catalytic.reaction.reactants[*])',
