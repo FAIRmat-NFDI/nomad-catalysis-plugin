@@ -1,4 +1,3 @@
-from typing import Dict
 
 import pandas as pd
 from nomad.datamodel import EntryArchive
@@ -41,6 +40,30 @@ class CatalysisParser(MatchingParser):
 
 
 class CatalystCollectionParser(MatchingParser):
+    def unify_columnnames(self, data_frame) -> pd.DataFrame:
+        """
+        This function unifies the column names of the data frame to a common format
+        by renaming the columns to a standard format that is used in the rest of
+        the code.
+        """
+        for col in data_frame.columns:
+            if col in ['Name', 'name', 'catalyst']:
+                data_frame.rename(columns={col: 'name'}, inplace=True)
+            if col in ['Storing Institution', 'storing_institution']:
+                data_frame.rename(columns={col: 'storing_institution'}, inplace=True)
+            if col in ['datetime', 'date']:
+                data_frame.rename(columns={col: 'datetime'}, inplace=True)
+            if col in ['lab_id', 'sample_id']:
+                data_frame.rename(columns={col: 'lab_id'}, inplace=True)
+            if col in ['surface_area_method']:
+                data_frame.rename(
+                    columns={col: 'method_surface_area_determination'}, inplace=True
+                )
+            if col in ['comment', 'comments']:
+                data_frame.rename(columns={col: 'description'}, inplace=True)
+                
+        return data_frame
+    
     def parse(
         self,
         mainfile: str,
@@ -59,22 +82,8 @@ class CatalystCollectionParser(MatchingParser):
         samples = []
 
         data_frame = pd.read_excel(mainfile)
-
-        for col in data_frame.columns:
-            if col in ['Name', 'name', 'catalyst']:
-                data_frame.rename(columns={col: 'name'}, inplace=True)
-            if col in ['Storing Institution', 'storing_institution']:
-                data_frame.rename(columns={col: 'storing_institution'}, inplace=True)
-            if col in ['datetime', 'date']:
-                data_frame.rename(columns={col: 'datetime'}, inplace=True)
-            if col in ['lab_id', 'sample_id']:
-                data_frame.rename(columns={col: 'lab_id'}, inplace=True)
-            if col in ['surface_area_method']:
-                data_frame.rename(
-                    columns={col: 'method_surface_area_determination'}, inplace=True
-                )
-            if col in ['comment', 'comments']:
-                data_frame.rename(columns={col: 'description'}, inplace=True)
+        data_frame = self.unify_columnnames(data_frame)
+        
         for n, row in data_frame.iterrows():
             row.dropna(inplace=True)
             catalyst_sample = CatalystSample()

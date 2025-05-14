@@ -12,8 +12,8 @@ def test_parser():
         entry_archive.metadata.entry_name
         == 'template_CatalystSampleCollection data file'
     )
-
-    assert len(entry_archive.data.samples) == 2
+    number_of_samples = 2
+    assert len(entry_archive.data.samples) == number_of_samples
 
     test_file = os.path.join('tests', 'data', 'template_CatalyticReaction.xlsx')
     entry_archive = parse(test_file)[0]
