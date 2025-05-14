@@ -8,5 +8,5 @@ catalysis = ExampleUploadEntryPoint(
         'reaction to demonstrate the new schemas from the '
         '[nomad-catalysis plugin](https://fairmat-nfdi.github.io/nomad-catalysis-plugin/index.html).'
     ),
-    resources=['example_uploads/het_catalysis_example/*'],
+    resources=['example_uploads/template_example/*'],
 )
