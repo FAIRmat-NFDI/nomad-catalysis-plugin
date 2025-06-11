@@ -64,6 +64,36 @@ class CatalystCollectionParser(MatchingParser):
                 
         return data_frame
     
+    def extract_elemental_composition(self, row, catalyst_sample) -> None:
+        """
+        This function extracts the elemental composition from a row of the data frame.
+        It returns an ElementalComposition object with the element and its mass and atom
+        fractions.
+        """
+        elements = row['Elements'].split(',')
+        for m, element in enumerate(elements):
+            elemental_composition = ElementalComposition(
+                element=element,
+            )
+            try:
+                mass_fractions = row['mass_fractions'].split(',')
+                elemental_composition.mass_fraction = float(
+                    mass_fractions[m]
+                )
+            except KeyError:
+                pass
+            try:
+                atom_fractions = row['atom_fractions'].split(',')
+                elemental_composition.atom_fraction = float(
+                    atom_fractions[m]
+                )
+            except KeyError:
+                pass
+            catalyst_sample.elemental_composition.append(
+                elemental_composition
+            )
+        
+    
     def parse(
         self,
         mainfile: str,
@@ -71,17 +101,23 @@ class CatalystCollectionParser(MatchingParser):
         logger=None,
         child_archives: dict[str, EntryArchive] = None,
     ) -> None:
+        
         logger.info('Catalyst Collection Parser called')
 
         filename = mainfile.split('/')[-1]
-        name = filename.split('.')[0]
+        name = filename.split('.')
         archive.data = CatalystSampleCollectionParserEntry(
             data_file=filename,
         )
-        archive.metadata.entry_name = f'{name} data file'
+        archive.metadata.entry_name = f'{name[0]} data file'
         samples = []
-
-        data_frame = pd.read_excel(mainfile)
+        if name[1] == 'xlsx':
+            data_frame = pd.read_excel(mainfile)
+        elif name[1] == 'csv':
+            data_frame = pd.read_csv(mainfile)
+        else:
+            return
+        logger.info(f'Parsing {filename} with {data_frame.shape[0]} rows')
         data_frame = self.unify_columnnames(data_frame)
         
         for n, row in data_frame.iterrows():
@@ -103,28 +139,8 @@ class CatalystCollectionParser(MatchingParser):
                 if key in ['catalyst_type']:
                     setattr(catalyst_sample, key, [row[key]])
                 if key in ['Elements']:
-                    elements = row['Elements'].split(',')
-                    for m, element in enumerate(elements):
-                        elemental_composition = ElementalComposition(
-                            element=element,
-                        )
-                        try:
-                            mass_fractions = row['mass_fractions'].split(',')
-                            elemental_composition.mass_fraction = float(
-                                mass_fractions[m]
-                            )
-                        except KeyError:
-                            pass
-                        try:
-                            atom_fractions = row['atom_fractions'].split(',')
-                            elemental_composition.atom_fraction = float(
-                                atom_fractions[m]
-                            )
-                        except KeyError:
-                            pass
-                        catalyst_sample.elemental_composition.append(
-                            elemental_composition
-                        )
+                    self.extract_elemental_composition(row, catalyst_sample)
+                    
                 if key in ['preparation_method', 'preparator', 'preparing_institution']:
                     setattr(preparation_details, key, row[key])
                 if key in [
