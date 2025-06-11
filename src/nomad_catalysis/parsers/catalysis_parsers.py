@@ -74,14 +74,19 @@ class CatalystCollectionParser(MatchingParser):
         logger.info('Catalyst Collection Parser called')
 
         filename = mainfile.split('/')[-1]
-        name = filename.split('.')[0]
+        name = filename.split('.')
         archive.data = CatalystSampleCollectionParserEntry(
             data_file=filename,
         )
-        archive.metadata.entry_name = f'{name} data file'
+        archive.metadata.entry_name = f'{name[0]} data file'
         samples = []
-
-        data_frame = pd.read_excel(mainfile)
+        if name[1] == 'xlsx':
+            data_frame = pd.read_excel(mainfile)
+        elif name[1] == 'csv':
+            data_frame = pd.read_csv(mainfile)
+        else:
+            return
+        logger.info(f'Parsing {filename} with {data_frame.shape[0]} rows')
         data_frame = self.unify_columnnames(data_frame)
         
         for n, row in data_frame.iterrows():
