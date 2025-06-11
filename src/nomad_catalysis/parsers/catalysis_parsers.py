@@ -64,7 +64,7 @@ class CatalystCollectionParser(MatchingParser):
                 
         return data_frame
     
-    def extract_elemental_composition(self, row, catalyst_sample) -> ElementalComposition:
+    def extract_elemental_composition(self, row, catalyst_sample) -> None:
         """
         This function extracts the elemental composition from a row of the data frame.
         It returns an ElementalComposition object with the element and its mass and atom
