@@ -64,6 +64,36 @@ class CatalystCollectionParser(MatchingParser):
                 
         return data_frame
     
+    def extract_elemental_composition(self, row, catalyst_sample) -> ElementalComposition:
+        """
+        This function extracts the elemental composition from a row of the data frame.
+        It returns an ElementalComposition object with the element and its mass and atom
+        fractions.
+        """
+        elements = row['Elements'].split(',')
+        for m, element in enumerate(elements):
+            elemental_composition = ElementalComposition(
+                element=element,
+            )
+            try:
+                mass_fractions = row['mass_fractions'].split(',')
+                elemental_composition.mass_fraction = float(
+                    mass_fractions[m]
+                )
+            except KeyError:
+                pass
+            try:
+                atom_fractions = row['atom_fractions'].split(',')
+                elemental_composition.atom_fraction = float(
+                    atom_fractions[m]
+                )
+            except KeyError:
+                pass
+            catalyst_sample.elemental_composition.append(
+                elemental_composition
+            )
+        
+    
     def parse(
         self,
         mainfile: str,
@@ -71,6 +101,7 @@ class CatalystCollectionParser(MatchingParser):
         logger=None,
         child_archives: dict[str, EntryArchive] = None,
     ) -> None:
+        
         logger.info('Catalyst Collection Parser called')
 
         filename = mainfile.split('/')[-1]
@@ -108,28 +139,8 @@ class CatalystCollectionParser(MatchingParser):
                 if key in ['catalyst_type']:
                     setattr(catalyst_sample, key, [row[key]])
                 if key in ['Elements']:
-                    elements = row['Elements'].split(',')
-                    for m, element in enumerate(elements):
-                        elemental_composition = ElementalComposition(
-                            element=element,
-                        )
-                        try:
-                            mass_fractions = row['mass_fractions'].split(',')
-                            elemental_composition.mass_fraction = float(
-                                mass_fractions[m]
-                            )
-                        except KeyError:
-                            pass
-                        try:
-                            atom_fractions = row['atom_fractions'].split(',')
-                            elemental_composition.atom_fraction = float(
-                                atom_fractions[m]
-                            )
-                        except KeyError:
-                            pass
-                        catalyst_sample.elemental_composition.append(
-                            elemental_composition
-                        )
+                    self.extract_elemental_composition(row, catalyst_sample)
+                    
                 if key in ['preparation_method', 'preparator', 'preparing_institution']:
                     setattr(preparation_details, key, row[key])
                 if key in [
