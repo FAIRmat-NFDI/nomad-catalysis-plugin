@@ -494,4 +494,8 @@ chemical_data = {
         'name': 'p>=5c',
         'iupac_name': 'C5+',
     },  # unspecified longer hydrocarbon
+    'C2-C4': {
+        'name': 'C2-C4',
+        'iupac_name': 'C2-C4',
+    },  # unspecified C2-C4 hydrocarbon
 }

@@ -204,7 +204,7 @@ class RawFileData(Schema):
     )
 
 
-class CatalystSampleCollectionParserEntry(Schema):
+class CatalysisCollectionParserEntry(Schema):
     """
     Section for storing a directly parsed raw data file.
     """
@@ -218,6 +218,17 @@ class CatalystSampleCollectionParserEntry(Schema):
             'this data file.',
         ),
     )
+    
+    measurements = Quantity(
+        type=Measurement,
+        shape=['*'],
+        a_eln=ELNAnnotation(
+            component='ReferenceEditQuantity',
+            description='A reference to the measurement entries that were generated from '
+            'this data file.',
+        ),
+    )
+    
     data_file = Quantity(
         type=str,
         shape=[],
@@ -2266,7 +2277,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         rates_units = {
             'reaction_rate': ['mmol reagent/g_cat/h', 'mmol/g/hour'],
             'rate': ['g reagent/g_cat/h', '1/hour'],
-            'specific_mass_rate': ['mmol reagent/g_cat/h', '1/hour'],
+            'specific_mass_rate': ['mmol reagent/g_cat/h', 'mmol/g/hour'],
             'specific_surface_area_rate': [
                 'mmol reagent/m**2 cat/h',
                 'mmol/m**2/hour',
