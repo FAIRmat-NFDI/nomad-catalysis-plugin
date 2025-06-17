@@ -1,15 +1,18 @@
-# How to Use This Plugin
-
-This plugin can be used in a NOMAD Oasis installation.
-
-There are 3 main ways to create catalysis entries in the NOMAD / NOMAD Oasis:
+# How to Create Catalysis Entries
+ 
+To create one or more entries in NOMAD through the browser, the user first has to navigate to the “PUBLISH” tab, log into their account (if applicable), then click “CREATE A NEW UPLOAD”. Here, there are 4 main ways to create catalysis entries in the NOMAD / NOMAD Oasis:
+- using the catalysis parser functionality
 - manually via the graphical user interface (GUI)
 - dropping archive.json files directly in an upload
-- using the tabular parser, for creating multiple entries when the data has already been collected in csv or xlsx files
-First I will detail how to create single entries and explain the structure of the schemas. Later I will add how to add larger datasets more quickly.
+- using the tabular parser, for creating more customized entries and when the data has already been collected in csv or xlsx files
+First I will detail how to create entries and explain the structure of the schemas. Later I will add how to add larger datasets more quickly.
 
-## 1. Manual Creation of Entries from the GUI
-When creating single entries, it may be easiest to manually fill the schemas in the GUI. Under Publish > Uploads press `Create A New Upload`. You can now click `Create from Schema` and select a built-in schema from the EntryData Category **Catalysis**. After entering a unique name for the entry (unique at least within the upload folder) you can create an instance of the selected schema, either a catalyst sample entry or a measurement of a functional catalyst analysis.
+## 1. Using the catalysis parser
+The easiest way to generate a number of entries at once is by dropping tabular files (csv/xlsx) into an upload, which adhere to a provided template format and naming convention for one or more samples in a [*CatalystSampleCollection.xlsx file](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/src/nomad_catalysis/example_uploads/template_example/template_CatalystSampleCollection.xlsx) and for a catalytic reaction using a [*CatalyticReaction.xlsx file](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/src/nomad_catalysis/example_uploads/template_example/template_CatalyticReaction.xlsx). (csv files work the same.)
+
+## 2. Manual creation of entries from the GUI
+  
+When creating single entries, it may be easiest to manually fill the schemas in the GUI.  In the `Create from Schema` pop-up window one can select a built-in schema from the EntryData Category **Catalysis**. After entering a unique name for the entry (unique at least within the upload folder) one can create an instance of the selected schema, either a catalyst sample entry or a measurement of a functional catalyst analysis.
 ![image with screenshot of the NOMAD GUI](ScreenshotCreateBuiltInSchema.png)
 
 ## The **Catalyst Sample** schema
@@ -117,7 +120,7 @@ The following information is currently added by default to entries filled by a h
 | 'plug flow reactor'| reactor_setup.reactor_type |
 
 ## 2. Direct generation of json files
-Another way to generate entries in NOMAD is to place *.archive.json files directly in one upload. The file needs to contain the path to a schema and then NOMAD automatically creates the corresponding entry. The archive.json file does not contain unit information, this is only defined and stored in the schema definition and does not need to correspond to the display unit in the GUI. But usually this is the SI unit of a respective quantity.
+Another way to generate entries in NOMAD is to place *.archive.json files directly in one upload. The file needs to contain the path to a schema definition and then NOMAD automatically creates the corresponding entry. The archive.json file does not contain unit information, this is only defined and stored in the schema definition and does not need to correspond to the display unit in the GUI. But usually this correspons to the SI unit of a respective quantity. This can also be checked in the [metainfo browser](https://nomad-lab.eu/prod/v1/gui/analyze/metainfo/nomad_catalysis) of the NOMAD installation.
 
 ```json
 
