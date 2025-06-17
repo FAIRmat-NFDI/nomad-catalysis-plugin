@@ -29,7 +29,7 @@ maintainers = [
     { name = "FAIRmat", email = "fairmat@physik.hu-berlin.de"},
 ]
 license = { file = "LICENSE" }
-dependencies = ["nomad-lab>=1.3.16", "openpyxl"]
+dependencies = ["nomad-lab>=1.3.13", "openpyxl"] # should be NOMAD 1.3.16
 
 [project.urls]
 Repository = "https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin"
