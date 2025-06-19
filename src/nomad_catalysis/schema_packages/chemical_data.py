@@ -13,6 +13,7 @@ chemical_data = {
         'cas_number': '630-08-0',
     },
     'CO': 'carbon monoxide',  # Reference to 'CO'
+    'co': 'carbon monoxide',  # Reference to 'carbon monoxide'
     'carbon dioxide': {
         'pub_chem_id': 280,
         'iupac_name': 'carbon dioxide',
@@ -27,6 +28,7 @@ chemical_data = {
         'cas_number': '124-38-9',
     },
     'CO2': 'carbon dioxide',  # Reference to 'carbon dioxide'
+    'co2': 'carbon dioxide',  # Reference to 'carbon dioxide'
     'propanoic acid': {
         'pub_chem_id': 1032,
         'iupac_name': 'propanoic acid',
@@ -48,6 +50,7 @@ chemical_data = {
         'cas_number': '7664-41-7',
     },
     'NH3': 'ammonia',  # Reference to 'ammonia'
+    'nh3': 'ammonia',  # Reference to 'ammonia'
     'Ammonia': 'ammonia',  # Reference to 'ammonia'
     'molecular hydrogen': {
         'pub_chem_id': 783,
@@ -63,6 +66,7 @@ chemical_data = {
         'cas_number': '1333-74-0',
     },
     'H2': 'molecular hydrogen',  # Reference to 'molecular hydrogen'
+    'h2': 'molecular hydrogen',  # Reference to 'molecular hydrogen'
     'hydrogen': 'molecular hydrogen',  # Reference to 'molecular hydrogen'
     'water': {
         'pub_chem_id': 962,
@@ -78,6 +82,7 @@ chemical_data = {
         'cas_number': '7732-18-5',
     },
     'H2O': 'water',  # Reference to 'water'
+    'h2o': 'water',  # Reference to 'water'
     'argon': {
         'pub_chem_id': 23968,
         'iupac_name': 'argon',
@@ -92,6 +97,7 @@ chemical_data = {
         'cas_number': '7440-37-1',
     },
     'Ar': 'argon',  # Reference to 'argon'
+    'ar': 'argon',  # Reference to 'argon'
     'helium': {
         'pub_chem_id': 23987,
         'iupac_name': 'helium',
@@ -106,6 +112,7 @@ chemical_data = {
         'cas_number': '7440-59-7',
     },
     'He': 'helium',  # Reference to 'helium'
+    'he': 'helium',  # Reference to 'helium'
     'molecular nitrogen': {
         'pub_chem_id': 947,
         'iupac_name': 'molecular nitrogen',
@@ -121,6 +128,7 @@ chemical_data = {
     },
     'nitrogen': 'molecular nitrogen',  # Reference to 'molecular nitrogen'
     'N2': 'molecular nitrogen',  # Reference to 'molecular nitrogen'
+    'n2': 'molecular nitrogen',  # Reference to 'molecular nitrogen'
     'molecular oxygen': {
         'pub_chem_id': 977,
         'iupac_name': 'molecular oxygen',
@@ -136,6 +144,7 @@ chemical_data = {
     },
     'oxygen': 'molecular oxygen',  # Reference to 'molecular oxygen'
     'O2': 'molecular oxygen',  # Reference to 'molecular oxygen'
+    'o2': 'molecular oxygen',  # Reference to 'molecular oxygen'
     'methane': {
         'pub_chem_id': 297,
         'iupac_name': 'methane',
@@ -150,6 +159,7 @@ chemical_data = {
         'cas_number': '74-82-8',
     },
     'CH4': 'methane',  # Reference to 'methane'
+    'ch4': 'methane',  # Reference to 'methane'
     'ethane': {
         'pub_chem_id': 6324,
         'iupac_name': 'ethane',
@@ -160,6 +170,7 @@ chemical_data = {
         'cas_number': '74-84-0',
     },
     'C2H6': 'ethane',  # Reference to 'ethane'
+    'c2h6': 'ethane',  # Reference to 'ethane'
     'ethene': {
         'pub_chem_id': 6325,
         'iupac_name': 'ethene',
@@ -171,6 +182,7 @@ chemical_data = {
     },
     'ethylene': 'ethene',  # Reference to 'ethene'
     'C2H4': 'ethene',  # Reference to 'ethene'
+    'c2h4': 'ethene',  # Reference to 'ethene'
     'ethyne': {
         'pub_chem_id': 6326,
         'iupac_name': 'ethyne',
@@ -182,6 +194,7 @@ chemical_data = {
     },
     'acetylene': 'ethyne',  # Reference to 'ethyne'
     'C2H2': 'ethyne',  # Reference to 'ethyne'
+    'c2h2': 'ethyne',  # Reference to 'ethyne'
     'ethin': 'ethyne',  # Reference to 'ethyne'
     'acetic acid': {
         'pub_chem_id': 176,
@@ -217,6 +230,7 @@ chemical_data = {
     },
     'propylene': 'propene',  # Reference to 'propene'
     'C3H6': 'propene',  # Reference to 'propene'
+    'c3h6': 'propene',  # Reference to 'propene'
     'propyne': {
         'pub_chem_id': 6335,
         'iupac_name': 'propyne',
@@ -227,6 +241,7 @@ chemical_data = {
     'propine': 'propyne',  # Reference to 'propyne'
     'propin': 'propyne',  # Reference to 'propyne'
     'C3H4': 'propyne',  # Reference to 'propyne'
+    'c3h4': 'propyne',  # Reference to 'propyne'
     'prop-2-enoic acid': {
         'pub_chem_id': 6581,
         'iupac_name': 'prop-2-enoic acid',
@@ -332,7 +347,9 @@ chemical_data = {
         'cas_number': '64-17-5',
     },
     'EtOH': 'ethanol',  # Reference to 'ethanol'
+    'etoh': 'ethanol',  # Reference to 'ethanol'
     'CH3CH2OH': 'ethanol',  # Reference to 'ethanol'
+    'ch3ch2oh': 'ethanol',  # Reference to 'ethanol'
     'methanol': {
         'pub_chem_id': 887,
         'iupac_name': 'methanol',
@@ -344,6 +361,7 @@ chemical_data = {
     },
     'methyl alcohol': 'methanol',  # Reference to 'methanol'
     'MeOH': 'methanol',  # Reference to 'methanol'
+    'meoh': 'methanol',  # Reference to 'methanol'
     'CH3OH': 'methanol',  # Reference to 'methanol'
     'formic acid': {
         'pub_chem_id': 284,
@@ -355,6 +373,7 @@ chemical_data = {
         'cas_number': '64-18-6',
     },
     'HCOOH': 'formic acid',  # Reference to 'formic acid'
+    'hcooh': 'formic acid',  # Reference to 'formic acid'
     'methanoic acid': 'formic acid',  # Reference to 'formic acid'
     'prop-2-enal': {
         'pub_chem_id': 7847,
@@ -365,6 +384,7 @@ chemical_data = {
     },
     'acrolein': 'prop-2-enal',  # Reference to 'prop-2-enal'
     'C3H4O': 'prop-2-enal',  # Reference to 'prop-2-enal'
+    'c3h4o': 'prop-2-enal',  # Reference to 'prop-2-enal'
     'propanal': {
         'pub_chem_id': 527,
         'iupac_name': 'propanal',
@@ -453,6 +473,7 @@ chemical_data = {
     },
     'butylene': '1-butene',  # Reference to '1-butene'
     'n-Butene': '1-butene',  # Reference to '1-butene'
+    'nbutene': '1-butene',  # Reference to '1-butene'
     'butene': {
         'iupac_name': 'butene',
         'molecular_formula': 'C4H8',
@@ -490,6 +511,7 @@ chemical_data = {
     '25-dihydrofuran': '2,5-dihydrofuran',  # Reference to '2,5-dihydrofuran'
     'maleic anhydride': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
     'MAN': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
+    'man': 'furan-2,5-dione',  # Reference to 'furan-2,5-dione'
     'p>=5c': {
         'name': 'p>=5c',
         'iupac_name': 'C5+',
@@ -498,4 +520,5 @@ chemical_data = {
         'name': 'C2-C4',
         'iupac_name': 'C2-C4',
     },  # unspecified C2-C4 hydrocarbon
+    'c2-c4': 'C2-C4',  # Reference to 'C2-C4'
 }
