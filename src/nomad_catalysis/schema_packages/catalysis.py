@@ -212,21 +212,15 @@ class CatalysisCollectionParserEntry(Schema):
     samples = Quantity(
         type=CompositeSystem,
         shape=['*'],
-        a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity',
-            description='A reference to the sample entries that were generated from '
+        description='A reference to the sample entries that were generated from'
             'this data file.',
-        ),
     )
     
     measurements = Quantity(
         type=Measurement,
         shape=['*'],
-        a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity',
-            description='A reference to the measurement entries that were generated from '
-            'this data file.',
-        ),
+        description='A reference to the measurement entries that were generated'
+            'from this data file.',
     )
     
     data_file = Quantity(
