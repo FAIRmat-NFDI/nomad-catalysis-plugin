@@ -217,7 +217,7 @@ class CatalysisCollectionParser(MatchingParser):
         return cat_data
     
 
-    def extract_reaction_entries(self, data_frame, archive, logger) -> None:
+    def extract_reaction_entries(self, data_frame, archive, logger) -> None:  # noqa: PLR0912, PLR0915
         "This function extracts information for catalytic reaction entries with a"
         "single measurement from the data frame and adds them to the archive."
         reactions = []
@@ -277,7 +277,7 @@ class CatalysisCollectionParser(MatchingParser):
                 if key in ['catalyst', 'catalyst_name']:
                     setattr(sample, 'name', row[key])
                     setattr(reactor_filling, 'catalyst_name', str(row[key]))
-                if key in ['sample_id']:
+                if key in ['sample_id', 'catalyst_id']:
                     setattr(sample, 'lab_id', row[key])
                 
                 if len(col_split) < 2:  # noqa: PLR2004
@@ -466,7 +466,7 @@ class CatalysisCollectionParser(MatchingParser):
         data frame and adds them to the archive. It returns a list of CatalystSample
         objects."""
         logger.info('Extracting sample entries from the data frame')
-        
+
         samples = []
         for n, row in data_frame.iterrows():
             row.dropna(inplace=True)
@@ -555,6 +555,19 @@ class CatalysisCollectionParser(MatchingParser):
                 collection. Reaction entries are successfully extracted.'''
             )
             return
+        elif 'CatalystSampleCollection' in name[-2]:
+            try:
+                data_frame = self.unify_columnnames(data_frame)
+                samples = self.extract_sample_entries(data_frame, archive, logger)
+                logger.info(
+                    f'''File {filename} matches the expected format for a catalysis
+                    collection. Sample entries successfully extracted.'''
+                )        
+                archive.data.samples = samples
+                return
+            except Exception as e:
+                logger.error(f'Error extracting sample entries: {e}')
+        
         elif 'CatalysisCollection' in name[-2]:
             try:
                 self.extract_reaction_entries(data_frame, archive, logger)
@@ -566,16 +579,19 @@ class CatalysisCollectionParser(MatchingParser):
             except Exception as e:
                 logger.error(f'Error extracting reaction entries: {e}')
                 return
+            
+            try:
+                data_frame = self.unify_columnnames(data_frame)
+                samples = self.extract_sample_entries(data_frame, archive, logger)
+                logger.info(
+                    f'''File {filename} matches the expected format for a catalysis
+                    collection. Sample entries successfully extracted.'''
+                )        
+                archive.data.samples = samples
+
+            except Exception as e:
+                logger.error(f'Error extracting sample entries: {e}')
         
-        try:
-            data_frame = self.unify_columnnames(data_frame)
-            samples = self.extract_sample_entries(data_frame, archive, logger)
-            logger.info(
-                f'''File {filename} matches the expected format for a catalysis
-                collection. Sample entries successfully extracted.'''
-            )        
-            archive.data.samples = samples
-        except Exception as e:
-            logger.error(f'Error extracting sample entries: {e}')
+
 
         return
