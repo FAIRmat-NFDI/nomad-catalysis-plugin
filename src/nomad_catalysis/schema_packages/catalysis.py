@@ -1,12 +1,17 @@
+import random
+import time
 from typing import (
     TYPE_CHECKING,
 )
 
+import h5py
 import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 from ase.data import atomic_masses, atomic_numbers, chemical_symbols
 from nomad.config import config
+from nomad.datamodel.context import ClientContext
 from nomad.datamodel.data import ArchiveSection, EntryDataCategory, Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
 from nomad.datamodel.metainfo.basesections import (
@@ -37,7 +42,8 @@ from nomad.metainfo import (
     Section,
     SubSection,
 )
-from nomad.metainfo.metainfo import Category
+from nomad.metainfo.metainfo import Category, MSection
+from nomad.search import MetadataPagination, search
 from nomad.units import ureg
 
 from .chemical_data import chemical_data
@@ -117,7 +123,6 @@ def get_nested_attr(obj, attr_path):
         if isinstance(obj, list):  # needed for repeating subsection, e.g. results
             if obj == []:
                 return None
-            from nomad.metainfo.metainfo import MSection
 
             if isinstance(obj[0], MSection):
                 obj = obj[0]  ## only first element is considered for subsections
@@ -478,8 +483,6 @@ class CatalystSample(CompositeSystem, Schema):
             logger.warning("""Sample contains no lab_id, automatic linking of
                          measurements to this sample entry might be more difficult.""")
 
-        from nomad.search import MetadataPagination, search
-
         query = {
             'section_defs.definition_qualified_name:all': [
                 'nomad.datamodel.metainfo.basesections.v1.Activity'
@@ -531,9 +534,14 @@ class CatalystSample(CompositeSystem, Schema):
             )
 
     def normalize(self, archive, logger):
-        self.populate_results(archive, logger)
 
-        from nomad.datamodel.context import ClientContext
+        if self.catalyst_type is None and self.support is not None:
+            self.catalyst_type = ['supported catalyst']
+            logger.info(
+                '''Catalyst type set to supported catalyst, because a support 
+                was specified.'''
+            )
+        self.populate_results(archive, logger)
 
         if isinstance(archive.m_context, ClientContext):
             return
@@ -840,9 +848,6 @@ class Reagent(ArchiveSection):
                 logger.info(f'found {self.name} in chemical_data, no pubchem call made')
                 return
             else:
-                import random
-                import time
-
                 time.sleep(random.uniform(0.5, 5))
                 self.pure_component.normalize(archive, logger)
 
@@ -992,9 +997,6 @@ class RatesData(ArchiveSection):
                 logger.info(f'found {self.name} in chemical_data, no pubchem call made')
                 return
             else:
-                import random
-                import time
-
                 time.sleep(random.uniform(0.5, 5))
                 self.pure_component.normalize(archive, logger)
 
@@ -1548,13 +1550,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         """
         if self.data_file.endswith('.csv'):
             with archive.m_context.raw_file(self.data_file, 'rt') as f:
-                import pandas as pd
-
                 data = pd.read_csv(f).dropna(axis=1, how='all')
         elif self.data_file.endswith('.xlsx'):
             with archive.m_context.raw_file(self.data_file, 'rb') as f:
-                import pandas as pd
-
                 data = pd.read_excel(f, sheet_name=0)
 
         data.dropna(axis=1, how='all', inplace=True)
@@ -1784,7 +1782,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             and sample != []
             and sample is not None
         ):
-            from nomad.datamodel.context import ClientContext
 
             if isinstance(archive.m_context, ClientContext):
                 pass
@@ -1828,7 +1825,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         """
         if self.data_file.endswith('.h5'):
             with archive.m_context.raw_file(self.data_file, 'rb') as f:
-                import h5py
 
                 data = h5py.File(f, 'r')
 
@@ -1998,7 +1994,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
 
                 # sample.name = 'catalyst'
                 sample.lab_id = str(data['Header']['Header']['SampleID'][0])
-                from nomad.datamodel.context import ClientContext
+
 
                 if isinstance(archive.m_context, ClientContext):
                     pass
@@ -2107,6 +2103,22 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             return True
         else:
             return False
+    
+    def check_zero_elements(
+        self, el, logger: 'BoundLogger') -> bool:
+        """
+        Checks if the element has a zero atomic or mass fraction.
+        If it does, this will not be written in the results section of the reaction.
+        """
+        if el.atomic_fraction == 0.0 or el.mass_fraction == 0.0:
+            logger.warning(
+                f"'{el.element}' has a zero atomic or mass fraction and will not be "
+                'written in the results section of the reaction.'
+            )
+            return True
+        else:
+            return False
+
 
     def populate_catalyst_sample_info(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -2156,8 +2168,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                             ' elemental_composition section will be ignored.'
                         )
                         continue
-                    elif el.element not in archive.results.material.elements:
-                        archive.results.material.elements += [el.element]
+                    # elif el.element not in archive.results.material.elements:
+                    #     archive.results.material.elements += [el.element]
 
                     result_composition = ResultsElementalComposition(
                         element=el.element,
@@ -2169,10 +2181,14 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     duplicate = self.check_duplicate_elements(
                         el, existing_elements, logger
                     )
-                    if duplicate:
+                    zero_element = self.check_zero_elements(el, logger)
+                    if duplicate or zero_element:
                         continue
                     else:
                         comp_result_section.append(result_composition)
+                    
+                    if el.element not in archive.results.material.elements:
+                        archive.results.material.elements += [el.element]
 
             archive.results.material.material_name = name_comb
 
@@ -2463,7 +2479,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 )
 
             # getting the temperature values of each step
-            from itertools import groupby
+            from itertools import groupby  #noqa: PLC0415
 
             Temp_program = [key for key, _group in groupby(data_dict_no_ramps['Temp'])]
             # Temp_program = Temp_program.reset_index(drop=True)
@@ -2604,6 +2620,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         to replace the name of the reactant with the IUPAC name of the reagent. If the
         arrays are larger than 300 (threshold_datapoints), it will reduce the size to
         store in the archive.
+        ##potential TODO: If a value is negative, it will be replaced with 0 
+        ## in the results section. 
 
         return: a list of the reactants with the conversion results.
         """
@@ -2634,9 +2652,12 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                             mole_fraction_out=i.fraction_out,
                         )
                     else:
+                        conversion_results_not_negative = i.conversion.copy()
+                        conversion_results_not_negative[
+                            conversion_results_not_negative < 0] = 0
                         react = Reactant(
                             name=iupac_name,
-                            conversion=i.conversion,
+                            conversion=conversion_results_not_negative,
                             mole_fraction_in=i.fraction_in,
                             mole_fraction_out=i.fraction_out,
                         )
