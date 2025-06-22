@@ -14,7 +14,9 @@ jobs:
         pip install --upgrade pip
         pip install '.[dev]' --index-url https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple
         pip install coverage coveralls
-        pip install mongoengine; jwt; logstash
+        pip install mongoengine
+        pip install jwt
+        pip install logstash
         
     - name: Test with pytest
       run: |
