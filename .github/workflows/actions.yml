@@ -17,6 +17,7 @@ jobs:
         pip install mongoengine
         pip install jwt
         pip install logstash
+        pip install event
         
     - name: Test with pytest
       run: |
