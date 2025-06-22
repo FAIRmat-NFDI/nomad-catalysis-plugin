@@ -3,7 +3,7 @@ from nomad.config.models.plugins import ParserEntryPoint
 
 class CatalysisParserEntryPoint(ParserEntryPoint):
     def load(self):
-        from nomad_catalysis.parsers.catalysis_parsers import CatalysisParser
+        from nomad_catalysis.parsers.catalysis_parsers import CatalysisParser # noqa: PLC0415, I001
 
         return CatalysisParser(**self.dict())
 
@@ -17,7 +17,7 @@ catalysis = CatalysisParserEntryPoint(
 
 class CatalysisCollectionParserEntryPoint(ParserEntryPoint):
     def load(self):
-        from nomad_catalysis.parsers.catalysis_parsers import CatalysisCollectionParser
+        from nomad_catalysis.parsers.catalysis_parsers import CatalysisCollectionParser # noqa: PLC0415, I001
 
         return CatalysisCollectionParser(**self.dict())
 
