@@ -1,15 +1,20 @@
-# How to Use This Plugin
-
-This plugin can be used in a NOMAD Oasis installation.
-
-There are 3 main ways to create catalysis entries in the NOMAD / NOMAD Oasis:
+# How to Create Catalysis Entries
+ 
+To create one or more entries in NOMAD through the browser, the user first has to navigate to the “PUBLISH” tab, log into their account (if applicable), then click “CREATE A NEW UPLOAD”. Here, there are 4 main ways to create catalysis entries in the NOMAD / NOMAD Oasis:
+- using the catalysis parser functionality
 - manually via the graphical user interface (GUI)
 - dropping archive.json files directly in an upload
-- using the tabular parser, for creating multiple entries when the data has already been collected in csv or xlsx files
-First I will detail how to create single entries and explain the structure of the schemas. Later I will add how to add larger datasets more quickly.
+- using the tabular parser, for creating more customized entries and when the data has already been collected in csv or xlsx files
+First I will detail how to create entries and explain the structure of the schemas. Later I will add how to add larger datasets more quickly.
 
-## 1. Manual Creation of Entries from the GUI
-When creating single entries, it may be easiest to manually fill the schemas in the GUI. Under Publish > Uploads press `Create A New Upload`. You can now click `Create from Schema` and select a built-in schema from the EntryData Category **Catalysis**. After entering a unique name for the entry (unique at least within the upload folder) you can create an instance of the selected schema, either a catalyst sample entry or a measurement of a functional catalyst analysis.
+## 1. Using the catalysis parser
+The easiest way to generate a number of entries at once is by dropping tabular files (csv/xlsx), which adhere to a provided template format and naming convention into an upload in NOMAD. Templates are provided in the following to generate one or more sample entries from a [*CatalystSampleCollection.xlsx file](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/src/nomad_catalysis/example_uploads/template_example/template_CatalystSampleCollection.xlsx), one or more catalytic measurements in [*CatalyticReactionCollection.xlsx file](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/src/nomad_catalysis/example_uploads/template_example/template_CatalyticReactionCollection.xlsx), or for both sample and measurement data in one file as a [*CatalysisCollection.xlsx file](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/src/nomad_catalysis/example_uploads/template_example/template_CatalysisCollection.xlsx). For catalytic reactions with e.g. longer time or measurement series one can also upload a [*CatalyticReaction.xlsx file](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/src/nomad_catalysis/example_uploads/template_example/template_CatalyticReaction.xlsx) directly, or specify the reaction file in a `datafile` column of a *Collection.xlsx file to add multiple entries at once. Then there are no restrictions on the file name. (For all purposes mentioned here, csv files should work the same as xlsx files.)
+
+
+
+## 2. Manual creation of entries from the GUI
+  
+When creating single entries, it may be easiest to manually fill the schemas in the GUI.  In the `Create from Schema` pop-up window one can select a built-in schema from the EntryData Category **Catalysis**. After entering a unique name for the entry (unique at least within the upload folder) one can create an instance of the selected schema, either a catalyst sample entry or a measurement of a functional catalyst analysis.
 ![image with screenshot of the NOMAD GUI](ScreenshotCreateBuiltInSchema.png)
 
 ## The **Catalyst Sample** schema
@@ -44,21 +49,23 @@ The following column headers will be recognized and mapped into the NOMAD schema
 | `catalyst` | name of the catalyst| reactor_filling.catalyst_name
 | `sample_id` or `FHI-ID`| (unique) identification number of catalyst sample |sample[0].lab_id|
 | `mass (mg)` or `mass (g)` | catalyst mass in the reactor| reactor_filling.catalyst_mass|
-| `step` | number of reported measurement point| |
-| `TOS (*unit*)` or `time (*unit*)` | time on stream, *unit* can be s or min or h| |
-| `x {reagent_name}` or `x {reagent_name} (%)` |concentration of reagents at the inlet of the reactor| |
-| `x_out {reagent_name} (%)` | concentration of reagents or products at the outlet of the reactor | |
-| `temperature (*unit*)` | reactor temperature, if *unit* is not K or Kelvin, degree Celsius is assumed| |
-| `set_temperature (*unit*)` | desired or set reactor temperature| |
-| `C-balance` | carbon-balance| |
-| `GHSV *unit*`| Gas Hourly Space Velocity, unit can be 1/h or h^-1| |
-| `Vflow (mL/min)` or `flow_rate (mln)` | set total gas flow rate| |
-| `pressure` or `set_pressure` | reactor pressure in bar| |
-| `r {name}` *unit* | reaction rate of reactant or product with *name* and unit mol/(g*h) or equivalent (mmol,µmol, minute or s also accepted)| |
-| `x_p {name} (%)` |product based conversion of reactant *name*| |
-| `x_r {name} (%)` |reactant based conversion of reactant *name*| |
-| `y {name} (%)` |product yield of product *name*| |
-| `S_p {name} (%)` |selectivity of product *name*| |
+| `TOS (*unit*)` or `time (*unit*)` | time on stream, *unit* can be s or min or h| reaction_conditions.time_on_stream, results[0].time_on_stream |
+| `step` | number of reported measurement point|reaction_conditions.runs, results[0].runs  |
+| `x {reagent_name}` or `x {reagent_name} (%)` |concentration of reagents at the inlet of the reactor; if in % it will be converted into a fraction, if for that reagent also a conversion is specified, it will also appear in results|reaction_conditions.reagents[].name, reaction_conditions.reagents[].fraction_in; (results.reactants_conversion[].fraction_in/name)  |
+| `x_out {reagent_name} (%)` | concentration of reagents or products at the outlet of the reactor |results[0].reactants_conversions[].name/fraction_out or results[0].products[].name/fraction_out |
+| `set_temperature (*unit*)` | desired or set reactor temperature|reaction_conditions.set_temperature |
+| `temperature (*unit*)` | reactor temperature, if *unit* is not K or Kelvin, degree Celsius is assumed|results[0].temperature |
+| `C-balance` | carbon-balance|results[0].c_balance |
+| `GHSV *unit*`| Gas Hourly Space Velocity, unit can be 1/h or h^-1|reaction_conditions.gas_hourly_space_velocity |
+| `WHSV *unit*`| Gas Hourly Space Velocity, unit can be 1/h or h^-1|reaction_conditions.weight_hourly_space_velocity |
+| `Vflow (*unit*)` or `flow_rate (*unit)` | set total gas flow rate, unit can be ml/min or mln| reaction_conditions.set_total_flow_rate|
+|`set_pressure (*unit*)` | set reactor pressure| reaction_conditions.set_pressure  |
+|`pressure (*unit*)`| reactor pressure| results[0].pressure  |
+| `r {name} *unit*` | reaction rate of reactant or product with *name* and unit mol/(g*h) or equivalent (mmol,µmol, minute or s also accepted)|results[0].rates[].reaction_rate |
+| `x_p {name} (%)` |product based conversion of reactant *name* in %| results[0].reactants_conversions[].conversion_product_based|
+| `x_r {name} (%)` |reactant based conversion of reactant *name* in %|results[0].reactants_conversions[].conversion_product_based |
+| `y {name} (%)` |product yield of product *name*|results[0].products[].product_yield |
+| `S_p {name} (%)` |selectivity of product *name* in %|results[0].products[].selectivity |
 
 ### Structure of the hf5 data file:
 - 'Header'
@@ -116,8 +123,8 @@ The following information is currently added by default to entries filled by a h
 | 'Haber'| reactor_setup.name |
 | 'plug flow reactor'| reactor_setup.reactor_type |
 
-## 2. Direct generation of json files
-Another way to generate entries in NOMAD is to place *.archive.json files directly in one upload. The file needs to contain the path to a schema and then NOMAD automatically creates the corresponding entry. The archive.json file does not contain unit information, this is only defined and stored in the schema definition and does not need to correspond to the display unit in the GUI. But usually this is the SI unit of a respective quantity.
+## 3. Direct generation of json files
+Another way to generate entries in NOMAD is to place *.archive.json files directly in one upload. The file needs to contain the path to a schema definition and then NOMAD automatically creates the corresponding entry. The archive.json file does not contain unit information, this is only defined and stored in the schema definition and does not need to correspond to the display unit in the GUI. But usually this corresponds to the SI unit of a respective quantity. This can also be double checked in the [metainfo browser](https://nomad-lab.eu/prod/v1/gui/analyze/metainfo/nomad_catalysis) of the NOMAD installation.
 
 ```json
 

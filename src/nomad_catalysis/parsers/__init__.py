@@ -3,7 +3,7 @@ from nomad.config.models.plugins import ParserEntryPoint
 
 class CatalysisParserEntryPoint(ParserEntryPoint):
     def load(self):
-        from nomad_catalysis.parsers.catalysis_parsers import CatalysisParser
+        from nomad_catalysis.parsers.catalysis_parsers import CatalysisParser # noqa: PLC0415, I001
 
         return CatalysisParser(**self.dict())
 
@@ -15,15 +15,15 @@ catalysis = CatalysisParserEntryPoint(
 )
 
 
-class CatalystCollectionParserEntryPoint(ParserEntryPoint):
+class CatalysisCollectionParserEntryPoint(ParserEntryPoint):
     def load(self):
-        from nomad_catalysis.parsers.catalysis_parsers import CatalystCollectionParser
+        from nomad_catalysis.parsers.catalysis_parsers import CatalysisCollectionParser # noqa: PLC0415, I001
 
-        return CatalystCollectionParser(**self.dict())
+        return CatalysisCollectionParser(**self.dict())
 
 
-catalyst_sample_collection = CatalystCollectionParserEntryPoint(
-    name='CatalystSampleCollectionParser',
-    description='A parser for a collection of catalyst samples.',
-    mainfile_name_re=r'.*CatalystSampleCollection\.(xlsx|csv)',
+catalysis_collection = CatalysisCollectionParserEntryPoint(
+    name='CatalysisCollectionParser',
+    description='A parser for a collection of catalysis entries.',
+    mainfile_name_re=r'.*Cataly.+Collection\.(xlsx|csv)',
 )

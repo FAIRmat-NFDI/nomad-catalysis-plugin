@@ -17,7 +17,7 @@ name = "nomad-catalysis"
 description = "A NOMAD plugin for heterogeneous catalysis data."
 dynamic = ["version"]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 authors = [
     { name = "Julia Schumann"},
     { name = "Hampus Näsström"},
@@ -29,7 +29,7 @@ maintainers = [
     { name = "FAIRmat", email = "fairmat@physik.hu-berlin.de"},
 ]
 license = { file = "LICENSE" }
-dependencies = ["nomad-lab>=1.3.11", "openpyxl"]
+dependencies = ["nomad-lab[infrastructure]>=1.3.13", "openpyxl"] # should be NOMAD 1.3.16
 
 [project.urls]
 Repository = "https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin"
@@ -116,7 +116,7 @@ where = ["src"]
 catalysis = "nomad_catalysis.schema_packages:catalysis"
 catalysis_app = "nomad_catalysis.apps:catalysis"
 catalysis_parser = "nomad_catalysis.parsers:catalysis"
-catalyst_samples = "nomad_catalysis.parsers:catalyst_sample_collection"
+catalysis_collection = "nomad_catalysis.parsers:catalysis_collection"
 example_catalysis = "nomad_catalysis.example_uploads:catalysis"
 
 [tool.cruft]
