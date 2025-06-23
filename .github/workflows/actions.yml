@@ -20,7 +20,7 @@ jobs:
     - name: Submit to coveralls
       continue-on-error: true
       env:
-        GITHUB_TOKEN: {% raw -%}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         uv run --with coveralls coveralls --service=github
 
