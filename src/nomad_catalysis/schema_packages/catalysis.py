@@ -1644,9 +1644,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         np.nan_to_num(data[col]) * ureg.milliliter / ureg.minute
                     )
 
-            if col_split[0] == 'set_pressure':
+            if col_split[0] == 'set_pressure' and 'bar' in col_split[1]:
                 feed.set_pressure = np.nan_to_num(data[col]) * ureg.bar
-            if col_split[0].casefold() == 'pressure':
+            if col_split[0].casefold() == 'pressure' and 'bar' in col_split[1]:
                 cat_data.pressure = np.nan_to_num(data[col]) * ureg.bar
 
             if len(col_split) < 3:  # noqa: PLR2004

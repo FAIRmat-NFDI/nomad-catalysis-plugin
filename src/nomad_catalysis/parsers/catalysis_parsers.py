@@ -89,11 +89,13 @@ class CatalysisCollectionParser(MatchingParser):
         column 'catalyst' is present, as the focus is on the sample entry which is
         the catalyst.
         """
-        if 'name' in data_frame.columns and 'catalyst' in data_frame.columns:
-            data_frame.drop(columns=['name'], inplace=True)
 
         for col in data_frame.columns:
-            if col in ['name', 'catalyst']:
+            if col in ['catalyst name','catalyst_name', 'catalyst']:
+                try:
+                    data_frame.drop(columns=['name'], inplace=True)
+                except KeyError:
+                    pass
                 data_frame.rename(columns={col: 'name'}, inplace=True)
             if col in ['storing institution', 'storing_institute']:
                 data_frame.rename(columns={col: 'storing_institution'}, inplace=True)
@@ -104,6 +106,10 @@ class CatalysisCollectionParser(MatchingParser):
             if col in ['surface_area_method']:
                 data_frame.rename(
                     columns={col: 'method_surface_area_determination'}, inplace=True
+                )
+            if col in ['surface_area (m2/g)']:
+                data_frame.rename(
+                    columns={col: 'surface_area'}, inplace=True
                 )
             if col in ['preparation']:
                 data_frame.rename(columns={col: 'preparation_method'}, inplace=True)
@@ -316,7 +322,6 @@ class CatalysisCollectionParser(MatchingParser):
                         logger.warning('Temperature unit not recognized.')
 
                 if col_split[1].startswith('time'):
-                    logger.info(f'Extracting pretreatment time {key}')
                     if pretreatment.time_on_stream is None:
                         tos = []
                     if len(col_split) == 3:  # noqa: PLR2004
@@ -325,7 +330,6 @@ class CatalysisCollectionParser(MatchingParser):
                         logger.error('Time unit missing.')
                     tos.append(np.nan_to_num(row[key]))
                     pretreatment.time_on_stream = tos * unit
-                    logger.info(f'Pretreatment time: {pretreatment.time_on_stream}')
                 if col_split[1].startswith('set_pressure'):
                     if not pretreatment.set_pressure:
                         pretreatment.set_pressure = []
