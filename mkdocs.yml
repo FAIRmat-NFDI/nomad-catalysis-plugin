@@ -10,10 +10,9 @@ nav:
   - Tutorial: tutorial/tutorial.md
   - How-to guides:
       - Install this Plugin: how_to/install_this_plugin.md
-      - Use this Plugin: how_to/use_this_plugin.md
+      - Use this Plugin to Create Catalysis Entries: how_to/use_this_plugin.md
+      - Search for Catalysis Data in the App: how_to/search_catalysis_data.md
       - Contribute to this plugin: how_to/contribute_to_this_plugin.md
-      - Contribute to the documentation: how_to/contribute_to_the_documentation.md
-  - Explanation: explanation/explanation.md
   - Reference: reference/references.md
 plugins:
   - search
