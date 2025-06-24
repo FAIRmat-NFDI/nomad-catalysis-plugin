@@ -6,7 +6,6 @@
 
 
 !!! List of quantities and subsections in `Catalyst Sample`:
-
 - name (string quantity)
 - datetime (string quantity)
 - lab_id (string quantity)
@@ -15,25 +14,26 @@
 - catalyst_type (string quantity)
 - form (string quantity)
 
-+elemental_composition (SubSection, repeating):
-- element
-- atomic fraction
-- mass fraction
+- elemental_composition (SubSection, repeating):
+    - element
+    - atomic fraction
+    - mass fraction
 
-+components (SubSection, repeating):
-- component label
-- mass
-- mass fraction
+- components (SubSection, repeating):
+    - component label
+    - mass
+    - mass fraction
 
-+preparation_details (SubSection):
-- preparation_method(string quantity)
-- preparator
-- preparing institution
+- preparation_details (SubSection):
+    - preparation_method(string quantity)
+    - preparator
+    - preparing institution
 
-+surface (SubSection):
-- surface_area (float quantity)
-- method_surface_area_determination (string quantity)
-- dispersion (float quantity)
+- surface (SubSection):
+    - surface_area (float quantity)
+    - method_surface_area_determination (string quantity)
+    - dispersion (float quantity)
+
 
 !!!List of quantities and subsections in `CatalyticReaction`:
 - name
@@ -76,7 +76,7 @@
     - catalyst_sievefraction_upper_limit
     - catalyst_sievefraction_lower_limit
     - particle_size
-    - dilutent
+    - diluent
     - diluent_sievefraction_upper_limit
     - diluent_sievefraction_lower_limit
 
