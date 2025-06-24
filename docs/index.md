@@ -8,7 +8,7 @@ a guide of how to use the plugin and effectively manage and share catalysis rese
 in NOMAD.
 
 This plugin was developed as part of Task Area E2 "Heterogeneous Catalysis" of the
-[FAIRmat](https://www.fairmat-nfdi.eu/fairmat) project within the National Research Data
+[FAIRmat](https://www.fairmat-nfdi.eu/fairmat) project within the German National Research Data
 Infrastucture ([NFDI](https://www.nfdi.de)). The latest release v1.0.1 is part of the [central NOMAD repository](https://nomad-lab.eu/prod/v1/gui/search/heterogeneouscatalyst) deployment. New features of the main branch can be tested in the
 [Example Oasis](https://nomad-lab.eu/prod/v1/oasis/gui/) provided by FAIRmat/NOMAD-lab.
 NOMAD facilitates the collection, storage, analysis and dissemination of research data,
@@ -52,4 +52,4 @@ as well as the necessary format for the possible datafiles of the catalytic reac
 
 NOMAD is an open-source data management platform tailored for materials science, designed to follow the FAIR principles. It offers a robust framework for managing and sharing materials data in a standardized and interoperable manner. To learn more about NOMAD, visit the [official homepage](https://nomad-lab.eu/nomad-lab/).
 
-We hope this documentation provides all the information you need to make the most of the NOMAD Catalysis Plugin. Feel free to contact us for further questions.
+We hope this documentation provides all the information you need to make the most of the NOMAD Catalysis Plugin. Feel free to contact us for further questions, either via opening an issue in the [github repository](https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin), asking in the NOMAD Discord channel, or reaching out directly to the FAIRmat project(https://www.fairmat-nfdi.eu/fairmat/about-fairmat/contact-fairmat).
