@@ -11,7 +11,6 @@ import plotly.express as px
 import plotly.graph_objs as go
 from ase.data import atomic_masses, atomic_numbers, chemical_symbols
 from nomad.config import config
-from nomad.datamodel.context import ClientContext
 from nomad.datamodel.data import ArchiveSection, EntryDataCategory, Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
 from nomad.datamodel.metainfo.basesections import (
@@ -43,7 +42,6 @@ from nomad.metainfo import (
     SubSection,
 )
 from nomad.metainfo.metainfo import Category, MSection
-from nomad.search import MetadataPagination, search
 from nomad.units import ureg
 
 from .chemical_data import chemical_data
@@ -478,6 +476,7 @@ class CatalystSample(CompositeSystem, Schema):
             number: specifies the number of referencing entries that are checked,
             set to 10 by default
         """
+        from nomad.search import MetadataPagination, search
 
         if self.lab_id is None:
             logger.warning("""Sample contains no lab_id, automatic linking of
@@ -543,6 +542,7 @@ class CatalystSample(CompositeSystem, Schema):
             )
         self.populate_results(archive, logger)
 
+        from nomad.datamodel.context import ClientContext
         if isinstance(archive.m_context, ClientContext):
             return
 
@@ -1782,7 +1782,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             and sample != []
             and sample is not None
         ):
-
+            from nomad.datamodel.context import ClientContext
             if isinstance(archive.m_context, ClientContext):
                 pass
             else:
@@ -1995,7 +1995,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 # sample.name = 'catalyst'
                 sample.lab_id = str(data['Header']['Header']['SampleID'][0])
 
-
+                from nomad.datamodel.context import ClientContext
                 if isinstance(archive.m_context, ClientContext):
                     pass
                 else:
