@@ -2,8 +2,6 @@ import json
 import os.path
 from typing import TYPE_CHECKING
 
-from nomad.datamodel.context import ClientContext
-from nomad.utils import hash
 
 if TYPE_CHECKING:
     from nomad.datamodel.data import (
@@ -19,7 +17,7 @@ def get_reference(upload_id: str, entry_id: str) -> str:
 
 
 def get_entry_id_from_file_name(file_name: str, archive: 'EntryArchive') -> str:
-
+    from nomad.utils import hash
 
     return hash(archive.metadata.upload_id, file_name)
 
@@ -30,6 +28,8 @@ def create_archive(
     file_name: str,
 ) -> str:
   
+    from nomad.datamodel.context import ClientContext
+    
     entity_entry = entity.m_to_dict(with_root_def=True)
     if isinstance(archive.m_context, ClientContext):
         with open(file_name, 'w') as outfile:
