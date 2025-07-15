@@ -99,9 +99,9 @@ class CatalysisCollectionParser(MatchingParser):
                 data_frame.rename(columns={col: 'name'}, inplace=True)
             if col in ['storing institution', 'storing_institute']:
                 data_frame.rename(columns={col: 'storing_institution'}, inplace=True)
-            if col in ['date']:
+            if col in ['date', 'sample date']:
                 data_frame.rename(columns={col: 'datetime'}, inplace=True)
-            if col in ['lab-id','sample_id']:
+            if col in ['lab-id','sample_id', 'catalyst_id']:
                 data_frame.rename(columns={col: 'lab_id'}, inplace=True)
             if col in ['surface_area_method']:
                 data_frame.rename(
@@ -640,8 +640,13 @@ class CatalysisCollectionParser(MatchingParser):
                     f'{row["name"]}_catalytic_reaction.archive.json',
                 )
             )
-
-        archive.data.measurements = reactions
+        reaction_references = []
+        for reaction in reactions:
+            reaction_ref = CompositeSystemReference(
+                reference=reaction,
+            )
+            reaction_references.append(reaction_ref)
+        archive.data.measurements = reaction_references
 
     def extract_sample_entries(self, data_frame, archive, logger
                                ) -> list[CatalystSample]:
@@ -746,7 +751,13 @@ class CatalysisCollectionParser(MatchingParser):
                     f'''File {filename} matches the expected format for a catalysis
                     collection. Sample entries successfully extracted.'''
                 )        
-                archive.data.samples = samples
+                samples_references = []
+                for sample in samples:
+                    sample_ref = CompositeSystemReference(
+                        reference = sample,
+                    )
+                    samples_references.append(sample_ref)
+                archive.data.samples = samples_references
                 return
             except Exception as e:
                 logger.error(f'Error extracting sample entries: {e}')
@@ -769,12 +780,16 @@ class CatalysisCollectionParser(MatchingParser):
                 logger.info(
                     f'''File {filename} matches the expected format for a catalysis
                     collection. Sample entries successfully extracted.'''
-                )        
-                archive.data.samples = samples
+                )
+                samples_references = []
+                for sample in samples:
+                    sample_ref = CompositeSystemReference(
+                        reference = sample,
+                    )
+                    samples_references.append(sample_ref)
+                archive.data.samples = samples_references
 
             except Exception as e:
                 logger.error(f'Error extracting sample entries: {e}')
         
-
-
         return
