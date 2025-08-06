@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from nomad.datamodel import EntryArchive
 from nomad.datamodel.metainfo.basesections import (
-    ElementalComposition,
     CompositeSystemReference,
+    ElementalComposition,
     SectionReference,
 )
 from nomad.parsing import MatchingParser
