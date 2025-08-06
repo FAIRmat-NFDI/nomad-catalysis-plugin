@@ -295,13 +295,6 @@ heterogeneous_catalysis_app = App(
                     MenuItemCustomQuantities(),
                 ],
             ),
-            Menu(
-                title='Optimade',
-                size='lg',
-                items=[
-                    MenuItemOptimade(),
-                ],
-            ),
         ],
     ),
     dashboard=Dashboard(
