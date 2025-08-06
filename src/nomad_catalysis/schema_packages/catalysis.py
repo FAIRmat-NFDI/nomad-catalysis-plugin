@@ -13,13 +13,13 @@ from ase.data import atomic_masses, atomic_numbers, chemical_symbols
 from nomad.config import config
 from nomad.datamodel.data import ArchiveSection, EntryDataCategory, Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
-from nomad.datamodel.metainfo.basesections import (
-    CompositeSystem,
-    CompositeSystemReference,
+from nomad.datamodel.metainfo.basesections.v2 import (
+    System,
+    SystemReference,
     InstrumentReference,
     Measurement,
     MeasurementResult,
-    PubChemPureSubstanceSection,
+    PureSubstance,
 )
 from nomad.datamodel.metainfo.plot import PlotlyFigure, PlotSection
 from nomad.datamodel.results import (
@@ -213,7 +213,7 @@ class CatalysisCollectionParserEntry(Schema):
     """
 
     samples = Quantity(
-        type=CompositeSystem,
+        type=System,
         shape=['*'],
         description='A reference to the sample entries that were generated from'
             'this data file.',
@@ -344,7 +344,7 @@ class SurfaceArea(ArchiveSection):
     )
 
 
-class CatalystSample(CompositeSystem, Schema):
+class CatalystSample(System, Schema):
     m_def = Section(
         description="""
         An entry schema for specifying general information about a catalyst sample.
@@ -562,7 +562,7 @@ class ReactorFilling(ArchiveSection):
     )
 
     sample_section_reference = Quantity(
-        type=CompositeSystemReference,
+        type=SystemReference,
         description='A reference to the sample reference used in the measurement.',
         a_eln=ELNAnnotation(
             component='ReferenceEditQuantity',
@@ -764,7 +764,7 @@ class Reagent(ArchiveSection):
         a_eln=ELNAnnotation(component='NumberEditQuantity', defaultDisplayUnit='bar'),
     )
 
-    pure_component = SubSection(section_def=PubChemPureSubstanceSection)
+    pure_component = SubSection(section_def=PureSubstance)
 
     def update_chemical_info(self):
         """
@@ -783,7 +783,7 @@ class Reagent(ArchiveSection):
             chemical_key = chemical_data.get(self.name.lower())
             if isinstance(chemical_key, str):
                 chemical_key = chemical_data[chemical_key]
-        pure_component = PubChemPureSubstanceSection()
+        pure_component = PureSubstance()
         pure_component.name = self.name
         if chemical_key:
             pure_component.pub_chem_cid = chemical_key.get('pub_chem_id')
@@ -948,7 +948,7 @@ class RatesData(ArchiveSection):
         a_eln=ELNAnnotation(defaultDisplayUnit='1/hour'),
     )
 
-    pure_component = SubSection(section_def=PubChemPureSubstanceSection)
+    pure_component = SubSection(section_def=PureSubstance)
 
     def update_chemical_info(self):
         """
@@ -967,7 +967,7 @@ class RatesData(ArchiveSection):
             chemical_key = chemical_data.get(self.name.lower())
             if isinstance(chemical_key, str):
                 chemical_key = chemical_data[chemical_key]
-        pure_component = PubChemPureSubstanceSection()
+        pure_component = PureSubstance()
         pure_component.name = self.name
         if chemical_key:
             pure_component.pub_chem_cid = chemical_key.get('pub_chem_id')
@@ -1559,7 +1559,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         feed = ReactionConditionsData()
         reactor_filling = ReactorFilling()
         cat_data = CatalyticReactionData()
-        sample = CompositeSystemReference()
+        sample = SystemReference()
         reagents = []
         reagent_names = []
         products = []
@@ -1833,7 +1833,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 reactor_setup = ReactorSetup()
                 reactor_filling = ReactorFilling()
                 pretreatment = ReactionConditionsData()
-                sample = CompositeSystemReference()
+                sample = SystemReference()
                 conversions = []
                 rates = []
                 reagents = []
@@ -2793,7 +2793,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if not self.samples:
             return
         if self.samples[0].lab_id is not None and self.samples[0].reference is None:
-            sample = CompositeSystemReference(
+            sample = SystemReference(
                 lab_id=self.samples[0].lab_id, name=self.samples[0].name
             )
             sample.normalize(archive, logger)

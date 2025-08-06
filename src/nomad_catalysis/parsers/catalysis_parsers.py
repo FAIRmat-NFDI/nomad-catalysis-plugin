@@ -2,7 +2,11 @@
 import numpy as np
 import pandas as pd
 from nomad.datamodel import EntryArchive
-from nomad.datamodel.metainfo.basesections import ElementalComposition
+from nomad.datamodel.metainfo.basesections.v2 import (
+    ElementalComposition,
+    SystemReference,
+)
+from nomad.datamodel.metainfo.eln import ELNAnnotation
 from nomad.parsing import MatchingParser
 from nomad.units import ureg
 
@@ -12,7 +16,6 @@ from nomad_catalysis.schema_packages.catalysis import (
     CatalystSample,
     CatalyticReaction,
     CatalyticReactionData,
-    CompositeSystemReference,
     Preparation,
     ProductData,
     RatesData,
@@ -392,7 +395,7 @@ class CatalysisCollectionParser(MatchingParser):
 
             reaction = CatalyticReaction()
             reactor_filling = ReactorFilling()
-            sample = CompositeSystemReference()
+            sample = SystemReference()
 
             reagents = []
             reagent_names = []
