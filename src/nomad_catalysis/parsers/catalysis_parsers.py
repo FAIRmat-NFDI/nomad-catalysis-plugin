@@ -2,7 +2,11 @@
 import numpy as np
 import pandas as pd
 from nomad.datamodel import EntryArchive
-from nomad.datamodel.metainfo.basesections import ElementalComposition
+from nomad.datamodel.metainfo.basesections import (
+    ElementalComposition,
+    CompositeSystemReference,
+    SectionReference,
+)
 from nomad.parsing import MatchingParser
 from nomad.units import ureg
 
@@ -12,7 +16,6 @@ from nomad_catalysis.schema_packages.catalysis import (
     CatalystSample,
     CatalyticReaction,
     CatalyticReactionData,
-    CompositeSystemReference,
     Preparation,
     ProductData,
     RatesData,
@@ -641,9 +644,10 @@ class CatalysisCollectionParser(MatchingParser):
                 )
             )
         reaction_references = []
-        for reaction in reactions:
-            reaction_ref = CompositeSystemReference(
+        for n, reaction in enumerate(reactions):
+            reaction_ref = SectionReference(
                 reference=reaction,
+                name=data_frame["name"][n]
             )
             reaction_references.append(reaction_ref)
         archive.data.measurements = reaction_references

@@ -20,6 +20,7 @@ from nomad.datamodel.metainfo.basesections import (
     Measurement,
     MeasurementResult,
     PubChemPureSubstanceSection,
+    SectionReference,
 )
 from nomad.datamodel.metainfo.plot import PlotlyFigure, PlotSection
 from nomad.datamodel.results import (
@@ -224,11 +225,11 @@ class CatalysisCollectionParserEntry(Schema):
         repeats=True,
     )
     
-    measurements = Quantity(
-        type=Measurement,
-        shape=['*'],
-        description='A reference to the measurement entries that were generated'
-            'from this data file.',
+    measurements = SubSection(
+        section_def=SectionReference,
+        repeats=True,
+        description='A subsection with references to the measurement entries that were'
+            'generated from the data file.',
     )
     
     data_file = Quantity(
