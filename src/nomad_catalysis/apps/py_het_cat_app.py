@@ -7,7 +7,6 @@ from nomad.config.models.ui import (
     Menu,
     MenuItemCustomQuantities,
     MenuItemHistogram,
-    MenuItemOptimade,
     MenuItemPeriodicTable,
     MenuItemTerms,
     SearchQuantities,
