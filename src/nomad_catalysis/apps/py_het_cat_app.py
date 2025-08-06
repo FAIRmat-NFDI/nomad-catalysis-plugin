@@ -7,7 +7,6 @@ from nomad.config.models.ui import (
     Menu,
     MenuItemCustomQuantities,
     MenuItemHistogram,
-    MenuItemOptimade,
     MenuItemPeriodicTable,
     MenuItemTerms,
     SearchQuantities,
@@ -293,13 +292,6 @@ heterogeneous_catalysis_app = App(
                 size='xl',
                 items=[
                     MenuItemCustomQuantities(),
-                ],
-            ),
-            Menu(
-                title='Optimade',
-                size='lg',
-                items=[
-                    MenuItemOptimade(),
                 ],
             ),
         ],
