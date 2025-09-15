@@ -359,7 +359,7 @@ heterogeneous_catalysis_app = App(
                 },
                 x=Axis(
                     search_quantity='results.properties.catalytic.reaction.reactants[*].mole_fraction_in',
-                    title='Feed composition',
+                    title='molar fraction of reactants',
                 ),
                 y=Axis(
                     search_quantity='results.properties.catalytic.reaction.reaction_conditions.temperature'
