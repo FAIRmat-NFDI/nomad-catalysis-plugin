@@ -348,7 +348,7 @@ heterogeneous_catalysis_app = App(
                 scale='linear',
             ),
             WidgetScatterPlot(
-                title='Feed composition vs. Temperature',
+                title='Reactant concentrations vs. Temperature',
                 autorange=True,
                 layout={
                     'lg': Layout(h=10, minH=3, minW=8, w=12, x=0, y=8),
@@ -359,7 +359,7 @@ heterogeneous_catalysis_app = App(
                 },
                 x=Axis(
                     search_quantity='results.properties.catalytic.reaction.reactants[*].mole_fraction_in',
-                    title='Feed composition',
+                    title='Molar fraction of reactants',
                 ),
                 y=Axis(
                     search_quantity='results.properties.catalytic.reaction.reaction_conditions.temperature'
