@@ -455,7 +455,7 @@ class CatalysisCollectionParser(MatchingParser):
 
                 if col_split[0].casefold() == 'x':
                     if len(col_split) == 3 and ('%' in col_split[2]):  # noqa: PLR2004
-                        gas_in = [row[key] / 100.]
+                        gas_in = [np.nan_to_num(float(row[key])) / 100.]
                     else:
                         gas_in = [row[key]]
                     reagent = Reagent(name=col_split[1], fraction_in=gas_in)
