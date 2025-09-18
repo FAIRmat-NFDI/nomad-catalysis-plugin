@@ -875,7 +875,6 @@ class ReactantData(Reagent):
         a_eln=ELNAnnotation(component='NumberEditQuantity'),
     )
 
-    reference = Quantity(type=Reagent, a_eln=dict(component='ReferenceEditQuantity'))
     conversion = Quantity(
         type=np.float64,
         shape=['*'],
