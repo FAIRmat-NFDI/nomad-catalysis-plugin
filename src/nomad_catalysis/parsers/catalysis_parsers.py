@@ -458,7 +458,8 @@ class CatalysisCollectionParser(MatchingParser):
                         try:
                             gas_in = [np.nan_to_num(float(row[key])) / 100.]
                         except (ValueError, TypeError) as e:
-                            logger.warning(f"""Non-numeric value for {key}: {row[key]}. Error: {e}.""")
+                            logger.warning(f"""Non-numeric value for {key}: {row[key]}. 
+                                           Error: {e}.""")
                             gas_in = [np.nan]
                     else:
                         gas_in = [row[key]]
