@@ -573,13 +573,22 @@ class CatalysisCollectionParser(MatchingParser):
 
                 if col_split[0].casefold() == 'x_out':  # concentration out
                     if col_split[1] in reagent_names:
-                        conversion = ReactantData(
-                            name=col_split[1],
-                            fraction_in=[
-                                np.nan_to_num(row['x ' + col_split[1] + ' (%)'])
-                            ] / 100,
-                            fraction_out=[np.nan_to_num(row[key])] / 100,
-                        )
+                        if "%" in key:
+                            conversion = ReactantData(
+                                name=col_split[1],
+                                fraction_in=[
+                                    np.nan_to_num(row['x ' + col_split[1] + ' (%)'])
+                                ] / 100,
+                                fraction_out=[np.nan_to_num(row[key])] / 100,
+                            )
+                        else:
+                            conversion = ReactantData(
+                                name=col_split[1],
+                                fraction_in=[
+                                    np.nan_to_num(row['x ' + col_split[1]])
+                                ],
+                                fraction_out=[np.nan_to_num(row[key])],
+                            )
                         conversions.append(conversion)
                     else:
                         product = ProductData(
