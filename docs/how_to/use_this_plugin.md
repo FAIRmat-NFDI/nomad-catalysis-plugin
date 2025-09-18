@@ -31,7 +31,7 @@ Here you see a screenshot of an empty **Catalytic Reaction** measurement entry.
 Currently two types of data files are recognized in the data_file quantity and information
 is extracted directly to populate the `CatalyticReaction` schema.
 The first type is an excel or csv table, and as long as the column headers follow some
-guidelines, the data can be extracted by NOMAD. The formate originated from the [clean
+guidelines, the data can be extracted by NOMAD. The format originated from the [clean
 data project](https://doi.org/10.1021/jacs.2c11117) and has been extended to allow a bit more flexibility of the input format.
 The second supported file type is a hdf5 file, as it is currently produced by the Haber Reactor at the
 Inorganic Chemistry Department of the Fritz-Haber-Institute and was presented in the
