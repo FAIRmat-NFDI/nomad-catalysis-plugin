@@ -3,9 +3,11 @@
 !!! List of ELN Schemas from this Plugin
 - Catalyst Sample
 - Catalytic Reaction
+- Catalysis Collection Parser Entry
 
 
 !!! List of quantities and subsections in `Catalyst Sample`:
+
 - name (string quantity)
 - datetime (string quantity)
 - lab_id (string quantity)
@@ -36,6 +38,7 @@
 
 
 !!!List of quantities and subsections in `CatalyticReaction`:
+
 - name
 - starting_Time
 - data_file
@@ -57,7 +60,7 @@
     - reference
     - lab_id
 
-- instruments (SubSection,label: reactor setup, repeating):
+- instruments (SubSection, label: reactor setup, repeating):
     - name
     - reference
     - lab_id
@@ -114,7 +117,6 @@
         - gas_concentration_in
         - gas_concentration_out
         - flow_rate
-        - reference
         - conversion
         - conversion_type
         - conversion_product_based
@@ -140,3 +142,10 @@
         - pure_component:
             - name
             - iupac_name
+
+!!!List of quantities and subsections in `CatalysisCollectionParserEntry`:
+
+- data_file
+
+- samples (SubSection, repeating)
+- measurements (SubSection, repeating)
