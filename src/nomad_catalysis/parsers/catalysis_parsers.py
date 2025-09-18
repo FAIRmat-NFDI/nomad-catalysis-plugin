@@ -529,16 +529,16 @@ class CatalysisCollectionParser(MatchingParser):
                 if col_split[0] == 'x_p':  # conversion, based on product detection
                     conversion = ReactantData(
                         name=col_split[1],
-                        conversion=np.nan_to_num(row[key]),
+                        conversion=[np.nan_to_num(row[key])],
                         conversion_type='product-based conversion',
-                        conversion_product_based=np.nan_to_num(row[key]),
+                        conversion_product_based=[np.nan_to_num(row[key])],
                     )
                     for i, p in enumerate(conversions):
                         if p.name == col_split[1]:
                             conversion = conversions.pop(i)
 
-                    conversion.conversion_product_based = np.nan_to_num(row[key])
-                    conversion.conversion = np.nan_to_num(row[key])
+                    conversion.conversion_product_based = [np.nan_to_num(row[key])]
+                    conversion.conversion = [np.nan_to_num(row[key])]
                     conversion.conversion_type = 'product-based conversion'
 
                     conversion_names.append(col_split[1])
