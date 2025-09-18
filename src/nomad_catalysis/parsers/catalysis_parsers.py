@@ -455,7 +455,12 @@ class CatalysisCollectionParser(MatchingParser):
 
                 if col_split[0].casefold() == 'x':
                     if len(col_split) == 3 and ('%' in col_split[2]):  # noqa: PLR2004
-                        gas_in = [row[key] / 100.]
+                        try:
+                            gas_in = [np.nan_to_num(float(row[key])) / 100.]
+                        except (ValueError, TypeError) as e:
+                            logger.warning(f"""Non-numeric value for {key}: {row[key]}. 
+                                           Error: {e}.""")
+                            gas_in = [np.nan]
                     else:
                         gas_in = [row[key]]
                     reagent = Reagent(name=col_split[1], fraction_in=gas_in)
@@ -529,16 +534,16 @@ class CatalysisCollectionParser(MatchingParser):
                 if col_split[0] == 'x_p':  # conversion, based on product detection
                     conversion = ReactantData(
                         name=col_split[1],
-                        conversion=np.nan_to_num(row[key]),
+                        conversion=[np.nan_to_num(row[key])],
                         conversion_type='product-based conversion',
-                        conversion_product_based=np.nan_to_num(row[key]),
+                        conversion_product_based=[np.nan_to_num(row[key])],
                     )
                     for i, p in enumerate(conversions):
                         if p.name == col_split[1]:
                             conversion = conversions.pop(i)
 
-                    conversion.conversion_product_based = np.nan_to_num(row[key])
-                    conversion.conversion = np.nan_to_num(row[key])
+                    conversion.conversion_product_based = [np.nan_to_num(row[key])]
+                    conversion.conversion = [np.nan_to_num(row[key])]
                     conversion.conversion_type = 'product-based conversion'
 
                     conversion_names.append(col_split[1])
@@ -573,13 +578,22 @@ class CatalysisCollectionParser(MatchingParser):
 
                 if col_split[0].casefold() == 'x_out':  # concentration out
                     if col_split[1] in reagent_names:
+                        if "%" in key:
+                            fraction_in = [
+                                np.nan_to_num(float(row['x ' + col_split[1] + ' (%)']))
+                                / 100
+                            ]
+                            fraction_out = [np.nan_to_num(row[key]) / 100]
+                        else:
+                            fraction_in = [np.nan_to_num(row['x ' + col_split[1]])]
+                            fraction_out = [np.nan_to_num(row[key])]
+                        
                         conversion = ReactantData(
                             name=col_split[1],
-                            fraction_in=[
-                                np.nan_to_num(row['x ' + col_split[1] + ' (%)'])
-                            ] / 100,
-                            fraction_out=[np.nan_to_num(row[key])] / 100,
+                            fraction_in=fraction_in,
+                            fraction_out=fraction_out,
                         )
+                        
                         conversions.append(conversion)
                     else:
                         product = ProductData(
