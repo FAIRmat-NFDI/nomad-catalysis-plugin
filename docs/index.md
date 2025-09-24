@@ -23,6 +23,7 @@ tool to manage, visualize, analyze and share catalyst and reactivity data. It is
 
 ## Included Entry Types
 This plugin includes the following NOMAD entry types: 
+
 - `CatalystSample` 
 - `CatalyticReaction`
 - `CatalysisCollectionParserEntry`
@@ -57,4 +58,4 @@ as well as the necessary format for the possible datafiles of the catalytic reac
 
 NOMAD is an open-source data management platform tailored for materials science, designed to follow the FAIR principles. It offers a robust framework for managing and sharing materials data in a standardized and interoperable manner. To learn more about NOMAD, visit the [official homepage](https://nomad-lab.eu/nomad-lab/).
 
-We hope this documentation provides all the information you need to make the most of the NOMAD Catalysis Plugin. Feel free to contact us for further questions, either via opening an issue in the [github repository](https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin), asking in the NOMAD Discord channel, or reaching out directly to the FAIRmat project(https://www.fairmat-nfdi.eu/fairmat/about-fairmat/contact-fairmat).
+We hope this documentation provides all the information you need to make the most of the NOMAD Catalysis Plugin. Feel free to contact us for further questions, either via opening an issue in the [github repository](https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin), asking in the NOMAD Discord channel, or reaching out directly to the [FAIRmat project](https://www.fairmat-nfdi.eu/fairmat/about-fairmat/contact-fairmat).
