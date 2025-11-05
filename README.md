@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/{829006410}.svg)](https://zenodo.org/badge/latestdoi/{829006410})
+[![DOI](https://zenodo.org/badge/829006410.svg)](https://doi.org/10.5281/zenodo.17534066)
 
 ![nomad plugin logo](docs/assets/nomad-plugin-logo.png)
 # nomad-catalysis
@@ -97,7 +97,7 @@ To run the check for updates locally, follow the instructions on [`cruft` websit
 Distributed under the terms of the `MIT`_ license, "nomad-catalysis" is free and open source software.
 
 ## How to cite this work
-Schumann, J., Näsström, H., NOMAD Catalysis Plugin (all versions) [Computer software]. https://doi.org/10.5281/zenodo.XXX
+Schumann, J., Näsström, H., NOMAD Catalysis Plugin (all versions) [Computer software]. https://doi.org/10.5281/zenodo.17534066
 
 ## Main contributors
 | Name | E-mail     |
