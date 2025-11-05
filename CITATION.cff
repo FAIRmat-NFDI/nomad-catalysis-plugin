@@ -11,7 +11,7 @@ authors:
   - given-names: Hampus
     family-names: Näsström
     orcid: 'https://orcid.org/0000-0002-3264-1692'
-doi: 10.5281/zenodo.XXX
+doi: 10.5281/zenodo.17534066
 
 repository-code: 'https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin'
 url: 'https://fairmat-nfdi.github.io/nomad-catalysis-plugin/'
