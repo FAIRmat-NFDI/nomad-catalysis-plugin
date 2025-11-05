@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: NOMAD Catalysis Plugin
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Julia
+    family-names: Schumann
+    orcid: ''
+  - given-names: Hampus
+    family-names: Näsström
+    orcid: 'https://orcid.org/0000-0002-3264-1692'
+doi: 10.5281/zenodo.XXX
+
+repository-code: 'https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin'
+url: 'https://fairmat-nfdi.github.io/nomad-catalysis-plugin/'
+abstract: >-
+  `nomad-catalysis-plugin` is a plugin within the NOMAD software
+    (https://zenodo.org/doi/10.5281/zenodo.8366162) for heterogeneous catalysis data.
+
+license: Apache-2.0
