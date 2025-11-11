@@ -422,6 +422,17 @@ class CatalystSample(CompositeSystem, Schema):
         # links=['https://w3id.org/nfdi4cat/voc4cat_0007825'],
     )
 
+    formula_descriptive = Quantity(
+        type=str,
+        shape=[],
+        description="""
+          A descriptive formula of the catalyst sample.
+          """,
+        a_eln=dict(
+            component='StringEditQuantity',
+        ),
+    )
+
     form = Quantity(
         type=str,
         shape=[],
@@ -458,13 +469,15 @@ class CatalystSample(CompositeSystem, Schema):
             target=archive.results.properties.catalytic.catalyst,
         )
 
-        name_material_mapping = {'name': 'material_name'}
+        name_material_mapping = {'name': 'material_name', 
+                                 'formula_descriptive': 'chemical_formula_descriptive'}
         map_and_assign_attributes(
             self,
             logger,
             mapping=name_material_mapping,
             target=archive.results.material,
         )
+
 
     def add_referencing_methods(
         self, archive: 'EntryArchive', logger: 'BoundLogger', number=10
