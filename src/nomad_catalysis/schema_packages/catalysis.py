@@ -2168,11 +2168,16 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             if not archive.results.material:
                 archive.results.material = Material()
             name_comb = ''
+            formula_comb = ''
             for i in self.samples:
                 if i.reference.name is not None:
                     if len(name_comb) != 0:
                         name_comb += '/ '
                     name_comb += str(i.reference.name)
+                if i.reference.formula_descriptive is not None:
+                    if len(formula_comb) != 0:
+                        formula_comb += ' + '
+                    formula_comb += str(i.reference.formula_descriptive)
 
                 if i.reference.elemental_composition is None or (
                     i.reference.elemental_composition == []
@@ -2186,8 +2191,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                             ' elemental_composition section will be ignored.'
                         )
                         continue
-                    # elif el.element not in archive.results.material.elements:
-                    #     archive.results.material.elements += [el.element]
 
                     result_composition = ResultsElementalComposition(
                         element=el.element,
@@ -2209,6 +2212,7 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         archive.results.material.elements += [el.element]
 
             archive.results.material.material_name = name_comb
+            archive.results.material.chemical_formula_descriptive = formula_comb
 
     def determine_x_axis(self):
         """Helper function to determine the x-axis data for the plots."""
