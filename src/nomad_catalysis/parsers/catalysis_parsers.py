@@ -688,6 +688,7 @@ class CatalysisCollectionParser(MatchingParser):
                     'form',
                     'support',
                     'description',
+                    'formula_descriptive',
                 ]:
                 if key in row.keys():
                     setattr(catalyst_sample, key, row[key])

@@ -422,6 +422,17 @@ class CatalystSample(CompositeSystem, Schema):
         # links=['https://w3id.org/nfdi4cat/voc4cat_0007825'],
     )
 
+    formula_descriptive = Quantity(
+        type=str,
+        shape=[],
+        description="""
+          A descriptive formula of the catalyst sample.
+          """,
+        a_eln=dict(
+            component='StringEditQuantity',
+        ),
+    )
+
     form = Quantity(
         type=str,
         shape=[],
@@ -458,13 +469,15 @@ class CatalystSample(CompositeSystem, Schema):
             target=archive.results.properties.catalytic.catalyst,
         )
 
-        name_material_mapping = {'name': 'material_name'}
+        name_material_mapping = {'name': 'material_name', 
+                                 'formula_descriptive': 'chemical_formula_descriptive'}
         map_and_assign_attributes(
             self,
             logger,
             mapping=name_material_mapping,
             target=archive.results.material,
         )
+
 
     def add_referencing_methods(
         self, archive: 'EntryArchive', logger: 'BoundLogger', number=10
@@ -2154,12 +2167,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.samples[0].reference.name is not None:
             if not archive.results.material:
                 archive.results.material = Material()
-            name_comb = ''
+            name_comb_list = []
+            formula_comb_list = []
             for i in self.samples:
                 if i.reference.name is not None:
-                    if len(name_comb) != 0:
-                        name_comb += '/ '
-                    name_comb += str(i.reference.name)
+                    name_comb_list.append(str(i.reference.name))
+                if i.reference.formula_descriptive is not None:
+                    formula_comb_list.append(str(i.reference.formula_descriptive))
 
                 if i.reference.elemental_composition is None or (
                     i.reference.elemental_composition == []
@@ -2173,8 +2187,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                             ' elemental_composition section will be ignored.'
                         )
                         continue
-                    # elif el.element not in archive.results.material.elements:
-                    #     archive.results.material.elements += [el.element]
 
                     result_composition = ResultsElementalComposition(
                         element=el.element,
@@ -2195,7 +2207,10 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     if el.element not in archive.results.material.elements:
                         archive.results.material.elements += [el.element]
 
-            archive.results.material.material_name = name_comb
+            archive.results.material.material_name = ' / '.join(name_comb_list)
+            archive.results.material.chemical_formula_descriptive = (
+                ' + '.join(formula_comb_list)
+            )
 
     def determine_x_axis(self):
         """Helper function to determine the x-axis data for the plots."""
