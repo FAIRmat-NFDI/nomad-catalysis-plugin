@@ -2208,7 +2208,9 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                         archive.results.material.elements += [el.element]
 
             archive.results.material.material_name = ' / '.join(name_comb_list)
-            archive.results.material.chemical_formula_descriptive = ' + '.join(formula_comb_list)
+            archive.results.material.chemical_formula_descriptive = (
+                ' + '.join(formula_comb_list)
+            )
 
     def determine_x_axis(self):
         """Helper function to determine the x-axis data for the plots."""
