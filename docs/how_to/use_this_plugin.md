@@ -1,5 +1,5 @@
 # How to Create Catalysis Entries
- 
+
 To create one or more entries in NOMAD through the browser, the user first has to navigate to the “PUBLISH” tab, log into their account (if applicable), then click “CREATE A NEW UPLOAD”. Here, there are 4 main ways to create catalysis entries in the NOMAD / NOMAD Oasis:
 
 - using the catalysis parser functionality by uploading template conform tables (in  csv or xlsx format)
@@ -14,7 +14,7 @@ The easiest way to generate a number of entries at once is by dropping tabular f
 
 
 ## 2. Manual creation of entries from the GUI
-  
+
 When creating single entries, it may be easiest to manually fill the schemas in the GUI.  In the `Create from Schema` pop-up window one can select a built-in schema from the EntryData Category **Catalysis**. After entering a unique name for the entry (unique at least within the upload folder) one can create an instance of the selected schema, either a catalyst sample entry or a measurement of a functional catalyst analysis.
 ![image with screenshot of the NOMAD GUI](ScreenshotCreateBuiltInSchema.png)
 
@@ -128,7 +128,6 @@ The following information is currently added by default to entries filled by a h
 Another way to generate entries in NOMAD is to place *.archive.json files directly in one upload. The file needs to contain the path to a schema definition and then NOMAD automatically creates the corresponding entry. The archive.json file does not contain unit information, this is only defined and stored in the schema definition and does not need to correspond to the display unit in the GUI. Usually this corresponds to the SI unit of a respective quantity. This can also be double checked in the [metainfo browser](https://nomad-lab.eu/prod/v1/gui/analyze/metainfo/nomad_catalysis) of the NOMAD installation.
 
 ```json
-
 {
     "data": {
         "m_def": "nomad_catalysis.schema_packages.catalysis.CatalyticReaction",
@@ -136,81 +135,81 @@ Another way to generate entries in NOMAD is to place *.archive.json files direct
         "reaction_type": "type of reaction",
         "reaction_name": "Reaction Name",
         "experimenter": "Name or ORCID",
-        "experiment_handbook": ,
-        "lab_id": "a lab_id of the measurment",
+        "experiment_handbook": "reference to handbook",
+        "lab_id": "a lab_id of the measurement",
         "location": "location",
         "reaction_conditions": {
-            "reagents": [{"name": "reagent1",
-                "flow_rate": [ ],
-                "gas_concentration_in": []},
+            "reagents": [
                 {
-                "name": "reagent2",
-                "flow_rate": [ ],
-                "gas_concentration_in": []}
-                ],
-            "set_pressure": [
-                101325.0
+                    "name": "reagent1",
+                    "flow_rate": [],
+                    "gas_concentration_in": []
+                },
+                {
+                    "name": "reagent2",
+                    "flow_rate": [],
+                    "gas_concentration_in": []
+                }
             ],
-            "set_temperature": [ ],
-            "set_total_flow_rate": [ ],
+            "set_pressure": [101325.0],
+            "set_temperature": [],
+            "set_total_flow_rate": [],
             "contact_time": [],
             "weight_hourly_space_velocity": [],
             "time_on_stream": []
         },
         "reactor_filling": {
             "catalyst_name": "name of the catalyst",
-            "catalyst_mass": number,
-            "catalyst_volume": number,
+            "catalyst_mass": 0.001,
+            "catalyst_volume": 0.0001,
             "diluent": "some diluent",
-            "catalyst_sievefraction_upper_limit": ,
-            "catalyst_sievefraction_lower_limit": ,
-            "diluent_sievefraction_upper_limit": ,
-            "diluent_sievefraction_lower_limit": ,
-            "particle_size":
+            "catalyst_sievefraction_upper_limit": 0.0002,
+            "catalyst_sievefraction_lower_limit": 0.0001,
+            "diluent_sievefraction_upper_limit": 0.0002,
+            "diluent_sievefraction_lower_limit": 0.0001,
+            "particle_size": 0.00015
         },
         "reactor_setup": {
-            "name": ,
-            "reactor_type": ,
-            "bed_length": ,
-            "reactor_volume": ,
-            "lab_id":
+            "name": "reactor name",
+            "reactor_type": "plug flow reactor",
+            "bed_length": 0.01,
+            "reactor_volume": 0.000002,
+            "lab_id": "reactor-001"
         },
         "results": [
             {
                 "products": [
                     {
                         "name": "product1",
-                        "selectivity": [
-                            float_number
-                        ]
+                        "selectivity": [0.85]
                     },
                     {
                         "name": "product2",
-                        "selectivity": [
-                            float_number
-                        ]
+                        "selectivity": [0.15]
                     }
                 ],
                 "reactants_conversions": [
-                    {"name": "reactant",
-                    "gas_concentration_out":[],
-                    "conversion": []}
+                    {
+                        "name": "reactant",
+                        "gas_concentration_out": [],
+                        "conversion": []
+                    }
                 ],
-                "runs": [
-                    1
-                ],
+                "runs": [1],
                 "temperature": [],
-                "pressure":[],
-                "total_flow_rate":[],
-                "time_on_stream":[],
-
+                "pressure": [],
+                "total_flow_rate": [],
+                "time_on_stream": []
             }
         ],
         "samples": [
             {
-                "lab_id": "lab id"  # if a sample entry exists with the specified lab_id it will be automatically linked.
+                "lab_id": "lab-id"
             }
         ]
     }
 }
 ```
+
+!!! note
+    If a sample entry exists with the specified `lab_id`, it will be automatically linked to the reaction entry.
