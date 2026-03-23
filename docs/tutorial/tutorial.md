@@ -14,7 +14,7 @@ The plugin ships with a built-in example upload containing real catalysis data. 
 1. Log in to your NOMAD instance
 2. Navigate to **PUBLISH** → **Uploads**
 3. Click **CREATE A NEW UPLOAD**
-4. In the upload page, look for the **Example Uploads** section or search for **"Heterogeneous Catalysis Example"** under the *FAIRmat examples* category
+4. In the upload page, look for the blue **Drop Files Here** bar and upload [this zip folder](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/scr/nomad_catalysis/example_uploads/het_catalysis_example/example_MeOHsyn.zip).
 
 The example upload contains three files:
 
@@ -75,9 +75,10 @@ For more details on searching and filtering, see the [Search Catalysis Data](../
 
 Now that you've seen the example, try creating your own entries:
 
-1. **From a template**: Download one of the provided [Excel templates](../how_to/use_this_plugin.md#1-using-the-catalysis-parser) and fill it with your data
+1. **From a template**: Download one of the provided [Excel templates](../how_to/use_this_plugin.md#1-using-the-catalysis-parser) and fill it with your data. You can also check out the Example upload in the NOMAD instance first: instead of **Create a New Upload** you can click on **Example Uploads** and search for **"Heterogeneous Catalysis Example"** under the *FAIRmat examples* category in the pull down menu.
 2. **From the GUI**: Create entries manually using the built-in schemas (select **Catalysis** category in *Create from Schema*)
 3. **From JSON**: Write `*.archive.json` files following the [example format](../how_to/use_this_plugin.md#3-direct-generation-of-json-files)
+
 
 ## Next Steps
 
