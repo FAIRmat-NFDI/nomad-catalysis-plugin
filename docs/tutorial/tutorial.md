@@ -36,7 +36,7 @@ After the upload is processed, open the **CuZnAl methanol synthesis catalyst** e
 - **Preparation**: precipitation method
 - **Surface area**: 117.8 m²/g (BET method)
 
-![Screenshot of a sample entry in the NOMAD GUI](../how_to/ScreenshotSampleEntry.png)
+![Screenshot of a sample entry in the NOMAD GUI](Screenshot_example1_sample.png)
 
 This demonstrates how the `CatalystSample` schema captures the key properties of a catalyst material in a structured, machine-readable format.
 
@@ -51,7 +51,7 @@ Open the **CuZnAl methanol synthesis** entry. This `CatalyticReaction` instance 
 - **Pretreatment**: H₂/Ar reduction ramp to 523 K
 - **Reaction conditions and results**: extracted from `methanol_synthesis_CuZnAl.xlsx`
 
-![Screenshot of a reaction measurement entry in the NOMAD GUI](../how_to/ScreenshotReactionMeasurementEntry.png)
+![Screenshot of a reaction measurement entry in the NOMAD GUI](Screenshot_example1_measurement.png)
 
 The Excel file follows the template format described in the [How-to guide](../how_to/use_this_plugin.md#format-of-the-csv-or-xlsx-data-file). Column headers like `set_temperature`, `x CO2 (%)`, `S_p methanol (%)` are automatically mapped to the schema quantities.
 
