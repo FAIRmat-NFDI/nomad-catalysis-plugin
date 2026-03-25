@@ -14,7 +14,7 @@ The plugin ships with a built-in example upload containing real catalysis data. 
 1. Log in to your NOMAD instance
 2. Navigate to **PUBLISH** → **Uploads**
 3. Click **CREATE A NEW UPLOAD**
-4. In the upload page, look for the blue **Drop Files Here** bar and upload [this zip folder](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/scr/nomad_catalysis/example_uploads/het_catalysis_example/example_MeOHsyn.zip).
+4. In the upload page, look for the blue **Drop Files Here** bar and upload [this zip folder](https://raw.githubusercontent.com/FAIRmat-NFDI/nomad-catalysis-plugin/main/src/nomad_catalysis/example_uploads/het_catalysis_example/example_MeOHsyn.zip).
 
 The example upload contains three files:
 
