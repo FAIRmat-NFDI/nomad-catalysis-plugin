@@ -16,10 +16,10 @@ from nomad.config.models.ui import (
 )
 
 heterogeneous_catalysis_app = App(
-    label='Heterogeneous Catalysis',
+    label='Catalysis',
     path='heterogeneouscatalyst',
     category='Use Cases',
-    description='Search heterogeneous catalysts',
+    description='Search heterogeneous catalysts and catalytic reactions',
     readme="""This page allows you to search **catalyst and catalysis data**
         within NOMAD. The filter menu on the left and the shown
         default columns are specifically designed for Heterogeneous Catalyst
