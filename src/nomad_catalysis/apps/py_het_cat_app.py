@@ -42,7 +42,9 @@ heterogeneous_catalysis_app = App(
         `results.properties.catalytic.reaction.products[? name=="B"].selectivity`.
         Be aware that the IUPAC names have to be used for the reactants and products 
         (except for water and ammonia).""",
-    filters_locked={'quantities': ['results.properties.catalytic.catalyst.catalyst_name']},
+    filters_locked={
+        'quantities': ['results.properties.catalytic.catalyst.catalyst_name']
+    },
     # search_syntaxes= {
     #     "exclude": ["free_text"]
     # },
