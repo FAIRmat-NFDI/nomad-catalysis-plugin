@@ -16,10 +16,10 @@ from nomad.config.models.ui import (
 )
 
 heterogeneous_catalysis_app = App(
-    label='Heterogeneous Catalysis',
+    label='Catalysis',
     path='heterogeneouscatalyst',
     category='Use Cases',
-    description='Search heterogeneous catalysts',
+    description='Search heterogeneous catalysts and catalytic reactions',
     readme="""This page allows you to search **catalyst and catalysis data**
         within NOMAD. The filter menu on the left and the shown
         default columns are specifically designed for Heterogeneous Catalyst
@@ -42,7 +42,9 @@ heterogeneous_catalysis_app = App(
         `results.properties.catalytic.reaction.products[? name=="B"].selectivity`.
         Be aware that the IUPAC names have to be used for the reactants and products 
         (except for water and ammonia).""",
-    filters_locked={'quantities': ['results.properties.catalytic']},
+    filters_locked={
+        'quantities': ['results.properties.catalytic.catalyst.catalyst_name']
+    },
     # search_syntaxes= {
     #     "exclude": ["free_text"]
     # },
