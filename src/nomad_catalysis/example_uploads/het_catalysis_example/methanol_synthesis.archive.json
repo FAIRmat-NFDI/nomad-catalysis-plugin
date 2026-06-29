@@ -54,7 +54,7 @@
             "diluent":"SiO2",
             "diluent_mass":0.0007
         },
-        "reaction_type": "hydrogenation",
+        "reaction_type": ["hydrogenation"],
         "reaction_name": "methanol synthesis",
         "data_file": "methanol_synthesis_CuZnAl.xlsx"
     }

@@ -1,151 +1,156 @@
 # References
 
-!!! List of ELN Schemas from this Plugin
-- Catalyst Sample
-- Catalytic Reaction
-- Catalysis Collection Parser Entry
+## ELN Schemas
 
+This plugin provides the following ELN schemas:
 
-!!! List of quantities and subsections in `Catalyst Sample`:
+- **Catalyst Sample**
+- **Catalytic Reaction**
+- **Catalysis Collection Parser Entry**
 
-- name (string quantity)
-- datetime (string quantity)
-- lab_id (string quantity)
-- description (rich text quantity)
-- storing_institution (string quantity)
-- catalyst_type (string quantity)
-- form (string quantity)
+---
 
-- elemental_composition (SubSection, repeating):
-    - element
-    - atomic fraction
-    - mass fraction
+## Catalyst Sample
 
-- components (SubSection, repeating):
-    - component label
-    - mass
-    - mass fraction
+**Quantities:**
 
-- preparation_details (SubSection):
-    - preparation_method(string quantity)
-    - preparator
-    - preparing institution
+- `name` (string)
+- `datetime` (string)
+- `lab_id` (string)
+- `description` (rich text)
+- `storing_institution` (string)
+- `catalyst_type` (string)
+- `form` (string)
 
-- surface (SubSection):
-    - surface_area (float quantity)
-    - method_surface_area_determination (string quantity)
-    - dispersion (float quantity)
+**Subsections:**
 
+??? info "elemental_composition (repeating)"
+    - `element`
+    - `atomic_fraction`
+    - `mass_fraction`
 
-!!!List of quantities and subsections in `CatalyticReaction`:
+??? info "components (repeating)"
+    - `component_label`
+    - `mass`
+    - `mass_fraction`
 
-- name
-- starting_Time
-- data_file
-- ID
-- reaction_type
-- reaction_name
-- experiment_handbook
-- description
-- location
-- experimenter
+??? info "preparation_details"
+    - `preparation_method` (string)
+    - `preparator`
+    - `preparing_institution`
 
-- steps (SubSection, repeating):
-    - name
-    - start_time
-    - comment
+??? info "surface"
+    - `surface_area` (float)
+    - `method_surface_area_determination` (string)
+    - `dispersion` (float)
 
-- samples (SubSection, repeating):
-    - name
-    - reference
-    - lab_id
+---
 
-- instruments (SubSection, label: reactor setup, repeating):
-    - name
-    - reference
-    - lab_id
-    - reactor_type
-    - bed_length
-    - reactor_cross_section_area
-    - reactor_diameter
-    - reactor_volume
+## Catalytic Reaction
 
-- reactor_filling (SubSection, repeating):
-    - catalyst_name
-    - sample_section_reference
-    - catalyst_mass
-    - catalyst_density
-    - catalyst_volume
-    - catalyst_sievefraction_upper_limit
-    - catalyst_sievefraction_lower_limit
-    - particle_size
-    - diluent
-    - diluent_sievefraction_upper_limit
-    - diluent_sievefraction_lower_limit
+**Quantities:**
 
-- pretreatment (SubSection, repeating):
-    *same as reaction conditions below*
+- `name`
+- `starting_time`
+- `data_file`
+- `ID`
+- `reaction_type`
+- `reaction_name`
+- `experiment_handbook`
+- `description`
+- `location`
+- `experimenter`
 
-- reaction_conditions (SubSection, repeating):
-    - set_temperature
-    - set_pressure
-    - set_total_flow_rate
-    - contact_time (label W|F)
-    - sampling_frequency
-    - time_on_stream
-    - weight_hourly_space_velocity
-    - gas_hourly_space_velocity
-    - runs
-    - subsection reagents:
-        - name
-        - gas_concentration_in
-        - flow_rate
-        - pure_component:
-            - name
-            - iupac_name...
+**Subsections:**
 
-- results (SubSection, repeating):
-    - name
-    - temperature
-    - pressure
-    - total_flow_rate
-    - runs
-    - time_on_stream
-    - c_balance
-    - reactants_conversions:
-        - name
-        - gas_concentration_in
-        - gas_concentration_out
-        - flow_rate
-        - conversion
-        - conversion_type
-        - conversion_product_based
-        - conversion_reactant_based
-        - pure_component:
-            - name
-            - iupac_name, ...
-    - rates:
-        - name
-        - reaction_rate
-        - specific_mass_rate
-        - specific_surface_area_rate
-        - rate
-        - turn_over_frequency
-    - products:
-        - name
-        - gas_concentration_in
-        - flow_rate
-        - gas_concentration_out
-        - selectivity
-        - product_yield
-        - space_time_yield
-        - pure_component:
-            - name
-            - iupac_name
+??? info "steps (repeating)"
+    - `name`
+    - `start_time`
+    - `comment`
 
-!!!List of quantities and subsections in `CatalysisCollectionParserEntry`:
+??? info "samples (repeating)"
+    - `name`
+    - `reference`
+    - `lab_id`
 
-- data_file
+??? info "instruments / reactor setup (repeating)"
+    - `name`
+    - `reference`
+    - `lab_id`
+    - `reactor_type`
+    - `bed_length`
+    - `reactor_cross_section_area`
+    - `reactor_diameter`
+    - `reactor_volume`
 
-- samples (SubSection, repeating)
-- measurements (SubSection, repeating)
+??? info "reactor_filling (repeating)"
+    - `catalyst_name`
+    - `sample_section_reference`
+    - `catalyst_mass`
+    - `catalyst_density`
+    - `catalyst_volume`
+    - `catalyst_sievefraction_upper_limit`
+    - `catalyst_sievefraction_lower_limit`
+    - `particle_size`
+    - `diluent`
+    - `diluent_sievefraction_upper_limit`
+    - `diluent_sievefraction_lower_limit`
+
+??? info "pretreatment (repeating)"
+    Same structure as **reaction_conditions** below.
+
+??? info "reaction_conditions (repeating)"
+    - `set_temperature`
+    - `set_pressure`
+    - `set_total_flow_rate`
+    - `contact_time` (label: W|F)
+    - `sampling_frequency`
+    - `time_on_stream`
+    - `weight_hourly_space_velocity`
+    - `gas_hourly_space_velocity`
+    - `runs`
+
+    **Sub-subsection: reagents**
+
+    - `name`
+    - `gas_concentration_in`
+    - `flow_rate`
+    - `pure_component`: `name`, `iupac_name`, ...
+
+??? info "results (repeating)"
+    - `name`
+    - `temperature`
+    - `pressure`
+    - `total_flow_rate`
+    - `runs`
+    - `time_on_stream`
+    - `c_balance`
+
+    **reactants_conversions:**
+
+    - `name`, `gas_concentration_in`, `gas_concentration_out`, `flow_rate`
+    - `conversion`, `conversion_type`, `conversion_product_based`, `conversion_reactant_based`
+    - `pure_component`: `name`, `iupac_name`, ...
+
+    **rates:**
+
+    - `name`, `reaction_rate`, `specific_mass_rate`, `specific_surface_area_rate`, `rate`, `turn_over_frequency`
+
+    **products:**
+
+    - `name`, `gas_concentration_in`, `flow_rate`, `gas_concentration_out`
+    - `selectivity`, `product_yield`, `space_time_yield`
+    - `pure_component`: `name`, `iupac_name`
+
+---
+
+## Catalysis Collection Parser Entry
+
+**Quantities:**
+
+- `data_file`
+
+**Subsections:**
+
+- `samples` (repeating)
+- `measurements` (repeating)

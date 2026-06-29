@@ -1,13 +1,20 @@
 # Install This Plugin
 
+The recommended way to include this plugin in your NOMAD Oasis is through a [NOMAD distribution](https://github.com/FAIRmat-NFDI/nomad-distro-template). Add the plugin to the `pyproject.toml` of your distribution repository:
 
-To include this plugin as part of your local or institutional NOMAD Oasis the following
-line needs to be added to the `pyproject.toml` file of the Oasis repo:
-```git+https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin.git@main```
+```toml
+[project.optional-dependencies]
+plugins = [
+  "nomad-catalysis @ git+https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin.git@main"
+]
+```
 
-For a detailed guide on how to setup and install a new Oasis, see the [Tutorial 13 part 4](https://github.com/FAIRmat-NFDI/AreaA-Examples/tree/main/tutorial13/part4)
+!!! tip "Using Specific Versions"
+    For production deployments, pin a version tag or commit hash instead of `@main`:
+    ```toml
+    "nomad-catalysis @ git+https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin.git@v1.0.2"
+    ```
 
+Then rebuild your Oasis Docker image. The distribution template uses `uv sync` to install all plugins automatically.
 
-## Add This Plugin to Your NOMAD installation
-
-Read the [NOMAD plugin documentation](https://nomad-lab.eu/prod/v1/staging/docs/plugins/plugins.html#add-a-plugin-to-your-nomad) for all details on how to deploy the plugin on your NOMAD instance.
+For detailed instructions on setting up an Oasis and installing plugins, see the [NOMAD plugin documentation](https://nomad-lab.eu/prod/v1/docs/howto/plugins/plugins.html).

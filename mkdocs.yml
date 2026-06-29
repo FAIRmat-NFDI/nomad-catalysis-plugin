@@ -13,9 +13,16 @@ nav:
       - Use this Plugin to Create Catalysis Entries: how_to/use_this_plugin.md
       - Search for Catalysis Data in the App: how_to/search_catalysis_data.md
       - Contribute to this plugin: how_to/contribute_to_this_plugin.md
-  - Reference: reference/references.md
+  - Reference:
+      - Overview: reference/index.md
+      - Catalyst Sample: reference/catalyst-sample.md
+      - Catalytic Reaction: reference/catalytic-reaction.md
+      - Collection Parser: reference/collection-parser.md
+      - Schema Documentation: reference/schema-docs.md
 plugins:
   - search
+  - macros:
+      module_name: docs/main
 theme:
   name: material
   palette:
@@ -27,6 +34,10 @@ theme:
   favicon: assets/favicon.png
   features:
     - navigation.instant
+    - navigation.path
+    - navigation.footer
+    - navigation.top
+    - content.code.copy
   custom_dir: docs/theme
   icon:
     repo: fontawesome/brands/github
@@ -44,7 +55,6 @@ markdown_extensions:
       permalink: True
   - pymdownx.arithmatex:
       generic: true
-  - attr_list
   - mkdocs-click
   - pymdownx.extra
 extra:
@@ -54,6 +64,4 @@ use_directory_urls: false
 extra_css:
   - stylesheets/extra.css
 extra_javascript:
-  - javascript.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

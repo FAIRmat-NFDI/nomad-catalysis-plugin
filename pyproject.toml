@@ -35,7 +35,17 @@ dependencies = ["nomad-lab[infrastructure]>=1.3.13", "openpyxl"] # should be NOM
 Repository = "https://github.com/FAIRmat-NFDI/nomad-catalysis-plugin"
 
 [project.optional-dependencies]
-dev = ["ruff", "pytest", "structlog"]
+dev = [
+  "ruff",
+  "pytest",
+  "structlog",
+  "mkdocs",
+  "mkdocs-material>=9.0",
+  "pymdown-extensions",
+  "mkdocs-click",
+  "mkdocs-macros-plugin>=1.0",
+  "nomad-docs>=0.1.3",
+]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

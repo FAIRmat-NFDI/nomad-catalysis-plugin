@@ -1,5 +1,5 @@
 # How to Search Catalysis Data
-![Header](ScreenshotCatalysisAppHead-1.png)
+![Header](ScreenshotCatalysisAppHead.png)
 
 This plugin provides a dedicated heterogeneous catalysis app which makes it possible to get a quick overview of related entries, visualize results and search for specific information. The catalysis app of the central NOMAD service can be accessed [here](https://nomad-lab.eu/prod/v1/gui/search/heterogeneouscatalyst).
 
@@ -11,7 +11,7 @@ At the bottom there are two default scatterplots which give an idea about the te
 ![image of Catalysis App Dashboard](ScreenshotDashboard.png)
 
 ## Filter Menu
-The Filter Menu allows to quickly access a number of properties conveniently grouped under the main menu items "Catalyst Materials" and "Reactions" each with further submenu items. Upon clicking one of the menu headings a panel with the properties opens. Each property comes with a window displaying the most common occurances in the database and also a search bar to search for other less common instances. In addition to getting a quick overview of the data in the database, these windows can be used to filter and search specific data entries as well.  
+The Filter Menu allows to quickly access a number of properties conveniently grouped under the main menu items "Catalyst Materials" and "Reactions" each with further submenu items. Upon clicking one of the menu headings a panel with the properties opens. Each property comes with a window displaying the most common occurances in the database and also a search bar to search for other less common instances. In addition to getting a quick overview of the data in the database, these windows can be used to filter and search specific data entries as well.
 
 ![image of Filter Menu](ScreenshotFilterMenu.png)
 
@@ -23,6 +23,6 @@ Below the dashboard there is the search results list, which gives direct access 
 
 ## Custom Search
 
-At the top of the page, there is the searchbar for direct filter and search, as well as buttons to create your own, custom widgets. 
+At the top of the page, there is the searchbar for direct filter and search, as well as buttons to create your own, custom widgets.
 
 
