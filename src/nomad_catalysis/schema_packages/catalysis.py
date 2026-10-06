@@ -1,6 +1,6 @@
-from pathlib import PurePosixPath
 import random
 import time
+from pathlib import PurePosixPath
 from typing import (
     TYPE_CHECKING,
 )
@@ -11,7 +11,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 from ase.data import atomic_masses, atomic_numbers, chemical_symbols
-from nomad.common import is_safe_relative_path
 from nomad.config import config
 from nomad.datamodel.data import ArchiveSection, EntryDataCategory, Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
@@ -2825,7 +2824,6 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
             self.populate_catalyst_sample_info(archive, logger)
 
     def _resolve_data_file_path(self, archive, logger) -> str:
-        
         root_data_file_exists = False
         local_data_file_exists = False
 
@@ -2835,10 +2833,13 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         mainfile = archive.metadata.mainfile if archive.metadata else None
 
         if mainfile:
-            relative_candidate = (PurePosixPath(mainfile).parent / self.data_file).as_posix()
-
-        if relative_candidate != self.data_file and archive.m_context.raw_path_exists(relative_candidate):
-            local_data_file_exists = True
+            relative_candidate = (
+                PurePosixPath(mainfile).parent / self.data_file
+            ).as_posix()
+            if relative_candidate != self.data_file and (
+                archive.m_context.raw_path_exists(relative_candidate)
+            ):
+                local_data_file_exists = True
 
         if root_data_file_exists and not local_data_file_exists:
             # standard usage of data_file in the upload root
