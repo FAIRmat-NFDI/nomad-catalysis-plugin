@@ -65,8 +65,12 @@ def test_read_upload_from_root_and_subfolder(caplog):
     assert entry_archive.data.results
 
     # data file both in the upload root and next to the mainfile
-    entry_archive = normalize_with_data_file('MoO3_C2_performance_kelvin_also_outside.xlsx')
-    assert entry_archive.data.data_file == 'MoO3_C2_performance_kelvin_also_outside.xlsx'
+    entry_archive = normalize_with_data_file(
+        'MoO3_C2_performance_kelvin_also_outside.xlsx'
+    )
+    assert (
+        entry_archive.data.data_file == 'MoO3_C2_performance_kelvin_also_outside.xlsx'
+    )
     assert 'found both in the upload root and next to the mainfile' in caplog.text
 
     # data file neither in the upload root nor next to the mainfile
