@@ -317,7 +317,7 @@ heterogeneous_catalysis_app = App(
                 layout={
                     'lg': Layout(h=8, minH=3, minW=3, w=6, x=12, y=0),
                     'md': Layout(h=8, minH=3, minW=3, w=4, x=10, y=0),
-                    'sm': Layout(h=4, minH=3, minW=3, w=4, x=0, y=8),
+                    'sm': Layout(h=6, minH=3, minW=3, w=12, x=0, y=8),
                     'xl': Layout(h=10, minH=3, minW=3, w=6, x=12, y=0),
                     'xxl': Layout(h=10, minH=3, minW=3, w=6, x=16, y=0),
                 },
@@ -328,7 +328,7 @@ heterogeneous_catalysis_app = App(
                 layout={
                     'lg': Layout(h=4, minH=3, minW=3, w=6, x=18, y=0),
                     'md': Layout(h=4, minH=3, minW=3, w=4, x=14, y=0),
-                    'sm': Layout(h=4, minH=4, minW=3, w=4, x=4, y=8),
+                    'sm': Layout(h=6, minH=4, minW=3, w=12, x=0, y=14),
                     'xl': Layout(h=5, minH=3, minW=3, w=6, x=18, y=0),
                     'xxl': Layout(h=10, minH=3, minW=3, w=6, x=22, y=0),
                 },
@@ -341,7 +341,7 @@ heterogeneous_catalysis_app = App(
                 layout={
                     'lg': Layout(h=4, minH=3, minW=3, w=6, x=18, y=4),
                     'md': Layout(h=4, minH=3, minW=3, w=4, x=14, y=4),
-                    'sm': Layout(h=4, minH=4, minW=3, w=4, x=8, y=8),
+                    'sm': Layout(h=6, minH=4, minW=3, w=12, x=0, y=20),
                     'xl': Layout(h=5, minH=3, minW=3, w=6, x=18, y=5),
                     'xxl': Layout(h=10, minH=3, minW=3, w=6, x=28, y=0),
                 },
@@ -355,7 +355,7 @@ heterogeneous_catalysis_app = App(
                 layout={
                     'lg': Layout(h=10, minH=3, minW=8, w=12, x=0, y=8),
                     'md': Layout(h=6, minH=3, minW=8, w=9, x=0, y=8),
-                    'sm': Layout(h=6, minH=3, minW=6, w=6, x=0, y=12),
+                    'sm': Layout(h=7, minH=3, minW=6, w=12, x=0, y=26),
                     'xl': Layout(h=8, minH=3, minW=8, w=12, x=0, y=10),
                     'xxl': Layout(h=8, minH=6, minW=8, w=12, x=0, y=10),
                 },
@@ -375,7 +375,7 @@ heterogeneous_catalysis_app = App(
                 layout={
                     'lg': Layout(h=10, minH=3, minW=3, w=12, x=12, y=8),
                     'md': Layout(h=6, minH=3, minW=3, w=9, x=9, y=8),
-                    'sm': Layout(h=6, minH=3, minW=3, w=6, x=6, y=12),
+                    'sm': Layout(h=7, minH=3, minW=3, w=12, x=0, y=33),
                     'xl': Layout(h=8, minH=3, minW=3, w=12, x=12, y=10),
                     'xxl': Layout(h=8, minH=3, minW=3, w=12, x=12, y=10),
                 },
