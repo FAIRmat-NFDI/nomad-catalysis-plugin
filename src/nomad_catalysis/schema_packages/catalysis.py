@@ -1,5 +1,6 @@
 import random
 import time
+from pathlib import PurePosixPath
 from typing import (
     TYPE_CHECKING,
 )
@@ -2822,10 +2823,51 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
         if self.samples[0].reference is not None:
             self.populate_catalyst_sample_info(archive, logger)
 
+    def _resolve_data_file_path(self, archive, logger) -> str:
+        root_data_file_exists = False
+        local_data_file_exists = False
+
+        if archive.m_context.raw_path_exists(self.data_file):
+            root_data_file_exists = True
+
+        mainfile = archive.metadata.mainfile if archive.metadata else None
+
+        if mainfile:
+            relative_candidate = (
+                PurePosixPath(mainfile).parent / self.data_file
+            ).as_posix()
+            if relative_candidate != self.data_file and (
+                archive.m_context.raw_path_exists(relative_candidate)
+            ):
+                local_data_file_exists = True
+
+        if root_data_file_exists and not local_data_file_exists:
+            # standard usage of data_file in the upload root
+            return self.data_file
+        elif local_data_file_exists and not root_data_file_exists:
+            logger.info(
+                f'Data file "{self.data_file}" not found in the upload root, '
+                f'using "{relative_candidate}" next to the mainfile instead.'
+            )
+            return relative_candidate
+        elif root_data_file_exists and local_data_file_exists:
+            logger.warning(
+                f'Data file "{self.data_file}" found both in the upload root and '
+                f'next to the mainfile "{mainfile}". Using the one in the upload root.'
+            )
+            return self.data_file
+
+        raise FileNotFoundError(
+            f'Data file "{self.data_file}" was found neither in the upload root nor '
+            f'in the directory of the mainfile "{mainfile}". Paths are interpreted '
+            'relative to the upload root, e.g. "subfolder/data.xlsx".'
+        )
+
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         super().normalize(archive, logger)
 
         if self.data_file is not None:
+            self.data_file = self._resolve_data_file_path(archive, logger)
             self.check_and_read_data_file(archive, logger)
             logger.info('Data file processed.')
 
