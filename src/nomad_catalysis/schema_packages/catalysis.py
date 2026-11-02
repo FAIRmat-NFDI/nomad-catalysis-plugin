@@ -1628,12 +1628,16 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                 if 'K' in col_split[1]:
                     feed.set_temperature = np.nan_to_num(data[col])
                 else:
-                    feed.set_temperature = np.nan_to_num(data[col]) * ureg.celsius
+                    feed.set_temperature = ureg.Quantity(
+                        np.nan_to_num(data[col]), ureg.celsius
+                    )
             if col_split[0].casefold() == 'temperature':
                 if 'K' in col_split[1]:
                     cat_data.temperature = np.nan_to_num(data[col])
                 else:
-                    cat_data.temperature = np.nan_to_num(data[col]) * ureg.celsius
+                    cat_data.temperature = ureg.Quantity(
+                        np.nan_to_num(data[col]), ureg.celsius
+                    )
 
             if col_split[0].casefold() == 'tos' or col_split[0].casefold() == 'time':
                 if 's' in col_split[1]:
@@ -1898,8 +1902,8 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     self.experimenter = header['User'][0].decode()
 
                 pre = data['Sorted Data'][methodname]['H2 Reduction']
-                pretreatment.set_temperature = (
-                    pre['Catalyst Temperature [C°]'] * ureg.celsius
+                pretreatment.set_temperature = ureg.Quantity(
+                    pre['Catalyst Temperature [C°]'], ureg.celsius
                 )
                 for col in pre.dtype.names:
                     if (
@@ -1989,11 +1993,11 @@ class CatalyticReaction(CatalyticReactionCore, PlotSection, Schema):
                     ),
                 )
                 rates.append(rate)
-                feed.set_temperature = (
-                    analysed['Catalyst Temperature [C°]'] * ureg.celsius
+                feed.set_temperature = ureg.Quantity(
+                    analysed['Catalyst Temperature [C°]'], ureg.celsius
                 )
-                cat_data.temperature = (
-                    analysed['Catalyst Temperature [C°]'] * ureg.celsius
+                cat_data.temperature = ureg.Quantity(
+                    analysed['Catalyst Temperature [C°]'], ureg.celsius
                 )
                 number_of_runs = len(analysed['NH3 Conversion [%]'])
                 feed.runs = np.linspace(0, number_of_runs - 1, number_of_runs)
