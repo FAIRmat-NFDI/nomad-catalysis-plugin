@@ -96,7 +96,7 @@ The following column headers will be recognized and mapped into the NOMAD schema
 | - ['User'][0].decode()| experimenter|
 | - ['Temporal resolution [Hz]']| reaction_conditions.sampling_frequency|
 |#### ['Sorted Data'][methodname]['H2 Reduction']| |
-| ['Catalyst Temperature [C°]'] * ureg.celsius| pretreatment.set_temperature|
+| `ureg.Quantity(pre['Catalyst Temperature [C°]'], ureg.celsius)` | pretreatment.set_temperature|
 | ['Massflow3 (H2) Target Calculated Realtime Value [mln&#124;min]']| pretreatment.reagent[0].flow_rate, & name|
 | ['Massflow5 (Ar) Target Calculated Realtime Value [mln&#124;min]']| pretreatment.reagent[1].flow_rate & name|
 | ['Target Total Gas (After Reactor) [mln&#124;min]']| pretreatment.set_total_flow_rate
